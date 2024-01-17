@@ -43,9 +43,18 @@
 //     Ok(())
 // }
 #![allow(unused)]
-use iced::{Application, Command};
+use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
+use iced::{
+    mouse,
+    widget::{
+        canvas,
+        canvas::{Cache, Geometry, Path},
+        container,
+    },
+    Application, Color, Command, Length, Point, Rectangle, Renderer, Theme,
+};
 use serde::Deserialize;
-use std::{fs::File, io::prelude::*, path::Path};
+use std::{fs::File, io::prelude::*};
 
 #[derive(Deserialize, Default, Debug)]
 struct Config {
@@ -66,8 +75,8 @@ enum BoardElement {
 #[derive(Deserialize, Debug)]
 struct KeyboardKeyDefinition {
     id: u32,
-    boundaries: Vec<Point>,
-    text_position: Point,
+    boundaries: Vec<SerializablePoint>,
+    text_position: SerializablePoint,
     keycodes: Vec<u32>,
     text: String,
     shift_text: String,
@@ -77,8 +86,8 @@ struct KeyboardKeyDefinition {
 #[derive(Deserialize, Debug)]
 struct MouseKeyDefinition {
     id: u32,
-    boundaries: Vec<Point>,
-    text_position: Point,
+    boundaries: Vec<SerializablePoint>,
+    text_position: SerializablePoint,
     keycodes: Vec<u32>,
     text: String,
 }
@@ -86,8 +95,8 @@ struct MouseKeyDefinition {
 #[derive(Deserialize, Debug)]
 struct MouseScrollDefinition {
     id: u32,
-    boundaries: Vec<Point>,
-    text_position: Point,
+    boundaries: Vec<SerializablePoint>,
+    text_position: SerializablePoint,
     keycodes: Vec<u32>,
     text: String,
 }
@@ -95,18 +104,25 @@ struct MouseScrollDefinition {
 #[derive(Deserialize, Debug)]
 struct MouseSpeedIndicatorDefinition {
     id: u32,
-    location: Point,
+    location: SerializablePoint,
     radius: u32,
 }
 
-#[derive(Deserialize, Debug)]
-struct Point {
+#[derive(Deserialize, Debug, Clone)]
+struct SerializablePoint {
     x: u32,
     y: u32,
 }
 
+impl From<SerializablePoint> for Point {
+    fn from(point: SerializablePoint) -> Self {
+        Point::new(point.x as f32, point.y as f32)
+    }
+}
+
 struct NuhxBoard {
     config: Config,
+    canvas: Cache,
 }
 
 #[derive(Debug)]
@@ -122,7 +138,7 @@ struct Flags {
 
 impl Application for NuhxBoard {
     type Flags = Flags;
-    type Theme = iced::Theme;
+    type Theme = Theme;
     type Executor = iced::executor::Default;
     type Message = Message;
 
@@ -130,6 +146,7 @@ impl Application for NuhxBoard {
         (
             Self {
                 config: flags.config,
+                canvas: Cache::default(),
             },
             Command::none(),
         )
@@ -144,7 +161,56 @@ impl Application for NuhxBoard {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
-        "Hello, World!".into()
+        let canvas = canvas(self as &Self)
+            .width(Length::Fill)
+            .height(Length::Fill);
+
+        container(canvas)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
+}
+
+impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
+    type State = ();
+
+    fn draw(
+        &self,
+        _state: &Self::State,
+        renderer: &Renderer,
+        _theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<Geometry> {
+        let canvas = self.canvas.draw(renderer, bounds.size(), |frame| {
+            for element in &self.config.elements {
+                match element {
+                    BoardElement::KeyboardKey(def) => {
+                        let mut boundaries_iter = def.boundaries.iter();
+                        let key = Path::new(|builder| {
+                            builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
+                            for boundary in boundaries_iter {
+                                builder.line_to((*boundary).clone().into());
+                            }
+                            builder.close()
+                        });
+                        let fill_color = Rgb::from_hex_str("#000000").unwrap();
+                        frame.fill(
+                            &key,
+                            Color::from_rgba(
+                                fill_color.get_red(),
+                                fill_color.get_green(),
+                                fill_color.get_blue(),
+                                fill_color.get_alpha(),
+                            ),
+                        );
+                    }
+                    _ => unimplemented!(),
+                }
+            }
+        });
+        vec![canvas]
     }
 }
 
@@ -168,9 +234,8 @@ fn main() -> iced::Result {
         Err(why) => panic!("Error parsing config file: {}", why),
         Ok(config) => config,
     };
-    dbg!(&config);
 
-    let icon = iced::window::icon::from_file(Path::new("NuhxBoard.png")).unwrap();
+    let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png")).unwrap();
 
     let flags = Flags { config };
     let settings = iced::Settings {

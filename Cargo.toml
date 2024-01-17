@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { version = "0.10.0", features = ["image"] }
+colors-transform = "0.2.11"
+iced = { version = "0.10.0", features = ["image", "canvas"] }
 regex = "1.10.2"
 serde = { version = "1.0.195", features = ["serde_derive"] }
 serde_json = "1.0.111"
