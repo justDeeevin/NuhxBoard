@@ -43,6 +43,7 @@
 //     Ok(())
 // }
 #![allow(unused)]
+use clap::Parser;
 use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
 use iced::{
     mouse,
@@ -214,15 +215,23 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
     }
 }
 
+#[derive(Parser, Debug)]
+#[command(author = "justDeeevin", version = "0.1.0")]
+struct Args {
+    #[arg(short, long)]
+    config_path: String,
+
+    #[arg(short, long)]
+    style_path: String,
+}
+
 fn main() -> iced::Result {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
-        panic!("No config file specified");
-    }
-    let mut config_file = match File::open(&args[1]) {
+    let args = Args::parse();
+
+    let mut config_file = match File::open(&args.config_path) {
         Err(why) => panic!(
             "Error opening config file (given path: {}): {}",
-            args[1], why
+            args.config_path, why
         ),
         Ok(file) => file,
     };
