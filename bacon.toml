@@ -59,7 +59,8 @@ command = [
   "run",
   "--color",
   "always",
-  # put launch parameters for your program behind a `--` separator
+  "--",
+  "layouts/Geometry Dash.json",
 ]
 need_stdout = true
 allow_warnings = true
