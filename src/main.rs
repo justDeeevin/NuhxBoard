@@ -43,8 +43,11 @@
 //     Ok(())
 // }
 #![allow(unused)]
+mod config;
+mod style;
 use clap::Parser;
 use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
+use config::*;
 use iced::{
     mouse,
     widget::{
@@ -56,70 +59,6 @@ use iced::{
 };
 use serde::Deserialize;
 use std::{fs::File, io::prelude::*};
-
-#[derive(Deserialize, Default, Debug)]
-struct Config {
-    version: String,
-    width: u32,
-    height: u32,
-    elements: Vec<BoardElement>,
-}
-
-#[derive(Deserialize, Debug)]
-enum BoardElement {
-    KeyboardKey(KeyboardKeyDefinition),
-    MouseKey(MouseKeyDefinition),
-    MouseScroll(MouseScrollDefinition),
-    MouseSpeedIndicator(MouseSpeedIndicatorDefinition),
-}
-
-#[derive(Deserialize, Debug)]
-struct KeyboardKeyDefinition {
-    id: u32,
-    boundaries: Vec<SerializablePoint>,
-    text_position: SerializablePoint,
-    keycodes: Vec<u32>,
-    text: String,
-    shift_text: String,
-    change_on_caps: bool,
-}
-
-#[derive(Deserialize, Debug)]
-struct MouseKeyDefinition {
-    id: u32,
-    boundaries: Vec<SerializablePoint>,
-    text_position: SerializablePoint,
-    keycodes: Vec<u32>,
-    text: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct MouseScrollDefinition {
-    id: u32,
-    boundaries: Vec<SerializablePoint>,
-    text_position: SerializablePoint,
-    keycodes: Vec<u32>,
-    text: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct MouseSpeedIndicatorDefinition {
-    id: u32,
-    location: SerializablePoint,
-    radius: u32,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct SerializablePoint {
-    x: u32,
-    y: u32,
-}
-
-impl From<SerializablePoint> for Point {
-    fn from(point: SerializablePoint) -> Self {
-        Point::new(point.x as f32, point.y as f32)
-    }
-}
 
 struct NuhxBoard {
     config: Config,
