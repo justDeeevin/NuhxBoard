@@ -1,20 +1,20 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct Style {
-    #[serde(rename = "BackgrounColor")]
+    #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
     #[serde(rename = "BackgroundImageFileName")]
-    pub background_image_file_name: String,
+    pub background_image_file_name: Option<String>,
     #[serde(rename = "DefaultKeyStyle")]
     pub default_key_style: KeyStyle,
     #[serde(rename = "DefaultMouseIndicatorStyle")]
-    pub default_mouse_indicator_style: MouseSpeedIndicatorStyle,
+    pub default_mouse_indicator_style: Option<MouseSpeedIndicatorStyle>,
     #[serde(rename = "ElementStyles")]
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: u8,
@@ -24,7 +24,7 @@ pub struct NohRgb {
     pub blue: u8,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
@@ -32,7 +32,7 @@ pub struct KeyStyle {
     pub pressed: KeySubStyle,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct KeySubStyle {
     #[serde(rename = "Background")]
     pub background: NohRgb,
@@ -50,41 +50,17 @@ pub struct KeySubStyle {
     pub background_image_file_name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct Font {
     #[serde(rename = "FontFamily")]
     pub font_family: String,
     #[serde(rename = "Size")]
     pub size: f32,
     #[serde(rename = "Style")]
-    pub style: FontStyle,
+    pub style: u8,
 }
 
-#[derive(Deserialize, Debug)]
-pub enum FontStyle {
-    Regular,
-    Bold,
-    Italic,
-    Underline,
-    Strikeout,
-}
-
-impl TryFrom<u8> for FontStyle {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(FontStyle::Regular),
-            1 => Ok(FontStyle::Bold),
-            2 => Ok(FontStyle::Italic),
-            4 => Ok(FontStyle::Underline),
-            8 => Ok(FontStyle::Strikeout),
-            _ => Err(()),
-        }
-    }
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct MouseSpeedIndicatorStyle {
     #[serde(rename = "InnerColor")]
     pub inner_color: NohRgb,
@@ -94,7 +70,7 @@ pub struct MouseSpeedIndicatorStyle {
     pub outline_width: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct ElementStyle {
     #[serde(rename = "Key")]
     pub key: u32,
@@ -103,7 +79,14 @@ pub struct ElementStyle {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(tag = "__type")]
 pub enum ElementStyleUnion {
     KeyStyle(KeyStyle),
     MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
+}
+
+impl Default for ElementStyleUnion {
+    fn default() -> Self {
+        ElementStyleUnion::KeyStyle(KeyStyle::default())
+    }
 }
