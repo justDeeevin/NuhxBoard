@@ -1,4 +1,4 @@
-# NuhxBoard
+# ![The NuhxBoard Logo](NuhxBoard.png) NuhxBoard
 
 ## Contents
 
