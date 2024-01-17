@@ -45,7 +45,7 @@
 #![allow(unused)]
 use iced::{Application, Command};
 use serde::Deserialize;
-use std::{fs::File, io::prelude::*};
+use std::{fs::File, io::prelude::*, path::Path};
 
 #[derive(Deserialize, Default, Debug)]
 struct Config {
@@ -169,11 +169,15 @@ fn main() -> iced::Result {
         Ok(config) => config,
     };
     dbg!(&config);
+
+    let icon = iced::window::icon::from_file(Path::new("NuhxBoard.png")).unwrap();
+
     let flags = Flags { config };
     let settings = iced::Settings {
         window: iced::window::Settings {
             size: (flags.config.width, flags.config.height),
             resizable: true,
+            icon: Some(icon),
             ..iced::window::Settings::default()
         },
         flags,
