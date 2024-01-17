@@ -1,4 +1,4 @@
-# KBDisplay Improved
+# NuhxBoard
 
 ## Contents
 
