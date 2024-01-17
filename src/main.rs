@@ -154,7 +154,10 @@ fn main() -> iced::Result {
         panic!("No config file specified");
     }
     let mut config_file = match File::open(&args[1]) {
-        Err(why) => panic!("Error opening config file: {}", why),
+        Err(why) => panic!(
+            "Error opening config file (given path: {}): {}",
+            args[1], why
+        ),
         Ok(file) => file,
     };
     let mut config_string = String::new();
