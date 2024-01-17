@@ -1,4 +1,4 @@
-# ![The NuhxBoard Logo](NuhxBoard.png) NuhxBoard
+# <img src="NuhxBoard.png" alt="The NuhxBoard logo" width="34"> NuhxBoard
 
 ## Contents
 
