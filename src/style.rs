@@ -14,7 +14,7 @@ pub struct Style {
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: u8,
@@ -24,7 +24,7 @@ pub struct NohRgb {
     pub blue: u8,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
@@ -32,7 +32,7 @@ pub struct KeyStyle {
     pub pressed: KeySubStyle,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct KeySubStyle {
     #[serde(rename = "Background")]
     pub background: NohRgb,
@@ -50,7 +50,7 @@ pub struct KeySubStyle {
     pub background_image_file_name: String,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct Font {
     #[serde(rename = "FontFamily")]
     pub font_family: String,

@@ -49,20 +49,23 @@ use clap::Parser;
 use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
 use config::*;
 use iced::{
-    mouse,
+    keyboard, mouse,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Length, Point, Rectangle, Renderer, Theme,
+    Application, Color, Command, Event, Length, Point, Rectangle, Renderer, Subscription, Theme,
 };
 use serde::Deserialize;
 use std::{fs::File, io::prelude::*};
+use style::*;
 
 struct NuhxBoard {
     config: Config,
+    style: Style,
     canvas: Cache,
+    pressed_keys: Vec<u32>,
 }
 
 #[derive(Debug)]
@@ -74,6 +77,7 @@ enum Message {
 #[derive(Default)]
 struct Flags {
     config: Config,
+    style: Style,
 }
 
 impl Application for NuhxBoard {
@@ -86,7 +90,9 @@ impl Application for NuhxBoard {
         (
             Self {
                 config: flags.config,
+                style: flags.style,
                 canvas: Cache::default(),
+                pressed_keys: Vec::new(),
             },
             Command::none(),
         )
@@ -109,6 +115,25 @@ impl Application for NuhxBoard {
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
+    }
+
+    // fn subscription(&self) -> iced::Subscription<Self::Message> {
+    //     iced::subscription::events_with(|e, s| match e {
+    //         Event::Keyboard(ke) => match ke {
+    //             keyboard::Event::KeyPressed { key_code, .. } => Some(Message::KeyDown(key_code)),
+    //         },
+    //     })
+    // }
+
+    fn theme(&self) -> Self::Theme {
+        let red: f32 = Into::<f32>::into(self.style.background_color.red) / 255.0;
+        let green: f32 = Into::<f32>::into(self.style.background_color.green) / 255.0;
+        let blue: f32 = Into::<f32>::into(self.style.background_color.blue) / 255.0;
+        let palette: iced::theme::Palette = iced::theme::Palette {
+            background: Color::from_rgb(red, green, blue),
+            ..iced::theme::Palette::DARK
+        };
+        Theme::Custom(Box::new(iced::theme::Custom::new(palette)))
     }
 }
 
@@ -135,16 +160,100 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             }
                             builder.close()
                         });
-                        let fill_color = Rgb::from_hex_str("#000000").unwrap();
+
+                        let default_key_style = ElementStyle {
+                            key: def.id,
+                            value: style::ElementStyleUnion::KeyStyle(
+                                self.style.default_key_style.clone(),
+                            ),
+                        };
+                        let element_style = match &self
+                            .style
+                            .element_styles
+                            .iter()
+                            .find(|style| style.key == def.id)
+                            .unwrap_or(&default_key_style)
+                            .value
+                        {
+                            ElementStyleUnion::KeyStyle(style) => style,
+                            _ => unreachable!(),
+                        };
+
+                        let fill_color = match self.pressed_keys.contains(&def.id) {
+                            true => &element_style.pressed.background,
+                            false => &element_style.loose.background,
+                        };
                         frame.fill(
                             &key,
-                            Color::from_rgba(
-                                fill_color.get_red(),
-                                fill_color.get_green(),
-                                fill_color.get_blue(),
-                                fill_color.get_alpha(),
+                            Color::from_rgb(
+                                fill_color.red.into(),
+                                fill_color.green.into(),
+                                fill_color.blue.into(),
                             ),
                         );
+                        frame.fill_text(canvas::Text {
+                            content: def.text.clone(),
+                            position: def.text_position.clone().into(),
+                            color: match self.pressed_keys.contains(&def.id) {
+                                true => Color::from_rgb(
+                                    element_style.pressed.text.red.into(),
+                                    element_style.pressed.text.green.into(),
+                                    element_style.pressed.text.blue.into(),
+                                ),
+                                false => Color::from_rgb(
+                                    element_style.loose.text.red.into(),
+                                    element_style.loose.text.green.into(),
+                                    element_style.loose.text.blue.into(),
+                                ),
+                            },
+                            size: element_style.loose.font.size,
+                            font: iced::Font {
+                                family: iced::font::Family::Name(
+                                    match self.pressed_keys.contains(&def.id) {
+                                        true => {
+                                            element_style.pressed.font.font_family.clone().leak()
+                                        }
+                                        false => {
+                                            element_style.loose.font.font_family.clone().leak()
+                                        }
+                                    },
+                                ),
+                                weight: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if element_style.pressed.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if element_style.loose.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                },
+                                stretch: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if element_style.pressed.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if element_style.loose.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                },
+                                monospaced: false,
+                            },
+                            ..canvas::Text::default()
+                        })
                     }
                     _ => unimplemented!(),
                 }
@@ -183,9 +292,25 @@ fn main() -> iced::Result {
         Ok(config) => config,
     };
 
+    let mut style_file = match File::open(&args.style_path) {
+        Err(why) => panic!(
+            "Error opening style file (given path: {}): {}",
+            args.style_path, why
+        ),
+        Ok(file) => file,
+    };
+    let mut style_string = String::new();
+    if let Err(why) = style_file.read_to_string(&mut style_string) {
+        panic!("Error reading style file: {}", why)
+    };
+    let style: Style = match serde_json::from_str(&style_string) {
+        Err(why) => panic!("Error parsing style file: {}", why),
+        Ok(style) => style,
+    };
+
     let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png")).unwrap();
 
-    let flags = Flags { config };
+    let flags = Flags { config, style };
     let settings = iced::Settings {
         window: iced::window::Settings {
             size: (flags.config.width, flags.config.height),
