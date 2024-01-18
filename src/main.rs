@@ -117,14 +117,6 @@ impl Application for NuhxBoard {
             .into()
     }
 
-    // fn subscription(&self) -> iced::Subscription<Self::Message> {
-    //     iced::subscription::events_with(|e, s| match e {
-    //         Event::Keyboard(ke) => match ke {
-    //             keyboard::Event::KeyPressed { key_code, .. } => Some(Message::KeyDown(key_code)),
-    //         },
-    //     })
-    // }
-
     fn theme(&self) -> Self::Theme {
         let red: f32 = Into::<f32>::into(self.style.background_color.red) / 255.0;
         let green: f32 = Into::<f32>::into(self.style.background_color.green) / 255.0;
@@ -161,6 +153,12 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             builder.close()
                         });
 
+                        // TODO: Avoid creating a new ElementStyle to contain the default key style
+                        // We should end up with an element_style that only points to the app's
+                        // state such that we can be sure the data will last as long as the app.
+                        // Doing what we do now forces us to leak the font family string. Not
+                        // necessarily a problem, but there are far more elegant ways to handle
+                        // this data.
                         let default_key_style = ElementStyle {
                             key: def.id,
                             value: style::ElementStyleUnion::KeyStyle(
