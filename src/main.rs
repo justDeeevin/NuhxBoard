@@ -191,6 +191,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         );
                         frame.fill_text(canvas::Text {
                             content: def.text.clone(),
+                            // TODO: Figure out how to properly place text
                             position: def.text_position.clone().into(),
                             color: match self.pressed_keys.contains(&def.id) {
                                 true => Color::from_rgb(
