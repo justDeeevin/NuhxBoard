@@ -153,33 +153,26 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             builder.close()
                         });
 
-                        // TODO: Avoid creating a new ElementStyle to contain the default key style
-                        // We should end up with an element_style that only points to the app's
-                        // state such that we can be sure the data will last as long as the app.
-                        // Doing what we do now forces us to leak the font family string. Not
-                        // necessarily a problem, but there are far more elegant ways to handle
-                        // this data.
-                        let default_key_style = ElementStyle {
-                            key: def.id,
-                            value: style::ElementStyleUnion::KeyStyle(
-                                self.style.default_key_style.clone(),
-                            ),
-                        };
-                        let element_style = match &self
+                        let element_style = &self
                             .style
                             .element_styles
                             .iter()
-                            .find(|style| style.key == def.id)
-                            .unwrap_or(&default_key_style)
-                            .value
-                        {
-                            ElementStyleUnion::KeyStyle(style) => style,
-                            _ => unreachable!(),
-                        };
+                            .find(|style| style.key == def.id);
+
+                        let mut style: &KeyStyle;
+
+                        if let Some(s) = element_style {
+                            style = match &s.value {
+                                ElementStyleUnion::KeyStyle(i_s) => i_s,
+                                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
+                            };
+                        } else {
+                            style = &self.style.default_key_style;
+                        }
 
                         let fill_color = match self.pressed_keys.contains(&def.id) {
-                            true => &element_style.pressed.background,
-                            false => &element_style.loose.background,
+                            true => &style.pressed.background,
+                            false => &style.loose.background,
                         };
                         frame.fill(
                             &key,
@@ -195,38 +188,38 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             position: def.text_position.clone().into(),
                             color: match self.pressed_keys.contains(&def.id) {
                                 true => Color::from_rgb(
-                                    element_style.pressed.text.red.into(),
-                                    element_style.pressed.text.green.into(),
-                                    element_style.pressed.text.blue.into(),
+                                    style.pressed.text.red.into(),
+                                    style.pressed.text.green.into(),
+                                    style.pressed.text.blue.into(),
                                 ),
                                 false => Color::from_rgb(
-                                    element_style.loose.text.red.into(),
-                                    element_style.loose.text.green.into(),
-                                    element_style.loose.text.blue.into(),
+                                    style.loose.text.red.into(),
+                                    style.loose.text.green.into(),
+                                    style.loose.text.blue.into(),
                                 ),
                             },
-                            size: element_style.loose.font.size,
+                            size: style.loose.font.size,
                             font: iced::Font {
                                 family: iced::font::Family::Name(
                                     match self.pressed_keys.contains(&def.id) {
-                                        true => {
-                                            element_style.pressed.font.font_family.clone().leak()
-                                        }
-                                        false => {
-                                            element_style.loose.font.font_family.clone().leak()
-                                        }
+                                        // Leak is required because Name requires static lifetime
+                                        // as opposed to application lifetime :(
+                                        // I suppose they were just expecting you to pass in a
+                                        // literal here... damn you!!
+                                        true => style.pressed.font.font_family.clone().leak(),
+                                        false => style.loose.font.font_family.clone().leak(),
                                     },
                                 ),
                                 weight: match self.pressed_keys.contains(&def.id) {
                                     true => {
-                                        if element_style.pressed.font.style & 0b00000001 > 0 {
+                                        if style.pressed.font.style & 0b00000001 > 0 {
                                             iced::font::Weight::Bold
                                         } else {
                                             iced::font::Weight::Normal
                                         }
                                     }
                                     false => {
-                                        if element_style.loose.font.style & 0b00000001 > 0 {
+                                        if style.loose.font.style & 0b00000001 > 0 {
                                             iced::font::Weight::Bold
                                         } else {
                                             iced::font::Weight::Normal
@@ -235,14 +228,14 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 },
                                 stretch: match self.pressed_keys.contains(&def.id) {
                                     true => {
-                                        if element_style.pressed.font.style & 0b00000010 > 0 {
+                                        if style.pressed.font.style & 0b00000010 > 0 {
                                             iced::font::Stretch::Expanded
                                         } else {
                                             iced::font::Stretch::Normal
                                         }
                                     }
                                     false => {
-                                        if element_style.loose.font.style & 0b00000010 > 0 {
+                                        if style.loose.font.style & 0b00000010 > 0 {
                                             iced::font::Stretch::Expanded
                                         } else {
                                             iced::font::Stretch::Normal
