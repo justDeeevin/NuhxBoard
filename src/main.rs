@@ -247,7 +247,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             ..canvas::Text::default()
                         })
                     }
-                    _ => unimplemented!(),
+                    _ => todo!(),
                 }
             }
         });
