@@ -184,9 +184,9 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         frame.fill(
                             &key,
                             Color::from_rgb(
-                                fill_color.red.into(),
-                                fill_color.green.into(),
-                                fill_color.blue.into(),
+                                Into::<f32>::into(fill_color.red) / 255.0,
+                                Into::<f32>::into(fill_color.blue) / 255.0,
+                                Into::<f32>::into(fill_color.green) / 255.0,
                             ),
                         );
                         frame.fill_text(canvas::Text {
@@ -268,7 +268,7 @@ struct Args {
     config_path: String,
 
     #[arg(short, long)]
-    style_path: String,
+    style_path: Option<String>,
 }
 
 fn main() -> iced::Result {
@@ -290,24 +290,28 @@ fn main() -> iced::Result {
         Ok(config) => config,
     };
 
-    let mut style_file = match File::open(&args.style_path) {
-        Err(why) => panic!(
-            "Error opening style file (given path: {}): {}",
-            args.style_path, why
-        ),
-        Ok(file) => file,
-    };
-    let mut style_string = String::new();
-    if let Err(why) = style_file.read_to_string(&mut style_string) {
-        panic!("Error reading style file: {}", why)
-    };
-    let style: Style = match serde_json::from_str(&style_string) {
-        Err(why) => panic!("Error parsing style file: {}", why),
-        Ok(style) => style,
-    };
+    let mut style: Style;
+    if let Some(style_path) = &args.style_path {
+        let mut style_file = match File::open(style_path) {
+            Err(why) => panic!(
+                "Error opening style file (given path: {}): {}",
+                style_path, why
+            ),
+            Ok(file) => file,
+        };
+        let mut style_string = String::new();
+        if let Err(why) = style_file.read_to_string(&mut style_string) {
+            panic!("Error reading style file: {}", why)
+        };
+        style = match serde_json::from_str(&style_string) {
+            Err(why) => panic!("Error parsing style file: {}", why),
+            Ok(style) => style,
+        };
+    } else {
+        style = Style::default()
+    }
 
     let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png")).unwrap();
-
     let flags = Flags { config, style };
     let settings = iced::Settings {
         window: iced::window::Settings {
