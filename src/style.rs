@@ -24,6 +24,26 @@ pub struct NohRgb {
     pub blue: u8,
 }
 
+impl NohRgb {
+    pub const BLACK: NohRgb = NohRgb {
+        red: 0,
+        green: 0,
+        blue: 0,
+    };
+
+    pub const WHITE: NohRgb = NohRgb {
+        red: 255,
+        green: 255,
+        blue: 255,
+    };
+
+    pub const DEFAULT_GRAY: NohRgb = NohRgb {
+        red: 100,
+        green: 100,
+        blue: 100,
+    };
+}
+
 #[derive(Default, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
@@ -90,3 +110,45 @@ impl Default for ElementStyleUnion {
         ElementStyleUnion::KeyStyle(KeyStyle::default())
     }
 }
+
+const GLOBAL_DEFAULT: Style = Style {
+    background_color: NohRgb {
+        red: 0,
+        green: 0,
+        blue: 100,
+    },
+    background_image_file_name: None,
+    default_key_style: KeyStyle {
+        loose: KeySubStyle {
+            background: NohRgb::DEFAULT_GRAY,
+            text: NohRgb::BLACK,
+            outline: NohRgb::BLACK,
+            show_outline: false,
+            outline_width: 0,
+            font: Font {
+                font_family: "Consolas".into(),
+                size: 15.0,
+                style: 0,
+            },
+            background_image_file_name: "".into(),
+        },
+        pressed: KeySubStyle {
+            background: NohRgb::WHITE,
+            text: NohRgb::BLACK,
+            outline: NohRgb::BLACK,
+            show_outline: false,
+            outline_width: 0,
+            font: Font {
+                font_family: "Consolas".into(),
+                size: 15.0,
+                style: 0,
+            },
+            background_image_file_name: "".into(),
+        },
+    },
+    default_mouse_indicator_style: Some(MouseSpeedIndicatorStyle {
+        inner_color: NohRgb::DEFAULT_GRAY,
+        outer_color: NohRgb::DEFAULT_GRAY,
+        outline_width: 2,
+    }),
+};
