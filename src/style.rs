@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Style {
     #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
@@ -14,7 +14,7 @@ pub struct Style {
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Default, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: u8,
@@ -44,7 +44,7 @@ impl NohRgb {
     };
 }
 
-#[derive(Default, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
@@ -52,7 +52,7 @@ pub struct KeyStyle {
     pub pressed: KeySubStyle,
 }
 
-#[derive(Default, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct KeySubStyle {
     #[serde(rename = "Background")]
     pub background: NohRgb,
@@ -70,7 +70,7 @@ pub struct KeySubStyle {
     pub background_image_file_name: String,
 }
 
-#[derive(Default, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Font {
     #[serde(rename = "FontFamily")]
     pub font_family: String,
@@ -80,7 +80,7 @@ pub struct Font {
     pub style: u8,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct MouseSpeedIndicatorStyle {
     #[serde(rename = "InnerColor")]
     pub inner_color: NohRgb,
@@ -90,7 +90,7 @@ pub struct MouseSpeedIndicatorStyle {
     pub outline_width: u32,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct ElementStyle {
     #[serde(rename = "Key")]
     pub key: u32,
@@ -105,50 +105,49 @@ pub enum ElementStyleUnion {
     MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
 }
 
-impl Default for ElementStyleUnion {
+impl Default for Style {
     fn default() -> Self {
-        ElementStyleUnion::KeyStyle(KeyStyle::default())
+        Style {
+            background_color: NohRgb {
+                red: 0,
+                green: 0,
+                blue: 100,
+            },
+            background_image_file_name: None,
+            default_key_style: KeyStyle {
+                loose: KeySubStyle {
+                    background: NohRgb::DEFAULT_GRAY,
+                    text: NohRgb::BLACK,
+                    outline: NohRgb::BLACK,
+                    show_outline: false,
+                    outline_width: 0,
+                    font: Font {
+                        font_family: "Consolas".into(),
+                        size: 15.0,
+                        style: 0,
+                    },
+                    background_image_file_name: "".into(),
+                },
+                pressed: KeySubStyle {
+                    background: NohRgb::WHITE,
+                    text: NohRgb::BLACK,
+                    outline: NohRgb::BLACK,
+                    show_outline: false,
+                    outline_width: 0,
+                    font: Font {
+                        font_family: "Consolas".into(),
+                        size: 15.0,
+                        style: 0,
+                    },
+                    background_image_file_name: "".into(),
+                },
+            },
+            default_mouse_indicator_style: Some(MouseSpeedIndicatorStyle {
+                inner_color: NohRgb::DEFAULT_GRAY,
+                outer_color: NohRgb::DEFAULT_GRAY,
+                outline_width: 2,
+            }),
+            element_styles: vec![],
+        }
     }
 }
-
-const GLOBAL_DEFAULT: Style = Style {
-    background_color: NohRgb {
-        red: 0,
-        green: 0,
-        blue: 100,
-    },
-    background_image_file_name: None,
-    default_key_style: KeyStyle {
-        loose: KeySubStyle {
-            background: NohRgb::DEFAULT_GRAY,
-            text: NohRgb::BLACK,
-            outline: NohRgb::BLACK,
-            show_outline: false,
-            outline_width: 0,
-            font: Font {
-                font_family: "Consolas".into(),
-                size: 15.0,
-                style: 0,
-            },
-            background_image_file_name: "".into(),
-        },
-        pressed: KeySubStyle {
-            background: NohRgb::WHITE,
-            text: NohRgb::BLACK,
-            outline: NohRgb::BLACK,
-            show_outline: false,
-            outline_width: 0,
-            font: Font {
-                font_family: "Consolas".into(),
-                size: 15.0,
-                style: 0,
-            },
-            background_image_file_name: "".into(),
-        },
-    },
-    default_mouse_indicator_style: Some(MouseSpeedIndicatorStyle {
-        inner_color: NohRgb::DEFAULT_GRAY,
-        outer_color: NohRgb::DEFAULT_GRAY,
-        outline_width: 2,
-    }),
-};
