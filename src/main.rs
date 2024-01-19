@@ -66,6 +66,7 @@ struct NuhxBoard {
     style: Style,
     canvas: Cache,
     pressed_keys: Vec<u32>,
+    caps: bool,
 }
 
 #[derive(Debug)]
@@ -93,6 +94,7 @@ impl Application for NuhxBoard {
                 style: flags.style,
                 canvas: Cache::default(),
                 pressed_keys: Vec::new(),
+                caps: false,
             },
             Command::none(),
         )
@@ -183,8 +185,12 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             ),
                         );
                         frame.fill_text(canvas::Text {
-                            content: def.text.clone(),
-                            // TODO: Figure out how to properly place text
+                            content: match self.pressed_keys.contains(&def.id)
+                                || (self.caps && def.change_on_caps)
+                            {
+                                true => def.shift_text.clone(),
+                                false => def.text.clone(),
+                            },
                             position: def.text_position.clone().into(),
                             color: match self.pressed_keys.contains(&def.id) {
                                 true => Color::from_rgb(
@@ -242,8 +248,220 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                         }
                                     }
                                 },
-                                monospaced: false,
+                                monospaced: true,
                             },
+                            horizontal_alignment: iced::alignment::Horizontal::Center,
+                            vertical_alignment: iced::alignment::Vertical::Center,
+                            ..canvas::Text::default()
+                        })
+                    }
+                    BoardElement::MouseKey(def) => {
+                        let mut boundaries_iter = def.boundaries.iter();
+                        let key = Path::new(|builder| {
+                            builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
+                            for boundary in boundaries_iter {
+                                builder.line_to((*boundary).clone().into());
+                            }
+                            builder.close()
+                        });
+
+                        let element_style = &self
+                            .style
+                            .element_styles
+                            .iter()
+                            .find(|style| style.key == def.id);
+
+                        let mut style: &KeyStyle;
+
+                        if let Some(s) = element_style {
+                            style = match &s.value {
+                                ElementStyleUnion::KeyStyle(i_s) => i_s,
+                                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
+                            };
+                        } else {
+                            style = &self.style.default_key_style;
+                        }
+
+                        let fill_color = match self.pressed_keys.contains(&def.id) {
+                            true => &style.pressed.background,
+                            false => &style.loose.background,
+                        };
+                        frame.fill(
+                            &key,
+                            Color::from_rgb(
+                                Into::<f32>::into(fill_color.red) / 255.0,
+                                Into::<f32>::into(fill_color.blue) / 255.0,
+                                Into::<f32>::into(fill_color.green) / 255.0,
+                            ),
+                        );
+                        frame.fill_text(canvas::Text {
+                            content: def.text.clone(),
+                            position: def.text_position.clone().into(),
+                            color: match self.pressed_keys.contains(&def.id) {
+                                true => Color::from_rgb(
+                                    style.pressed.text.red.into(),
+                                    style.pressed.text.green.into(),
+                                    style.pressed.text.blue.into(),
+                                ),
+                                false => Color::from_rgb(
+                                    style.loose.text.red.into(),
+                                    style.loose.text.green.into(),
+                                    style.loose.text.blue.into(),
+                                ),
+                            },
+                            size: style.loose.font.size,
+                            font: iced::Font {
+                                family: iced::font::Family::Name(
+                                    match self.pressed_keys.contains(&def.id) {
+                                        // Leak is required because Name requires static lifetime
+                                        // as opposed to application lifetime :(
+                                        // I suppose they were just expecting you to pass in a
+                                        // literal here... damn you!!
+                                        true => style.pressed.font.font_family.clone().leak(),
+                                        false => style.loose.font.font_family.clone().leak(),
+                                    },
+                                ),
+                                weight: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if style.pressed.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if style.loose.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                },
+                                stretch: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if style.pressed.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if style.loose.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                },
+                                monospaced: true,
+                            },
+                            horizontal_alignment: iced::alignment::Horizontal::Center,
+                            vertical_alignment: iced::alignment::Vertical::Center,
+                            ..canvas::Text::default()
+                        })
+                    }
+                    BoardElement::MouseScroll(def) => {
+                        let mut boundaries_iter = def.boundaries.iter();
+                        let key = Path::new(|builder| {
+                            builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
+                            for boundary in boundaries_iter {
+                                builder.line_to((*boundary).clone().into());
+                            }
+                            builder.close()
+                        });
+
+                        let element_style = &self
+                            .style
+                            .element_styles
+                            .iter()
+                            .find(|style| style.key == def.id);
+
+                        let mut style: &KeyStyle;
+
+                        if let Some(s) = element_style {
+                            style = match &s.value {
+                                ElementStyleUnion::KeyStyle(i_s) => i_s,
+                                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
+                            };
+                        } else {
+                            style = &self.style.default_key_style;
+                        }
+
+                        let fill_color = match self.pressed_keys.contains(&def.id) {
+                            true => &style.pressed.background,
+                            false => &style.loose.background,
+                        };
+                        frame.fill(
+                            &key,
+                            Color::from_rgb(
+                                Into::<f32>::into(fill_color.red) / 255.0,
+                                Into::<f32>::into(fill_color.blue) / 255.0,
+                                Into::<f32>::into(fill_color.green) / 255.0,
+                            ),
+                        );
+                        frame.fill_text(canvas::Text {
+                            content: def.text.clone(),
+                            position: def.text_position.clone().into(),
+                            color: match self.pressed_keys.contains(&def.id) {
+                                true => Color::from_rgb(
+                                    style.pressed.text.red.into(),
+                                    style.pressed.text.green.into(),
+                                    style.pressed.text.blue.into(),
+                                ),
+                                false => Color::from_rgb(
+                                    style.loose.text.red.into(),
+                                    style.loose.text.green.into(),
+                                    style.loose.text.blue.into(),
+                                ),
+                            },
+                            size: style.loose.font.size,
+                            font: iced::Font {
+                                family: iced::font::Family::Name(
+                                    match self.pressed_keys.contains(&def.id) {
+                                        // Leak is required because Name requires static lifetime
+                                        // as opposed to application lifetime :(
+                                        // I suppose they were just expecting you to pass in a
+                                        // literal here... damn you!!
+                                        true => style.pressed.font.font_family.clone().leak(),
+                                        false => style.loose.font.font_family.clone().leak(),
+                                    },
+                                ),
+                                weight: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if style.pressed.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if style.loose.font.style & 0b00000001 > 0 {
+                                            iced::font::Weight::Bold
+                                        } else {
+                                            iced::font::Weight::Normal
+                                        }
+                                    }
+                                },
+                                stretch: match self.pressed_keys.contains(&def.id) {
+                                    true => {
+                                        if style.pressed.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                    false => {
+                                        if style.loose.font.style & 0b00000010 > 0 {
+                                            iced::font::Stretch::Expanded
+                                        } else {
+                                            iced::font::Stretch::Normal
+                                        }
+                                    }
+                                },
+                                monospaced: true,
+                            },
+                            horizontal_alignment: iced::alignment::Horizontal::Center,
+                            vertical_alignment: iced::alignment::Vertical::Center,
                             ..canvas::Text::default()
                         })
                     }
