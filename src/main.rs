@@ -248,7 +248,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                         }
                                     }
                                 },
-                                monospaced: true,
+                                monospaced: false,
                             },
                             horizontal_alignment: iced::alignment::Horizontal::Center,
                             vertical_alignment: iced::alignment::Vertical::Center,
@@ -353,7 +353,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                         }
                                     }
                                 },
-                                monospaced: true,
+                                monospaced: false,
                             },
                             horizontal_alignment: iced::alignment::Horizontal::Center,
                             vertical_alignment: iced::alignment::Vertical::Center,
@@ -458,7 +458,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                         }
                                     }
                                 },
-                                monospaced: true,
+                                monospaced: false,
                             },
                             horizontal_alignment: iced::alignment::Horizontal::Center,
                             vertical_alignment: iced::alignment::Vertical::Center,
