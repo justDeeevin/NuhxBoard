@@ -81,13 +81,13 @@ pub struct MouseSpeedIndicatorDefinition {
 #[derive(Deserialize, Debug, Clone)]
 pub struct SerializablePoint {
     #[serde(rename = "X")]
-    pub x: u32,
+    pub x: f32,
     #[serde(rename = "Y")]
-    pub y: u32,
+    pub y: f32,
 }
 
 impl From<SerializablePoint> for Point {
     fn from(point: SerializablePoint) -> Self {
-        Point::new(point.x as f32, point.y as f32)
+        Point::new(point.x, point.y)
     }
 }

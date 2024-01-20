@@ -60,7 +60,8 @@ command = [
   "--color",
   "always",
   "--",
-  "layouts/Geometry Dash.json",
+  "-c",
+  "layouts/us_intl_basicmousemove.json",
 ]
 need_stdout = true
 allow_warnings = true

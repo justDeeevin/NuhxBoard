@@ -17,30 +17,30 @@ pub struct Style {
 #[derive(Deserialize, Debug, Clone)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
-    pub red: u8,
+    pub red: f32,
     #[serde(rename = "Green")]
-    pub green: u8,
+    pub green: f32,
     #[serde(rename = "Blue")]
-    pub blue: u8,
+    pub blue: f32,
 }
 
 impl NohRgb {
     pub const BLACK: NohRgb = NohRgb {
-        red: 0,
-        green: 0,
-        blue: 0,
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
     };
 
     pub const WHITE: NohRgb = NohRgb {
-        red: 255,
-        green: 255,
-        blue: 255,
+        red: 255.0,
+        green: 255.0,
+        blue: 255.0,
     };
 
     pub const DEFAULT_GRAY: NohRgb = NohRgb {
-        red: 100,
-        green: 100,
-        blue: 100,
+        red: 100.0,
+        green: 100.0,
+        blue: 100.0,
     };
 }
 
@@ -87,7 +87,7 @@ pub struct MouseSpeedIndicatorStyle {
     #[serde(rename = "OuterColor")]
     pub outer_color: NohRgb,
     #[serde(rename = "OutlineWidth")]
-    pub outline_width: u32,
+    pub outline_width: f32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -109,9 +109,9 @@ impl Default for Style {
     fn default() -> Self {
         Style {
             background_color: NohRgb {
-                red: 0,
-                green: 0,
-                blue: 100,
+                red: 0.0,
+                green: 0.0,
+                blue: 100.0,
             },
             background_image_file_name: None,
             default_key_style: KeyStyle {
@@ -145,7 +145,7 @@ impl Default for Style {
             default_mouse_indicator_style: Some(MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
                 outer_color: NohRgb::DEFAULT_GRAY,
-                outline_width: 2,
+                outline_width: 2.0,
             }),
             element_styles: vec![],
         }
