@@ -66,8 +66,40 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        if message != Message::Dummy {
-            dbg!(&message);
+        match message {
+            Message::KeyPress { keycode, caps } => {
+                if !self.pressed_keys.contains(&keycode) {
+                    self.pressed_keys.push(keycode);
+                }
+                if self.caps != caps {
+                    self.caps = caps;
+                }
+            }
+            Message::KeyRelease { keycode, caps } => {
+                if self.pressed_keys.contains(&keycode) {
+                    self.pressed_keys.retain(|&x| x != keycode);
+                }
+                if self.caps != caps {
+                    self.caps = caps;
+                }
+            }
+            Message::MouseButtonPress(keycode) => {
+                if !self.pressed_keys.contains(&keycode) {
+                    self.pressed_keys.push(keycode);
+                }
+            }
+            Message::MouseButtonRelease(keycode) => {
+                if self.pressed_keys.contains(&keycode) {
+                    self.pressed_keys.retain(|&x| x != keycode);
+                }
+            }
+            _ => {}
+        }
+        match message {
+            Message::Dummy | Message::Motion { .. } => {}
+            _ => {
+                self.canvas.clear();
+            }
         }
         Command::none()
     }
@@ -259,7 +291,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             ),
                         );
                         frame.fill_text(canvas::Text {
-                            content: match self.pressed_keys.contains(&def.id)
+                            content: match self.pressed_keys.contains(&50)
                                 || (self.caps && def.change_on_caps)
                             {
                                 true => def.shift_text.clone(),
@@ -336,11 +368,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         draw_key!(self, def, frame);
                     }
                     BoardElement::MouseSpeedIndicator(def) => {
-                        let inner = Path::rectangle(
-                            Point::new(def.location.x - 5.0, def.location.y - 5.0),
-                            iced::Size::new(10.0, 10.0),
-                        );
-
+                        let inner = Path::circle(def.location.clone().into(), 10.0);
                         let outer = Path::circle(def.location.clone().into(), def.radius as f32);
 
                         let element_style = &self
@@ -412,7 +440,7 @@ struct Args {
     style_path: Option<String>,
 }
 
-fn main() -> iced::Result {
+fn main() {
     let args = Args::parse();
 
     let mut config_file = match File::open(&args.config_path) {
@@ -464,5 +492,7 @@ fn main() -> iced::Result {
         flags,
         ..iced::Settings::default()
     };
-    NuhxBoard::run(settings)
+    NuhxBoard::run(settings);
+
+    //TODO: kill xinput on window closure
 }

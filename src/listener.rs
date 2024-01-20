@@ -138,6 +138,10 @@ impl futures::stream::Stream for InputStream {
                 for _ in 0..5 {
                     reader.read_line(&mut line).unwrap();
                 }
+                let scroll_check_re = Regex::new(r"3: -?[0-9]+").unwrap();
+                if scroll_check_re.captures(&line).is_some() {
+                    return Poll::Ready(Some(crate::Message::Dummy));
+                }
                 let x_vel_re = Regex::new(r"0: (-?[0-9]+)").unwrap();
                 let x_vel = x_vel_re
                     .captures(&line)
