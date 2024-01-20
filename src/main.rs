@@ -26,13 +26,14 @@ struct NuhxBoard {
     caps: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Message {
     KeyPress { keycode: u32, caps: bool },
     KeyRelease { keycode: u32, caps: bool },
     MouseButtonPress(u32),
     MouseButtonRelease(u32),
     Motion { x: f32, y: f32 },
+    Dummy,
 }
 
 #[derive(Default)]
@@ -65,6 +66,9 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        if message != Message::Dummy {
+            dbg!(&message);
+        }
         Command::none()
     }
 
@@ -88,6 +92,10 @@ impl Application for NuhxBoard {
             ..iced::theme::Palette::DARK
         };
         Theme::Custom(Box::new(iced::theme::Custom::new(palette)))
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        Subscription::from_recipe(listener::InputSubscription)
     }
 }
 

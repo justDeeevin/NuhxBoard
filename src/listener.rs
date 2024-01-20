@@ -56,7 +56,7 @@ impl futures::stream::Stream for InputStream {
         let mut reader = &mut self.get_mut().reader;
         reader.read_line(&mut line).unwrap();
         if line.is_empty() {
-            return Poll::Pending;
+            return Poll::Ready(Some(crate::Message::Dummy));
         }
         let event_type_re = Regex::new(r"EVENT type ([0-9]+) ").unwrap();
         let event_type = match event_type_re.captures(&line) {
@@ -66,9 +66,9 @@ impl futures::stream::Stream for InputStream {
                 "15" => InputEvent::MouseButtonPress,
                 "16" => InputEvent::MouseButtonRelease,
                 "17" => InputEvent::Motion,
-                _ => return Poll::Pending,
+                _ => return Poll::Ready(Some(crate::Message::Dummy)),
             },
-            None => return Poll::Pending,
+            None => return Poll::Ready(Some(crate::Message::Dummy)),
         };
         match event_type {
             InputEvent::KeyPress | InputEvent::KeyRelease => {
