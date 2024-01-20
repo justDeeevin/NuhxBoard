@@ -494,5 +494,8 @@ fn main() {
     };
     NuhxBoard::run(settings);
 
-    //TODO: kill xinput on window closure
+    std::process::Command::new("killall")
+        .arg("xinput")
+        .spawn()
+        .unwrap();
 }
