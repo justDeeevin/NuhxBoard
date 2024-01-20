@@ -159,7 +159,18 @@ macro_rules! draw_key {
             style = &$self.style.default_key_style;
         }
 
-        let fill_color = match $self.pressed_keys.contains(&$def.id) {
+        let mut pressed = false;
+
+        for keycode in &$def.keycodes {
+            if $self.pressed_keys.contains(keycode) {
+                pressed = true;
+                break;
+            } else {
+                pressed = false;
+            }
+        }
+
+        let fill_color = match pressed {
             true => &style.pressed.background,
             false => &style.loose.background,
         };
@@ -174,7 +185,7 @@ macro_rules! draw_key {
         $frame.fill_text(canvas::Text {
             content: $def.text.clone(),
             position: $def.text_position.clone().into(),
-            color: match $self.pressed_keys.contains(&$def.id) {
+            color: match pressed {
                 true => Color::from_rgb(
                     style.pressed.text.red,
                     style.pressed.text.green,
@@ -188,7 +199,7 @@ macro_rules! draw_key {
             },
             size: style.loose.font.size,
             font: iced::Font {
-                family: iced::font::Family::Name(match $self.pressed_keys.contains(&$def.id) {
+                family: iced::font::Family::Name(match pressed {
                     // Leak is required because Name requires static lifetime
                     // as opposed to application lifetime :(
                     // I suppose they were just expecting you to pass in a
@@ -196,7 +207,7 @@ macro_rules! draw_key {
                     true => style.pressed.font.font_family.clone().leak(),
                     false => style.loose.font.font_family.clone().leak(),
                 }),
-                weight: match $self.pressed_keys.contains(&$def.id) {
+                weight: match pressed {
                     true => {
                         if style.pressed.font.style & 1 != 0 {
                             iced::font::Weight::Bold
@@ -212,7 +223,7 @@ macro_rules! draw_key {
                         }
                     }
                 },
-                stretch: match $self.pressed_keys.contains(&$def.id) {
+                stretch: match pressed {
                     true => {
                         if style.pressed.font.style & 0b10 != 0 {
                             iced::font::Stretch::Expanded
@@ -278,7 +289,18 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             style = &self.style.default_key_style;
                         }
 
-                        let fill_color = match self.pressed_keys.contains(&def.id) {
+                        let mut pressed = false;
+
+                        for keycode in &def.keycodes {
+                            if self.pressed_keys.contains(keycode) {
+                                pressed = true;
+                                break;
+                            } else {
+                                pressed = false;
+                            }
+                        }
+
+                        let fill_color = match pressed {
                             true => &style.pressed.background,
                             false => &style.loose.background,
                         };
@@ -298,7 +320,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 false => def.text.clone(),
                             },
                             position: def.text_position.clone().into(),
-                            color: match self.pressed_keys.contains(&def.id) {
+                            color: match pressed {
                                 true => Color::from_rgb(
                                     style.pressed.text.red,
                                     style.pressed.text.green,
@@ -312,17 +334,15 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             },
                             size: style.loose.font.size,
                             font: iced::Font {
-                                family: iced::font::Family::Name(
-                                    match self.pressed_keys.contains(&def.id) {
-                                        // Leak is required because Name requires static lifetime
-                                        // as opposed to application lifetime :(
-                                        // I suppose they were just expecting you to pass in a
-                                        // literal here... damn you!!
-                                        true => style.pressed.font.font_family.clone().leak(),
-                                        false => style.loose.font.font_family.clone().leak(),
-                                    },
-                                ),
-                                weight: match self.pressed_keys.contains(&def.id) {
+                                family: iced::font::Family::Name(match pressed {
+                                    // Leak is required because Name requires static lifetime
+                                    // as opposed to application lifetime :(
+                                    // I suppose they were just expecting you to pass in a
+                                    // literal here... damn you!!
+                                    true => style.pressed.font.font_family.clone().leak(),
+                                    false => style.loose.font.font_family.clone().leak(),
+                                }),
+                                weight: match pressed {
                                     true => {
                                         if style.pressed.font.style & 1 != 0 {
                                             iced::font::Weight::Bold
@@ -338,7 +358,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                         }
                                     }
                                 },
-                                stretch: match self.pressed_keys.contains(&def.id) {
+                                stretch: match pressed {
                                     true => {
                                         if style.pressed.font.style & 0b10 != 0 {
                                             iced::font::Stretch::Expanded
