@@ -33,7 +33,7 @@ impl Recipe for InputSubscription {
     }
 }
 
-pub struct InputStream {
+struct InputStream {
     reader: io::BufReader<std::process::ChildStdout>,
 }
 
