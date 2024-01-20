@@ -1658,6 +1658,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "colors-transform",
+ "futures",
  "iced",
  "regex",
  "serde",

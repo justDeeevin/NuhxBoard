@@ -1,47 +1,3 @@
-// use regex::Regex;
-// use std::io::{self, BufRead};
-// use std::process::Command;
-//
-// fn main() -> io::Result<()> {
-//     let mut child = Command::new("xinput")
-//         .arg("test-xi2")
-//         .arg("--root")
-//         .stdout(std::process::Stdio::piped())
-//         .spawn()?;
-//
-//     let reader = io::BufReader::new(child.stdout.take().unwrap());
-//
-//     let mut key_down = false;
-//     let mut key_up = false;
-//
-//     for line in reader.lines() {
-//         let line = line?;
-//
-//         if line.contains("EVENT type 2") {
-//             key_down = true;
-//         } else if line.contains("EVENT type 3") {
-//             key_up = true;
-//         } else if line.contains("detail:") {
-//             let re = Regex::new(r"detail:\s*(\d+)").unwrap();
-//
-//             if key_down {
-//                 let captures = re.captures(&line).unwrap();
-//                 let keycode: u32 = captures.get(1).unwrap().as_str().parse().unwrap();
-//                 println!("Key down: {}", keycode)
-//             }
-//             if key_up {
-//                 let captures = re.captures(&line).unwrap();
-//                 let keycode: u32 = captures.get(1).unwrap().as_str().parse().unwrap();
-//                 println!("Key up: {}", keycode)
-//             }
-//
-//             key_down = false;
-//             key_up = false;
-//         }
-//     }
-//
-//     Ok(())
-// }
 #![allow(unused)]
 mod config;
 mod listener;
@@ -72,8 +28,11 @@ struct NuhxBoard {
 
 #[derive(Debug)]
 pub enum Message {
-    KeyDown(u32),
-    KeyUp(u32),
+    KeyPress { keycode: u32, caps: bool },
+    KeyRelease { keycode: u32, caps: bool },
+    MouseButtonPress(u32),
+    MouseButtonRelease(u32),
+    Motion { x: f32, y: f32 },
 }
 
 #[derive(Default)]
