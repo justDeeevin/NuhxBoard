@@ -44,6 +44,7 @@
 // }
 #![allow(unused)]
 mod config;
+mod listener;
 mod style;
 use clap::Parser;
 use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
@@ -70,7 +71,7 @@ struct NuhxBoard {
 }
 
 #[derive(Debug)]
-enum Message {
+pub enum Message {
     KeyDown(u32),
     KeyUp(u32),
 }
@@ -198,14 +199,14 @@ macro_rules! draw_key {
                 }),
                 weight: match $self.pressed_keys.contains(&$def.id) {
                     true => {
-                        if style.pressed.font.style & 0b00000001 > 0 {
+                        if style.pressed.font.style & 1 != 0 {
                             iced::font::Weight::Bold
                         } else {
                             iced::font::Weight::Normal
                         }
                     }
                     false => {
-                        if style.loose.font.style & 0b00000001 > 0 {
+                        if style.loose.font.style & 1 != 0 {
                             iced::font::Weight::Bold
                         } else {
                             iced::font::Weight::Normal
@@ -214,14 +215,14 @@ macro_rules! draw_key {
                 },
                 stretch: match $self.pressed_keys.contains(&$def.id) {
                     true => {
-                        if style.pressed.font.style & 0b00000010 > 0 {
+                        if style.pressed.font.style & 0b10 != 0 {
                             iced::font::Stretch::Expanded
                         } else {
                             iced::font::Stretch::Normal
                         }
                     }
                     false => {
-                        if style.loose.font.style & 0b00000010 > 0 {
+                        if style.loose.font.style & 0b10 != 0 {
                             iced::font::Stretch::Expanded
                         } else {
                             iced::font::Stretch::Normal
@@ -324,14 +325,14 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 ),
                                 weight: match self.pressed_keys.contains(&def.id) {
                                     true => {
-                                        if style.pressed.font.style & 0b00000001 > 0 {
+                                        if style.pressed.font.style & 1 != 0 {
                                             iced::font::Weight::Bold
                                         } else {
                                             iced::font::Weight::Normal
                                         }
                                     }
                                     false => {
-                                        if style.loose.font.style & 0b00000001 > 0 {
+                                        if style.loose.font.style & 1 != 0 {
                                             iced::font::Weight::Bold
                                         } else {
                                             iced::font::Weight::Normal
@@ -340,14 +341,14 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 },
                                 stretch: match self.pressed_keys.contains(&def.id) {
                                     true => {
-                                        if style.pressed.font.style & 0b00000010 > 0 {
+                                        if style.pressed.font.style & 0b10 != 0 {
                                             iced::font::Stretch::Expanded
                                         } else {
                                             iced::font::Stretch::Normal
                                         }
                                     }
                                     false => {
-                                        if style.loose.font.style & 0b00000010 > 0 {
+                                        if style.loose.font.style & 0b10 != 0 {
                                             iced::font::Stretch::Expanded
                                         } else {
                                             iced::font::Stretch::Normal
