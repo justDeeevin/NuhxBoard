@@ -88,7 +88,7 @@ impl Application for NuhxBoard {
                 // delay.
                 if keycode == 4 || keycode == 5 {
                     return Command::perform(
-                        tokio::time::sleep(std::time::Duration::from_millis(100)),
+                        async_std::task::sleep(std::time::Duration::from_millis(100)),
                         move |_| Message::MouseButtonRelease(keycode),
                     );
                 }
@@ -534,9 +534,4 @@ fn main() {
         ..iced::Settings::default()
     };
     NuhxBoard::run(settings).unwrap();
-
-    std::process::Command::new("killall")
-        .arg("xinput")
-        .spawn()
-        .unwrap();
 }
