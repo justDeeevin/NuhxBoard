@@ -534,4 +534,9 @@ fn main() {
         ..iced::Settings::default()
     };
     NuhxBoard::run(settings).unwrap();
+
+    std::process::Command::new("killall")
+        .arg("xinput")
+        .spawn()
+        .unwrap();
 }
