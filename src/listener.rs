@@ -19,7 +19,7 @@ impl Recipe for InputSubscription {
 
     fn stream(
         self: Box<Self>,
-        input: iced::advanced::subscription::EventStream,
+        _input: iced::advanced::subscription::EventStream,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let mut child = Command::new("xinput")
             .arg("test-xi2")
@@ -53,7 +53,7 @@ impl futures::stream::Stream for InputStream {
         _cx: &mut std::task::Context<'_>,
     ) -> Poll<Option<Self::Item>> {
         let mut line = String::new();
-        let mut reader = &mut self.get_mut().reader;
+        let reader = &mut self.get_mut().reader;
         reader.read_line(&mut line).unwrap();
         if line.is_empty() {
             return Poll::Ready(Some(crate::Message::Dummy));
@@ -88,7 +88,7 @@ impl futures::stream::Stream for InputStream {
                 for _ in 0..5 {
                     reader.read_line(&mut line).unwrap();
                 }
-                let modifiers_re = Regex::new(r"modifiers: locked 0x([a-f0-9]+)").unwrap();
+                let modifiers_re = Regex::new(r"modifiers: locked 0x?([a-f0-9]+)").unwrap();
                 let modifiers = u8::from_str_radix(
                     modifiers_re
                         .captures(&line)
@@ -129,7 +129,12 @@ impl futures::stream::Stream for InputStream {
                         Poll::Ready(Some(crate::Message::MouseButtonPress(button_code)))
                     }
                     InputEvent::MouseButtonRelease => {
-                        Poll::Ready(Some(crate::Message::MouseButtonRelease(button_code)))
+                        // See main.rs:36
+                        if button_code == 4 || button_code == 5 {
+                            Poll::Ready(Some(crate::Message::Dummy))
+                        } else {
+                            Poll::Ready(Some(crate::Message::MouseButtonRelease(button_code)))
+                        }
                     }
                     _ => unreachable!(),
                 }

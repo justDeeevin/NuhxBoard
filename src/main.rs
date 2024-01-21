@@ -1,20 +1,19 @@
-#![allow(unused)]
+mod code_convert;
 mod config;
 mod listener;
 mod style;
 use clap::Parser;
-use colors_transform::{AlphaColor, Color as ColorTrait, Rgb};
+use code_convert::code_convert;
 use config::*;
 use iced::{
-    keyboard, mouse,
+    mouse,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Event, Length, Point, Rectangle, Renderer, Subscription, Theme,
+    Application, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
-use serde::Deserialize;
 use std::{fs::File, io::prelude::*};
 use style::*;
 
@@ -84,6 +83,15 @@ impl Application for NuhxBoard {
                 }
             }
             Message::MouseButtonPress(keycode) => {
+                // Scroll up and down release way too early to even be displayed, so instead of
+                // unhighlighting them when xinput sends the release, we unhighlight them on a
+                // delay.
+                if keycode == 4 || keycode == 5 {
+                    return Command::perform(
+                        tokio::time::sleep(std::time::Duration::from_millis(100)),
+                        move |_| Message::MouseButtonRelease(keycode),
+                    );
+                }
                 if !self.pressed_keys.contains(&keycode) {
                     self.pressed_keys.push(keycode);
                 }
@@ -148,7 +156,7 @@ macro_rules! draw_key {
             .iter()
             .find(|style| style.key == $def.id);
 
-        let mut style: &KeyStyle;
+        let style: &KeyStyle;
 
         if let Some(s) = element_style {
             style = match &s.value {
@@ -162,7 +170,13 @@ macro_rules! draw_key {
         let mut pressed = false;
 
         for keycode in &$def.keycodes {
-            if $self.pressed_keys.contains(keycode) {
+            if $self
+                .pressed_keys
+                .iter()
+                .map(|key| code_convert(*key))
+                .collect::<Vec<u32>>()
+                .contains(keycode)
+            {
                 pressed = true;
                 break;
             } else {
@@ -278,7 +292,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             .iter()
                             .find(|style| style.key == def.id);
 
-                        let mut style: &KeyStyle;
+                        let style: &KeyStyle;
 
                         if let Some(s) = element_style {
                             style = match &s.value {
@@ -292,7 +306,13 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         let mut pressed = false;
 
                         for keycode in &def.keycodes {
-                            if self.pressed_keys.contains(keycode) {
+                            if self
+                                .pressed_keys
+                                .iter()
+                                .map(|key| code_convert(*key))
+                                .collect::<Vec<u32>>()
+                                .contains(keycode)
+                            {
                                 pressed = true;
                                 break;
                             } else {
@@ -314,6 +334,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         );
                         frame.fill_text(canvas::Text {
                             content: match self.pressed_keys.contains(&50)
+                                || self.pressed_keys.contains(&62)
                                 || (self.caps && def.change_on_caps)
                             {
                                 true => def.shift_text.clone(),
@@ -397,7 +418,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             .iter()
                             .find(|style| style.key == def.id);
 
-                        let mut style: &MouseSpeedIndicatorStyle;
+                        let style: &MouseSpeedIndicatorStyle;
 
                         let global_default_style =
                             Style::default().default_mouse_indicator_style.unwrap();
@@ -479,7 +500,7 @@ fn main() {
         Ok(config) => config,
     };
 
-    let mut style: Style;
+    let style: Style;
     if let Some(style_path) = &args.style_path {
         let mut style_file = match File::open(style_path) {
             Err(why) => panic!(
@@ -512,7 +533,7 @@ fn main() {
         flags,
         ..iced::Settings::default()
     };
-    NuhxBoard::run(settings);
+    NuhxBoard::run(settings).unwrap();
 
     std::process::Command::new("killall")
         .arg("xinput")

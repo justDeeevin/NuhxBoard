@@ -61,7 +61,7 @@ command = [
   "always",
   "--",
   "-c",
-  "layouts/us_intl_basicmousemove.json",
+  "layouts/Quake.json",
 ]
 need_stdout = true
 allow_warnings = true
