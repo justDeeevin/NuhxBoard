@@ -3,7 +3,6 @@
 ## Contents
 
 1. [Goals](#goals)
-2. [Limitations](#limitations)
 
 ## Goals
 
