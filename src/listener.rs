@@ -126,15 +126,20 @@ impl futures::stream::Stream for InputStream {
 
                 match event_type {
                     InputEvent::MouseButtonPress => {
+                        if button_code == 4 || button_code == 5 {
+                            dbg!();
+                            return Poll::Ready(Some(crate::Message::ScrollButtonPress(
+                                button_code - 4,
+                            )));
+                        }
                         Poll::Ready(Some(crate::Message::MouseButtonPress(button_code)))
                     }
                     InputEvent::MouseButtonRelease => {
                         // See main.rs:36
                         if button_code == 4 || button_code == 5 {
-                            Poll::Ready(Some(crate::Message::Dummy))
-                        } else {
-                            Poll::Ready(Some(crate::Message::MouseButtonRelease(button_code)))
+                            return Poll::Ready(Some(crate::Message::Dummy));
                         }
+                        Poll::Ready(Some(crate::Message::MouseButtonRelease(button_code)))
                     }
                     _ => unreachable!(),
                 }

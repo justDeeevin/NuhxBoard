@@ -22,7 +22,10 @@ struct NuhxBoard {
     style: Style,
     canvas: Cache,
     pressed_keys: Vec<u32>,
+    pressed_mouse_buttons: Vec<u32>,
+    pressed_scroll_buttons: Vec<u32>,
     caps: bool,
+    queued_scrolls: u32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -31,6 +34,8 @@ pub enum Message {
     KeyRelease { keycode: u32, caps: bool },
     MouseButtonPress(u32),
     MouseButtonRelease(u32),
+    ScrollButtonPress(u32),
+    ScrollButtonRelease(u32),
     Motion { x: f32, y: f32 },
     Dummy,
 }
@@ -54,7 +59,10 @@ impl Application for NuhxBoard {
                 style: flags.style,
                 canvas: Cache::default(),
                 pressed_keys: Vec::new(),
+                pressed_mouse_buttons: Vec::new(),
+                pressed_scroll_buttons: Vec::new(),
                 caps: false,
+                queued_scrolls: 0,
             },
             Command::none(),
         )
@@ -83,22 +91,35 @@ impl Application for NuhxBoard {
                 }
             }
             Message::MouseButtonPress(keycode) => {
-                // Scroll up and down release way too early to even be displayed, so instead of
-                // unhighlighting them when xinput sends the release, we unhighlight them on a
-                // delay.
-                if keycode == 4 || keycode == 5 {
-                    return Command::perform(
-                        async_std::task::sleep(std::time::Duration::from_millis(100)),
-                        move |_| Message::MouseButtonRelease(keycode),
-                    );
-                }
-                if !self.pressed_keys.contains(&keycode) {
-                    self.pressed_keys.push(keycode);
+                if !self.pressed_mouse_buttons.contains(&keycode) {
+                    self.pressed_mouse_buttons.push(keycode);
                 }
             }
             Message::MouseButtonRelease(keycode) => {
-                if self.pressed_keys.contains(&keycode) {
-                    self.pressed_keys.retain(|&x| x != keycode);
+                if self.pressed_mouse_buttons.contains(&keycode) {
+                    self.pressed_mouse_buttons.retain(|&x| x != keycode);
+                }
+            }
+            Message::ScrollButtonPress(keycode) => {
+                // Scroll up and down release way too early to even be displayed, so instead of
+                // unhighlighting them when xinput sends the release, we unhighlight them on a
+                // delay.
+                self.queued_scrolls += 1;
+                if !self.pressed_scroll_buttons.contains(&keycode) {
+                    self.pressed_scroll_buttons.push(keycode);
+                }
+                self.canvas.clear();
+                return Command::perform(
+                    async_std::task::sleep(std::time::Duration::from_millis(100)),
+                    move |_| Message::ScrollButtonRelease(keycode),
+                );
+            }
+            Message::ScrollButtonRelease(keycode) => {
+                self.queued_scrolls -= 1;
+                if self.pressed_scroll_buttons.contains(&keycode)
+                    && !((keycode == 4 || keycode == 5) && self.queued_scrolls > 0)
+                {
+                    self.pressed_scroll_buttons.retain(|&x| x != keycode);
                 }
             }
             _ => {}
@@ -140,7 +161,7 @@ impl Application for NuhxBoard {
 }
 
 macro_rules! draw_key {
-    ($self: ident, $def: ident, $frame: ident) => {
+    ($self: ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr, $keycode_map: expr) => {
         let mut boundaries_iter = $def.boundaries.iter();
         let key = Path::new(|builder| {
             builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
@@ -170,17 +191,15 @@ macro_rules! draw_key {
         let mut pressed = false;
 
         for keycode in &$def.keycodes {
-            if $self
-                .pressed_keys
+            #[allow(clippy::redundant_closure_call)]
+            if $pressed_button_list
                 .iter()
-                .map(|key| code_convert(*key))
+                .map(|xinput_code: &u32| $keycode_map(*xinput_code))
                 .collect::<Vec<u32>>()
                 .contains(keycode)
             {
                 pressed = true;
                 break;
-            } else {
-                pressed = false;
             }
         }
 
@@ -197,7 +216,7 @@ macro_rules! draw_key {
             ),
         );
         $frame.fill_text(canvas::Text {
-            content: $def.text.clone(),
+            content: $content,
             position: $def.text_position.clone().into(),
             color: match pressed {
                 true => Color::from_rgb(
@@ -277,136 +296,40 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
             for element in &self.config.elements {
                 match element {
                     BoardElement::KeyboardKey(def) => {
-                        let mut boundaries_iter = def.boundaries.iter();
-                        let key = Path::new(|builder| {
-                            builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
-                            for boundary in boundaries_iter {
-                                builder.line_to((*boundary).clone().into());
-                            }
-                            builder.close()
-                        });
-
-                        let element_style = &self
-                            .style
-                            .element_styles
-                            .iter()
-                            .find(|style| style.key == def.id);
-
-                        let style: &KeyStyle;
-
-                        if let Some(s) = element_style {
-                            style = match &s.value {
-                                ElementStyleUnion::KeyStyle(i_s) => i_s,
-                                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
-                            };
-                        } else {
-                            style = &self.style.default_key_style;
-                        }
-
-                        let mut pressed = false;
-
-                        for keycode in &def.keycodes {
-                            if self
-                                .pressed_keys
-                                .iter()
-                                .map(|key| code_convert(*key))
-                                .collect::<Vec<u32>>()
-                                .contains(keycode)
-                            {
-                                pressed = true;
-                                break;
-                            } else {
-                                pressed = false;
-                            }
-                        }
-
-                        let fill_color = match pressed {
-                            true => &style.pressed.background,
-                            false => &style.loose.background,
-                        };
-                        frame.fill(
-                            &key,
-                            Color::from_rgb(
-                                fill_color.red / 255.0,
-                                fill_color.blue / 255.0,
-                                fill_color.green / 255.0,
-                            ),
-                        );
-                        frame.fill_text(canvas::Text {
-                            content: match self.pressed_keys.contains(&50)
+                        draw_key!(
+                            self,
+                            def,
+                            frame,
+                            match self.pressed_keys.contains(&50)
                                 || self.pressed_keys.contains(&62)
                                 || (self.caps && def.change_on_caps)
                             {
                                 true => def.shift_text.clone(),
                                 false => def.text.clone(),
                             },
-                            position: def.text_position.clone().into(),
-                            color: match pressed {
-                                true => Color::from_rgb(
-                                    style.pressed.text.red,
-                                    style.pressed.text.green,
-                                    style.pressed.text.blue,
-                                ),
-                                false => Color::from_rgb(
-                                    style.loose.text.red,
-                                    style.loose.text.green,
-                                    style.loose.text.blue,
-                                ),
-                            },
-                            size: style.loose.font.size,
-                            font: iced::Font {
-                                family: iced::font::Family::Name(match pressed {
-                                    // Leak is required because Name requires static lifetime
-                                    // as opposed to application lifetime :(
-                                    // I suppose they were just expecting you to pass in a
-                                    // literal here... damn you!!
-                                    true => style.pressed.font.font_family.clone().leak(),
-                                    false => style.loose.font.font_family.clone().leak(),
-                                }),
-                                weight: match pressed {
-                                    true => {
-                                        if style.pressed.font.style & 1 != 0 {
-                                            iced::font::Weight::Bold
-                                        } else {
-                                            iced::font::Weight::Normal
-                                        }
-                                    }
-                                    false => {
-                                        if style.loose.font.style & 1 != 0 {
-                                            iced::font::Weight::Bold
-                                        } else {
-                                            iced::font::Weight::Normal
-                                        }
-                                    }
-                                },
-                                stretch: match pressed {
-                                    true => {
-                                        if style.pressed.font.style & 0b10 != 0 {
-                                            iced::font::Stretch::Expanded
-                                        } else {
-                                            iced::font::Stretch::Normal
-                                        }
-                                    }
-                                    false => {
-                                        if style.loose.font.style & 0b10 != 0 {
-                                            iced::font::Stretch::Expanded
-                                        } else {
-                                            iced::font::Stretch::Normal
-                                        }
-                                    }
-                                },
-                                monospaced: false,
-                            },
-                            horizontal_alignment: iced::alignment::Horizontal::Center,
-                            vertical_alignment: iced::alignment::Vertical::Center,
-                            ..canvas::Text::default()
-                        })
+                            self.pressed_keys,
+                            code_convert
+                        );
                     }
                     BoardElement::MouseKey(def) => {
-                        draw_key!(self, def, frame);
+                        draw_key!(
+                            self,
+                            def,
+                            frame,
+                            def.text.clone(),
+                            self.pressed_mouse_buttons,
+                            code_convert
+                        );
                     }
                     BoardElement::MouseScroll(def) => {
-                        draw_key!(self, def, frame);
+                        draw_key!(
+                            self,
+                            def,
+                            frame,
+                            def.text.clone(),
+                            self.pressed_scroll_buttons,
+                            |code| code
+                        );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {
                         let inner = Path::circle(def.location.clone().into(), 10.0);

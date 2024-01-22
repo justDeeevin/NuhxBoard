@@ -5,10 +5,6 @@ pub fn code_convert(xinput_code: u32) -> u32 {
         1 => return 0,
         // right
         3 => return 1,
-        //Scroll Down
-        4 => return 22,
-        //Scroll up
-        5 => return 21,
         _ => {}
     };
     // 1-9
