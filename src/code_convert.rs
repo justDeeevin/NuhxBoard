@@ -106,7 +106,7 @@ pub fn code_convert(xinput_code: u32) -> u32 {
         // *
         17 => 106,
         // alt
-        64 => 18,
+        64 => 164,
         // space
         65 => 32,
         // caps
@@ -193,6 +193,12 @@ pub fn code_convert(xinput_code: u32) -> u32 {
         113 => 37,
         // Right
         114 => 39,
+        // RAlt
+        108 => 165,
+        // Menu
+        135 => 93,
+        // RCtrl
+        105 => 163,
         _ => panic!("Unknown xinput code: {}", xinput_code),
     }
 }
