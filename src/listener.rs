@@ -127,7 +127,6 @@ impl futures::stream::Stream for InputStream {
                 match event_type {
                     InputEvent::MouseButtonPress => {
                         if button_code == 4 || button_code == 5 {
-                            dbg!();
                             return Poll::Ready(Some(crate::Message::ScrollButtonPress(
                                 button_code - 4,
                             )));
