@@ -88,7 +88,7 @@ impl futures::stream::Stream for InputStream {
                 for _ in 0..5 {
                     reader.read_line(&mut line).unwrap();
                 }
-                let modifiers_re = Regex::new(r"modifiers: locked 0x?([a-f0-9]+)").unwrap();
+                let modifiers_re = Regex::new(r"modifiers: locked (?:0x)?([a-f0-9]+)").unwrap();
                 let modifiers = u8::from_str_radix(
                     modifiers_re
                         .captures(&line)
