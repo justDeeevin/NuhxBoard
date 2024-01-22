@@ -78,15 +78,16 @@ impl Application for NuhxBoard {
                 if !self.pressed_keys.contains(&keycode) {
                     self.pressed_keys.push(keycode);
                 }
-                if self.caps != caps {
+                if keycode == 66 {
+                    self.caps = !self.caps;
+                } else if self.caps != caps {
                     self.caps = caps;
                 }
             }
             Message::KeyRelease { keycode, caps } => {
                 if self.pressed_keys.contains(&keycode) {
                     self.pressed_keys.retain(|&x| x != keycode);
-                }
-                if self.caps != caps {
+                } else if self.caps != caps {
                     self.caps = caps;
                 }
             }
