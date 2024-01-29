@@ -3,7 +3,7 @@ mod config;
 mod listener;
 mod style;
 use clap::Parser;
-use code_convert::code_convert;
+use code_convert::*;
 use config::*;
 use iced::{
     mouse,
@@ -119,9 +119,7 @@ impl Application for NuhxBoard {
             }
             Message::ScrollButtonRelease(keycode) => {
                 self.queued_scrolls -= 1;
-                if self.pressed_scroll_buttons.contains(&keycode)
-                    && !((keycode == 4 || keycode == 5) && self.queued_scrolls > 0)
-                {
+                if self.pressed_scroll_buttons.contains(&keycode) && (self.queued_scrolls == 0) {
                     self.pressed_scroll_buttons.retain(|&x| x != keycode);
                 }
             }
@@ -192,7 +190,6 @@ macro_rules! draw_key {
         let mut pressed = false;
 
         for keycode in &$def.keycodes {
-            #[allow(clippy::redundant_closure_call)]
             if $pressed_button_list
                 .iter()
                 .map(|xinput_code: &u32| $keycode_map(*xinput_code))
@@ -309,7 +306,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 false => def.text.clone(),
                             },
                             self.pressed_keys,
-                            code_convert
+                            keycode_convert
                         );
                     }
                     BoardElement::MouseKey(def) => {
@@ -319,7 +316,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             frame,
                             def.text.clone(),
                             self.pressed_mouse_buttons,
-                            code_convert
+                            mouse_button_code_convert
                         );
                     }
                     BoardElement::MouseScroll(def) => {
@@ -329,7 +326,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             frame,
                             def.text.clone(),
                             self.pressed_scroll_buttons,
-                            |code| code
+                            mouse_button_code_convert
                         );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {

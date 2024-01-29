@@ -1,12 +1,19 @@
-pub fn code_convert(xinput_code: u32) -> u32 {
-    // mouse buttons
+pub fn mouse_button_code_convert(xinput_code: u32) -> u32 {
     match xinput_code {
-        // left
-        1 => return 0,
-        // right
-        3 => return 1,
-        _ => {}
-    };
+        1 => 0,
+        2 => 2,
+        3 => 1,
+        4 => 0,
+        5 => 1,
+        6 => 3,
+        7 => 2,
+        8 => 3,
+        9 => 4,
+        _ => panic!("Unknown xinput code: {}", xinput_code),
+    }
+}
+
+pub fn keycode_convert(xinput_code: u32) -> u32 {
     // 1-9
     if (10..=18).contains(&xinput_code) {
         return xinput_code + 39;

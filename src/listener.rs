@@ -126,9 +126,9 @@ impl futures::stream::Stream for InputStream {
 
                 match event_type {
                     InputEvent::MouseButtonPress => {
-                        if button_code == 4 || button_code == 5 {
+                        if (4..=7).contains(&button_code) {
                             return Poll::Ready(Some(crate::Message::ScrollButtonPress(
-                                button_code - 4,
+                                button_code,
                             )));
                         }
                         Poll::Ready(Some(crate::Message::MouseButtonPress(button_code)))
@@ -147,7 +147,7 @@ impl futures::stream::Stream for InputStream {
                 for _ in 0..5 {
                     reader.read_line(&mut line).unwrap();
                 }
-                let scroll_check_re = Regex::new(r"3: -?[0-9]+").unwrap();
+                let scroll_check_re = Regex::new(r"(?:2|3): -?[0-9]+").unwrap();
                 if scroll_check_re.captures(&line).is_some() {
                     return Poll::Ready(Some(crate::Message::Dummy));
                 }
