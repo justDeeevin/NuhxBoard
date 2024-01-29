@@ -537,7 +537,7 @@ fn main() {
     let settings = iced::Settings {
         window: iced::window::Settings {
             size: (flags.config.width, flags.config.height),
-            resizable: true,
+            resizable: false,
             icon: Some(icon),
             ..iced::window::Settings::default()
         },
