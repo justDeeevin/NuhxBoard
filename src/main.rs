@@ -203,74 +203,45 @@ macro_rules! draw_key {
             }
         }
 
-        let fill_color = match pressed {
-            true => &style.pressed.background,
-            false => &style.loose.background,
+        let current_style = match pressed {
+            true => &style.pressed,
+            false => &style.loose,
         };
+
         $frame.fill(
             &key,
             Color::from_rgb(
-                fill_color.red / 255.0,
-                fill_color.blue / 255.0,
-                fill_color.green / 255.0,
+                current_style.background.red / 255.0,
+                current_style.background.blue / 255.0,
+                current_style.background.green / 255.0,
             ),
         );
         $frame.fill_text(canvas::Text {
             content: $content,
             position: $def.text_position.clone().into(),
-            color: match pressed {
-                true => Color::from_rgb(
-                    style.pressed.text.red / 255.0,
-                    style.pressed.text.green / 255.0,
-                    style.pressed.text.blue / 255.0,
-                ),
-                false => Color::from_rgb(
-                    style.loose.text.red / 255.0,
-                    style.loose.text.green / 255.0,
-                    style.loose.text.blue / 255.0,
-                ),
-            },
+            color: Color::from_rgb(
+                current_style.text.red / 255.0,
+                current_style.text.green / 255.0,
+                current_style.text.blue / 255.0,
+            ),
             size: style.loose.font.size,
             font: iced::Font {
-                family: iced::font::Family::Name(match pressed {
+                family: iced::font::Family::Name(
                     // Leak is required because Name requires static lifetime
                     // as opposed to application lifetime :(
                     // I suppose they were just expecting you to pass in a
                     // literal here... damn you!!
-                    true => style.pressed.font.font_family.clone().leak(),
-                    false => style.loose.font.font_family.clone().leak(),
-                }),
-                weight: match pressed {
-                    true => {
-                        if style.pressed.font.style & 1 != 0 {
-                            iced::font::Weight::Bold
-                        } else {
-                            iced::font::Weight::Normal
-                        }
-                    }
-                    false => {
-                        if style.loose.font.style & 1 != 0 {
-                            iced::font::Weight::Bold
-                        } else {
-                            iced::font::Weight::Normal
-                        }
-                    }
+                    current_style.font.font_family.clone().leak(),
+                ),
+                weight: if current_style.font.style & 1 != 0 {
+                    iced::font::Weight::Bold
+                } else {
+                    iced::font::Weight::Normal
                 },
-                stretch: match pressed {
-                    true => {
-                        if style.pressed.font.style & 0b10 != 0 {
-                            iced::font::Stretch::Expanded
-                        } else {
-                            iced::font::Stretch::Normal
-                        }
-                    }
-                    false => {
-                        if style.loose.font.style & 0b10 != 0 {
-                            iced::font::Stretch::Expanded
-                        } else {
-                            iced::font::Stretch::Normal
-                        }
-                    }
+                stretch: if current_style.font.style & 0b10 != 0 {
+                    iced::font::Stretch::Expanded
+                } else {
+                    iced::font::Stretch::Normal
                 },
                 monospaced: false,
             },
@@ -338,7 +309,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
                             self.mouse_velocity.1.atan2(self.mouse_velocity.0),
                         );
-                        let squashed_magnitude = (0.01 * polar_velocity.0).tanh();
+                        let squashed_magnitude = (0.03 * polar_velocity.0).tanh();
                         let ball = Path::circle(
                             iced::Point {
                                 x: def.location.x + (def.radius * polar_velocity.1.cos()),
@@ -505,7 +476,6 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    dbg!(std::env::current_exe().unwrap().parent());
     let mut config_file = match File::open(format!(
         "{}/keyboards/{}/keyboard.json",
         std::env::current_exe()

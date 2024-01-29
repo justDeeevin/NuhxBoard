@@ -60,10 +60,10 @@ command = [
   "--color",
   "always",
   "--",
-  "-c",
-  "./layouts/mouseAll.json",
+  "-k",
+  "quake/quakehighres",
   "-s",
-  "./styles/quake-champions.style",
+  "quake-champions-highres",
 ]
 need_stdout = true
 allow_warnings = true
