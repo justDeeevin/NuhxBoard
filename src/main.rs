@@ -489,12 +489,15 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
     }
 }
 
+/// NuhxBoard - The Linux port of NohBoard
 #[derive(Parser, Debug)]
-#[command(author = "justDeeevin", version = "0.1.0")]
+#[command(version = "0.1.0")]
 struct Args {
+    /// The keyboard to use. [GROUP]/[KEYBOARD]
     #[arg(short, long)]
     keyboard: String,
 
+    /// The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used.
     #[arg(short, long)]
     style: Option<String>,
 }
