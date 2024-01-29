@@ -431,7 +431,12 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         );
                         let ball_gradient = colorgrad::CustomGradient::new()
                             .colors(&[
-                                colorgrad::Color::new(1.0, 1.0, 1.0, 1.0),
+                                colorgrad::Color::new(
+                                    style.inner_color.red as f64 / 255.0,
+                                    style.inner_color.green as f64 / 255.0,
+                                    style.inner_color.blue as f64 / 255.0,
+                                    1.0,
+                                ),
                                 colorgrad::Color::new(
                                     style.outer_color.red as f64 / 255.0,
                                     style.outer_color.green as f64 / 255.0,
