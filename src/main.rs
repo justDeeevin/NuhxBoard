@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 mod code_convert;
 mod config;
 mod listener;
@@ -491,19 +493,29 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
 #[command(author = "justDeeevin", version = "0.1.0")]
 struct Args {
     #[arg(short, long)]
-    config_path: String,
+    keyboard: String,
 
     #[arg(short, long)]
-    style_path: Option<String>,
+    style: Option<String>,
 }
 
 fn main() {
     let args = Args::parse();
 
-    let mut config_file = match File::open(&args.config_path) {
+    dbg!(std::env::current_exe().unwrap().parent());
+    let mut config_file = match File::open(format!(
+        "{}/keyboards/{}/keyboard.json",
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap(),
+        args.keyboard
+    )) {
         Err(why) => panic!(
             "Error opening config file (given path: {}): {}",
-            args.config_path, why
+            args.keyboard, why
         ),
         Ok(file) => file,
     };
@@ -517,11 +529,21 @@ fn main() {
     };
 
     let style: Style;
-    if let Some(style_path) = &args.style_path {
-        let mut style_file = match File::open(style_path) {
+    if let Some(style_name) = &args.style {
+        let mut style_file = match File::open(format!(
+            "{}/keyboards/{}/{}.style",
+            std::env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            args.keyboard,
+            style_name
+        )) {
             Err(why) => panic!(
                 "Error opening style file (given path: {}): {}",
-                style_path, why
+                style_name, why
             ),
             Ok(file) => file,
         };
