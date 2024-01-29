@@ -462,7 +462,10 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
 
 /// NuhxBoard - The Linux port of NohBoard
 #[derive(Parser, Debug)]
-#[command(version = "0.1.0")]
+#[command(
+    version,
+    after_help = "Add keyboard groups to ~/.local/share/NuhxBoard/keyboards/"
+)]
 struct Args {
     /// The keyboard to use. [GROUP]/[KEYBOARD]
     #[arg(short, long)]
@@ -477,47 +480,31 @@ fn main() {
     let args = Args::parse();
 
     let mut config_file = match File::open(format!(
-        "{}/keyboards/{}/keyboard.json",
-        std::env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_str()
-            .unwrap(),
+        "{}/.local/share/NuhxBoard/keyboards/{}/keyboard.json",
+        home::home_dir().unwrap().to_str().unwrap(),
         args.keyboard
     )) {
-        Err(why) => panic!(
-            "Error opening config file (given path: {}): {}",
-            args.keyboard, why
-        ),
+        Err(why) => panic!("Error opening keyboard file: {}", why),
         Ok(file) => file,
     };
     let mut config_string = String::new();
     if let Err(why) = config_file.read_to_string(&mut config_string) {
-        panic!("Error reading config file: {}", why)
+        panic!("Error reading keyboard file: {}", why)
     };
     let config: Config = match serde_json::from_str(&config_string) {
-        Err(why) => panic!("Error parsing config file: {}", why),
+        Err(why) => panic!("Error parsing keyboard file: {}", why),
         Ok(config) => config,
     };
 
     let style: Style;
     if let Some(style_name) = &args.style {
         let mut style_file = match File::open(format!(
-            "{}/keyboards/{}/{}.style",
-            std::env::current_exe()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .to_str()
-                .unwrap(),
+            "{}/.local/share/NuhxBoard/keyboards/{}/{}.style",
+            home::home_dir().unwrap().to_str().unwrap(),
             args.keyboard,
             style_name
         )) {
-            Err(why) => panic!(
-                "Error opening style file (given path: {}): {}",
-                style_name, why
-            ),
+            Err(why) => panic!("Error opening style file: {}", why),
             Ok(file) => file,
         };
         let mut style_string = String::new();
