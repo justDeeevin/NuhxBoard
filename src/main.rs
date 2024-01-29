@@ -24,6 +24,7 @@ struct NuhxBoard {
     pressed_keys: Vec<u32>,
     pressed_mouse_buttons: Vec<u32>,
     pressed_scroll_buttons: Vec<u32>,
+    mouse_velocity: (f32, f32),
     caps: bool,
     queued_scrolls: u32,
 }
@@ -63,6 +64,7 @@ impl Application for NuhxBoard {
                 pressed_scroll_buttons: Vec::new(),
                 caps: false,
                 queued_scrolls: 0,
+                mouse_velocity: (0.0, 0.0),
             },
             Command::none(),
         )
@@ -123,14 +125,12 @@ impl Application for NuhxBoard {
                     self.pressed_scroll_buttons.retain(|&x| x != keycode);
                 }
             }
-            _ => {}
-        }
-        match message {
-            Message::Dummy | Message::Motion { .. } => {}
-            _ => {
-                self.canvas.clear();
+            Message::Motion { x, y } => self.mouse_velocity = (x, y),
+            Message::Dummy => {
+                return Command::none();
             }
         }
+        self.canvas.clear();
         Command::none()
     }
 
@@ -169,7 +169,7 @@ macro_rules! draw_key {
             for boundary in boundaries_iter {
                 builder.line_to((*boundary).clone().into());
             }
-            builder.close()
+            builder.close();
         });
 
         let element_style = &$self
@@ -221,14 +221,14 @@ macro_rules! draw_key {
             position: $def.text_position.clone().into(),
             color: match pressed {
                 true => Color::from_rgb(
-                    style.pressed.text.red,
-                    style.pressed.text.green,
-                    style.pressed.text.blue,
+                    style.pressed.text.red / 255.0,
+                    style.pressed.text.green / 255.0,
+                    style.pressed.text.blue / 255.0,
                 ),
                 false => Color::from_rgb(
-                    style.loose.text.red,
-                    style.loose.text.green,
-                    style.loose.text.blue,
+                    style.loose.text.red / 255.0,
+                    style.loose.text.green / 255.0,
+                    style.loose.text.blue / 255.0,
                 ),
             },
             size: style.loose.font.size,
@@ -333,8 +333,59 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {
-                        let inner = Path::circle(def.location.clone().into(), 10.0);
-                        let outer = Path::circle(def.location.clone().into(), def.radius as f32);
+                        let inner = Path::circle(def.location.clone().into(), def.radius / 5.0);
+                        let outer = Path::circle(def.location.clone().into(), def.radius);
+                        let polar_velocity = (
+                            (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
+                            self.mouse_velocity.1.atan2(self.mouse_velocity.0),
+                        );
+                        let squashed_magnitude = (0.01 * polar_velocity.0).tanh();
+                        let ball = Path::circle(
+                            iced::Point {
+                                x: def.location.x + (def.radius * polar_velocity.1.cos()),
+                                y: def.location.y + (def.radius * polar_velocity.1.sin()),
+                            },
+                            def.radius / 5.0,
+                        );
+
+                        // This is a whole lot of trig... just trust the process...
+                        // Check out [This Desmos thing](https://www.desmos.com/calculator/wf52bomadb) if you want to see it all workin
+                        let triangle = Path::new(|builder| {
+                            builder.move_to(iced::Point {
+                                x: def.location.x
+                                    + (squashed_magnitude
+                                        * ((def.radius * polar_velocity.1.cos())
+                                            - ((def.radius / 5.0)
+                                                * (-polar_velocity.1.tan().powi(-1))
+                                                    .atan()
+                                                    .cos()))),
+                                y: def.location.y
+                                    + (squashed_magnitude
+                                        * ((def.radius * polar_velocity.1.sin())
+                                            - ((def.radius / 5.0)
+                                                * (-polar_velocity.1.tan().powi(-1))
+                                                    .atan()
+                                                    .sin()))),
+                            });
+                            builder.line_to(iced::Point {
+                                x: def.location.x
+                                    + (squashed_magnitude
+                                        * ((def.radius * polar_velocity.1.cos())
+                                            + ((def.radius / 5.0)
+                                                * (-polar_velocity.1.tan().powi(-1))
+                                                    .atan()
+                                                    .cos()))),
+                                y: def.location.y
+                                    + (squashed_magnitude
+                                        * ((def.radius * polar_velocity.1.sin())
+                                            + ((def.radius / 5.0)
+                                                * (-polar_velocity.1.tan().powi(-1))
+                                                    .atan()
+                                                    .sin()))),
+                            });
+                            builder.line_to(def.location.clone().into());
+                            builder.close();
+                        });
 
                         let element_style = &self
                             .style
@@ -344,13 +395,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
 
                         let style: &MouseSpeedIndicatorStyle;
 
-                        let global_default_style =
-                            Style::default().default_mouse_indicator_style.unwrap();
-                        let default_style = &self
-                            .style
-                            .default_mouse_indicator_style
-                            .as_ref()
-                            .unwrap_or(&global_default_style);
+                        let default_style = &self.style.default_mouse_speed_indicator_style;
 
                         if let Some(s) = element_style {
                             style = match &s.value {
@@ -364,9 +409,9 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                         frame.fill(
                             &inner,
                             Color::from_rgb(
-                                style.inner_color.red,
-                                style.inner_color.green,
-                                style.inner_color.blue,
+                                style.inner_color.red / 255.0,
+                                style.inner_color.green / 255.0,
+                                style.inner_color.blue / 255.0,
                             ),
                         );
 
@@ -376,9 +421,9 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 width: style.outline_width,
                                 line_cap: canvas::LineCap::Round,
                                 style: canvas::Style::Solid(Color::from_rgb(
-                                    style.outer_color.red,
-                                    style.outer_color.green,
-                                    style.outer_color.blue,
+                                    style.inner_color.red / 255.0,
+                                    style.inner_color.green / 255.0,
+                                    style.inner_color.blue / 255.0,
                                 )),
                                 line_dash: canvas::LineDash {
                                     segments: &[],
@@ -386,7 +431,52 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                 },
                                 line_join: canvas::LineJoin::Round,
                             },
+                        );
+                        let ball_gradient = colorgrad::CustomGradient::new()
+                            .colors(&[
+                                colorgrad::Color::new(1.0, 1.0, 1.0, 1.0),
+                                colorgrad::Color::new(
+                                    style.outer_color.red as f64 / 255.0,
+                                    style.outer_color.green as f64 / 255.0,
+                                    style.outer_color.blue as f64 / 255.0,
+                                    1.0,
+                                ),
+                            ])
+                            .build()
+                            .unwrap();
+                        let ball_color = ball_gradient.at(squashed_magnitude as f64);
+                        frame.fill(
+                            &ball,
+                            Color::from_rgb(
+                                ball_color.r as f32,
+                                ball_color.g as f32,
+                                ball_color.b as f32,
+                            ),
+                        );
+                        let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
+                            def.location.clone().into(),
+                            iced::Point {
+                                x: def.location.x + (def.radius * polar_velocity.1.cos()),
+                                y: def.location.y + (def.radius * polar_velocity.1.sin()),
+                            },
                         )
+                        .add_stop(
+                            0.0,
+                            iced::Color::from_rgb(
+                                style.inner_color.red / 255.0,
+                                style.inner_color.green / 255.0,
+                                style.inner_color.blue / 255.0,
+                            ),
+                        )
+                        .add_stop(
+                            1.0,
+                            iced::Color::from_rgb(
+                                style.outer_color.red / 255.0,
+                                style.outer_color.green / 255.0,
+                                style.outer_color.blue / 255.0,
+                            ),
+                        );
+                        frame.fill(&triangle, triangle_gradient);
                     }
                 }
             }

@@ -8,8 +8,8 @@ pub struct Style {
     pub background_image_file_name: Option<String>,
     #[serde(rename = "DefaultKeyStyle")]
     pub default_key_style: KeyStyle,
-    #[serde(rename = "DefaultMouseIndicatorStyle")]
-    pub default_mouse_indicator_style: Option<MouseSpeedIndicatorStyle>,
+    #[serde(rename = "DefaultMouseSpeedIndicatorStyle")]
+    pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
     #[serde(rename = "ElementStyles")]
     pub element_styles: Vec<ElementStyle>,
 }
@@ -142,11 +142,11 @@ impl Default for Style {
                     background_image_file_name: "".into(),
                 },
             },
-            default_mouse_indicator_style: Some(MouseSpeedIndicatorStyle {
+            default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
                 outer_color: NohRgb::DEFAULT_GRAY,
-                outline_width: 2.0,
-            }),
+                outline_width: 1.0,
+            },
             element_styles: vec![],
         }
     }

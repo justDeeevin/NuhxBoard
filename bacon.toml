@@ -61,7 +61,9 @@ command = [
   "always",
   "--",
   "-c",
-  "layouts/Quake.json",
+  "./layouts/mouseAll.json",
+  "-s",
+  "./styles/quake-champions.style",
 ]
 need_stdout = true
 allow_warnings = true

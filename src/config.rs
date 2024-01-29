@@ -75,7 +75,7 @@ pub struct MouseSpeedIndicatorDefinition {
     #[serde(rename = "Location")]
     pub location: SerializablePoint,
     #[serde(rename = "Radius")]
-    pub radius: u32,
+    pub radius: f32,
 }
 
 #[derive(Deserialize, Debug, Clone)]
