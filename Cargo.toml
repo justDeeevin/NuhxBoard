@@ -1,6 +1,6 @@
 [package]
 name = "nuhxboard"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
@@ -10,7 +10,7 @@ keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
 readme = "README.md"
 rust-version = "1.75.0"
-include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
+include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md", "NuhxBoard.png"]
 
 [dependencies]
 async-std = "1.12.0"
