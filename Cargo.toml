@@ -1,6 +1,6 @@
 [package]
 name = "nuhxboard"
-version = "0.1.2"
+version = "0.1.4"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
