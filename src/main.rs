@@ -480,6 +480,8 @@ struct Args {
     style: Option<String>,
 }
 
+static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
@@ -543,7 +545,8 @@ fn main() -> Result<()> {
         style = Style::default()
     }
 
-    let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png"))?;
+    let icon_image = image::load_from_memory(IMAGE)?.to_rgb8().to_vec();
+    let icon = iced::window::icon::from_rgba(icon_image, 256, 256)?;
     let flags = Flags { config, style };
     let settings = iced::Settings {
         window: iced::window::Settings {
