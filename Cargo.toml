@@ -2,6 +2,14 @@
 name = "nuhxboard"
 version = "0.1.0"
 edition = "2021"
+license = "GPL-3.0"
+authors = ["Devin Droddy <devin.droddy@gmail.com>"]
+description = "A Linux port of NohBoard"
+repository = "https://github.com/ThePyroTF2/NuhxBoard"
+keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard", "nuhxboard"]
+categories = ["visualization"]
+readme = "README.md"
+rust-version = "1.75.0"
 
 [[bin]]
 name = "NuhxBoard"
