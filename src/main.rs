@@ -545,8 +545,8 @@ fn main() -> Result<()> {
         style = Style::default()
     }
 
-    let icon_image = image::load_from_memory(IMAGE)?.to_rgb8().to_vec();
-    let icon = iced::window::icon::from_rgba(icon_image, 256, 256)?;
+    let icon_image = image::load_from_memory(IMAGE)?;
+    let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { config, style };
     let settings = iced::Settings {
         window: iced::window::Settings {
