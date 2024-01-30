@@ -6,6 +6,10 @@ mod listener;
 mod style;
 use clap::Parser;
 use code_convert::*;
+use color_eyre::{
+    eyre::{Result, WrapErr},
+    Section,
+};
 use config::*;
 use iced::{
     mouse,
@@ -476,50 +480,70 @@ struct Args {
     style: Option<String>,
 }
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
+    if !home::home_dir()
+        .unwrap()
+        .join(".local/share/NuhxBoard")
+        .exists()
+    {
+        let make_dir = inquire::Confirm::new(
+            "NuhxBoard directory does not exist. Create it? (If no, program will exit)",
+        )
+        .with_default(true)
+        .prompt()?;
+
+        if make_dir {
+            std::fs::create_dir_all(
+                home::home_dir()
+                    .unwrap()
+                    .join(".local/share/NuhxBoard/keyboards"),
+            )?;
+        } else {
+            std::process::exit(0);
+        }
+    }
+
     let args = Args::parse();
 
-    let mut config_file = match File::open(format!(
+    let mut config_file = File::open(format!(
         "{}/.local/share/NuhxBoard/keyboards/{}/keyboard.json",
         home::home_dir().unwrap().to_str().unwrap(),
         args.keyboard
-    )) {
-        Err(why) => panic!("Error opening keyboard file: {}", why),
-        Ok(file) => file,
-    };
+    ))
+    .wrap_err("Error opening keyboard file")
+    .suggestion("Make sure the given keyboard file exists")?;
     let mut config_string = String::new();
-    if let Err(why) = config_file.read_to_string(&mut config_string) {
-        panic!("Error reading keyboard file: {}", why)
-    };
-    let config: Config = match serde_json::from_str(&config_string) {
-        Err(why) => panic!("Error parsing keyboard file: {}", why),
-        Ok(config) => config,
-    };
+    config_file
+        .read_to_string(&mut config_string)
+        .wrap_err("Error reading keyboard file")?;
+    let config: Config = serde_json::from_str(&config_string)
+        .wrap_err("Error parsing keyboard file")
+        .suggestion("Make sure the keyboard file is valid")?;
 
     let style: Style;
     if let Some(style_name) = &args.style {
-        let mut style_file = match File::open(format!(
+        let mut style_file = File::open(format!(
             "{}/.local/share/NuhxBoard/keyboards/{}/{}.style",
             home::home_dir().unwrap().to_str().unwrap(),
             args.keyboard,
             style_name
-        )) {
-            Err(why) => panic!("Error opening style file: {}", why),
-            Ok(file) => file,
-        };
+        ))
+        .wrap_err("Error opening style file")
+        .suggestion("Make sure the given style file exists")?;
         let mut style_string = String::new();
-        if let Err(why) = style_file.read_to_string(&mut style_string) {
-            panic!("Error reading style file: {}", why)
-        };
-        style = match serde_json::from_str(&style_string) {
-            Err(why) => panic!("Error parsing style file: {}", why),
-            Ok(style) => style,
-        };
+        style_file
+            .read_to_string(&mut style_string)
+            .wrap_err("Error reading style file")?;
+        style = serde_json::from_str(&style_string)
+            .wrap_err("Error parsing style file")
+            .suggestion("Make sure the style file is valid")?;
     } else {
         style = Style::default()
     }
 
-    let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png")).unwrap();
+    let icon = iced::window::icon::from_file(std::path::Path::new("NuhxBoard.png"))?;
     let flags = Flags { config, style };
     let settings = iced::Settings {
         window: iced::window::Settings {
@@ -531,10 +555,11 @@ fn main() {
         flags,
         ..iced::Settings::default()
     };
-    NuhxBoard::run(settings).unwrap();
+    NuhxBoard::run(settings)?;
 
     std::process::Command::new("killall")
         .arg("xinput")
-        .spawn()
-        .unwrap();
+        .spawn()?;
+
+    Ok(())
 }
