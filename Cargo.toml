@@ -1,6 +1,6 @@
 [package]
 name = "nuhxboard"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
@@ -11,10 +11,6 @@ categories = ["visualization"]
 readme = "README.md"
 rust-version = "1.75.0"
 include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
-
-[[bin]]
-name = "NuhxBoard"
-path = "src/main.rs"
 
 [dependencies]
 async-std = "1.12.0"
