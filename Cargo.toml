@@ -10,6 +10,7 @@ keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard", "nuhxboard"]
 categories = ["visualization"]
 readme = "README.md"
 rust-version = "1.75.0"
+include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
 
 [[bin]]
 name = "NuhxBoard"
