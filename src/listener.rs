@@ -1,3 +1,4 @@
+use color_eyre::{eyre::WrapErr, Section};
 use iced::advanced::subscription::Recipe;
 use regex::Regex;
 use std::{
@@ -26,6 +27,8 @@ impl Recipe for InputSubscription {
             .arg("--root")
             .stdout(std::process::Stdio::piped())
             .spawn()
+            .wrap_err("Error spawning input listener")
+            .note("NuhxBoard relies on XInput. If you are running on Windows, use NohBoard, and if you're running on Linux, make sure you have the `xorg-xinput` package installed.")
             .unwrap();
 
         let reader = io::BufReader::new(child.stdout.take().unwrap());
