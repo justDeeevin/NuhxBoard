@@ -27,24 +27,15 @@ struct NuhxBoard {
     config: Config,
     style: Style,
     canvas: Cache,
-    pressed_keys: Vec<u32>,
-    pressed_mouse_buttons: Vec<u32>,
+    pressed_keys: Vec<rdev::Key>,
+    pressed_mouse_buttons: Vec<rdev::Button>,
     pressed_scroll_buttons: Vec<u32>,
     mouse_velocity: (f32, f32),
+    previous_mouse_position: (f32, f32),
+    previous_mouse_time: std::time::SystemTime,
+    /// `(up, down, right, left)`
+    queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
-    queued_scrolls: u32,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Message {
-    KeyPress { keycode: u32, caps: bool },
-    KeyRelease { keycode: u32, caps: bool },
-    MouseButtonPress(u32),
-    MouseButtonRelease(u32),
-    ScrollButtonPress(u32),
-    ScrollButtonRelease(u32),
-    Motion { x: f32, y: f32 },
-    Dummy,
 }
 
 #[derive(Default)]
@@ -53,13 +44,19 @@ struct Flags {
     style: Style,
 }
 
+#[derive(Debug)]
+enum Message {
+    Listener(listener::Event),
+    ReleaseScroll(u32),
+}
+
 impl Application for NuhxBoard {
     type Flags = Flags;
     type Theme = Theme;
     type Executor = iced::executor::Default;
     type Message = Message;
 
-    fn new(flags: Flags) -> (Self, Command<Message>) {
+    fn new(flags: Flags) -> (Self, Command<Self::Message>) {
         (
             Self {
                 config: flags.config,
@@ -67,10 +64,12 @@ impl Application for NuhxBoard {
                 canvas: Cache::default(),
                 pressed_keys: Vec::new(),
                 pressed_mouse_buttons: Vec::new(),
-                pressed_scroll_buttons: Vec::new(),
                 caps: false,
-                queued_scrolls: 0,
                 mouse_velocity: (0.0, 0.0),
+                pressed_scroll_buttons: Vec::new(),
+                previous_mouse_position: (0.0, 0.0),
+                previous_mouse_time: std::time::SystemTime::now(),
+                queued_scrolls: (0, 0, 0, 0),
             },
             Command::none(),
         )
@@ -82,57 +81,107 @@ impl Application for NuhxBoard {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Message::KeyPress { keycode, caps } => {
-                if !self.pressed_keys.contains(&keycode) {
-                    self.pressed_keys.push(keycode);
+            Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
+                rdev::EventType::KeyPress(key) => {
+                    if key == rdev::Key::CapsLock {
+                        self.caps = !self.caps;
+                    }
+                    if !self.pressed_keys.contains(&key) {
+                        self.pressed_keys.push(key);
+                    }
                 }
-                if keycode == 66 {
-                    self.caps = !self.caps;
-                } else if self.caps != caps {
-                    self.caps = caps;
+                rdev::EventType::KeyRelease(key) => {
+                    if self.pressed_keys.contains(&key) {
+                        self.pressed_keys.retain(|&x| x != key);
+                    }
                 }
-            }
-            Message::KeyRelease { keycode, caps } => {
-                if self.pressed_keys.contains(&keycode) {
-                    self.pressed_keys.retain(|&x| x != keycode);
-                } else if self.caps != caps {
-                    self.caps = caps;
+                rdev::EventType::ButtonPress(button) => {
+                    if !self.pressed_mouse_buttons.contains(&button) {
+                        self.pressed_mouse_buttons.push(button);
+                    }
                 }
-            }
-            Message::MouseButtonPress(keycode) => {
-                if !self.pressed_mouse_buttons.contains(&keycode) {
-                    self.pressed_mouse_buttons.push(keycode);
+                rdev::EventType::ButtonRelease(button) => {
+                    if self.pressed_mouse_buttons.contains(&button) {
+                        self.pressed_mouse_buttons.retain(|&x| x != button);
+                    }
                 }
-            }
-            Message::MouseButtonRelease(keycode) => {
-                if self.pressed_mouse_buttons.contains(&keycode) {
-                    self.pressed_mouse_buttons.retain(|&x| x != keycode);
+                rdev::EventType::Wheel { delta_x, delta_y } => {
+                    let button;
+                    if delta_x < 0 {
+                        button = 3;
+                    } else if delta_x > 0 {
+                        button = 2;
+                    } else if delta_y < 0 {
+                        button = 1;
+                    } else {
+                        button = 0;
+                    }
+
+                    match button {
+                        0 => self.queued_scrolls.0 += 1,
+                        1 => self.queued_scrolls.1 += 1,
+                        2 => self.queued_scrolls.2 += 1,
+                        3 => self.queued_scrolls.3 += 1,
+                        _ => {}
+                    }
+
+                    if !self.pressed_scroll_buttons.contains(&button) {
+                        self.pressed_scroll_buttons.push(button);
+                    }
+
+                    self.canvas.clear();
+
+                    return Command::perform(
+                        async_std::task::sleep(std::time::Duration::from_millis(100)),
+                        move |_| Message::ReleaseScroll(button),
+                    );
                 }
-            }
-            Message::ScrollButtonPress(keycode) => {
-                // Scroll up and down release way too early to even be displayed, so instead of
-                // unhighlighting them when xinput sends the release, we unhighlight them on a
-                // delay.
-                self.queued_scrolls += 1;
-                if !self.pressed_scroll_buttons.contains(&keycode) {
-                    self.pressed_scroll_buttons.push(keycode);
+                rdev::EventType::MouseMove { x, y } => {
+                    let (x, y) = (x as f32, y as f32);
+                    let current_time = event.time;
+                    let time_diff = current_time
+                        .duration_since(self.previous_mouse_time)
+                        .unwrap();
+                    let position_diff = (
+                        x - self.previous_mouse_position.0,
+                        y - self.previous_mouse_position.1,
+                    );
+                    self.mouse_velocity = (
+                        position_diff.0 / time_diff.as_secs_f32(),
+                        position_diff.1 / time_diff.as_secs_f32(),
+                    );
+                    self.previous_mouse_position = (x, y);
+                    self.previous_mouse_time = current_time;
                 }
-                self.canvas.clear();
-                return Command::perform(
-                    async_std::task::sleep(std::time::Duration::from_millis(100)),
-                    move |_| Message::ScrollButtonRelease(keycode),
-                );
-            }
-            Message::ScrollButtonRelease(keycode) => {
-                self.queued_scrolls -= 1;
-                if self.pressed_scroll_buttons.contains(&keycode) && (self.queued_scrolls == 0) {
-                    self.pressed_scroll_buttons.retain(|&x| x != keycode);
+            },
+            Message::ReleaseScroll(button) => match button {
+                0 => {
+                    self.queued_scrolls.0 -= 1;
+                    if self.queued_scrolls.0 == 0 {
+                        self.pressed_scroll_buttons.retain(|&x| x != button);
+                    }
                 }
-            }
-            Message::Motion { x, y } => self.mouse_velocity = (x, y),
-            Message::Dummy => {
-                return Command::none();
-            }
+                1 => {
+                    self.queued_scrolls.1 -= 1;
+                    if self.queued_scrolls.1 == 0 {
+                        self.pressed_scroll_buttons.retain(|&x| x != button);
+                    }
+                }
+                2 => {
+                    self.queued_scrolls.2 -= 1;
+                    if self.queued_scrolls.2 == 0 {
+                        self.pressed_scroll_buttons.retain(|&x| x != button);
+                    }
+                }
+                3 => {
+                    self.queued_scrolls.3 -= 1;
+                    if self.queued_scrolls.3 == 0 {
+                        self.pressed_scroll_buttons.retain(|&x| x != button);
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
         }
         self.canvas.clear();
         Command::none()
@@ -161,7 +210,7 @@ impl Application for NuhxBoard {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        Subscription::from_recipe(listener::InputSubscription)
+        listener::bind().map(Message::Listener)
     }
 }
 
@@ -198,7 +247,7 @@ macro_rules! draw_key {
         for keycode in &$def.keycodes {
             if $pressed_button_list
                 .iter()
-                .map(|xinput_code: &u32| $keycode_map(*xinput_code))
+                .map(|rdev_code| $keycode_map(*rdev_code))
                 .collect::<Vec<u32>>()
                 .contains(keycode)
             {
@@ -275,8 +324,8 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             self,
                             def,
                             frame,
-                            match self.pressed_keys.contains(&50)
-                                || self.pressed_keys.contains(&62)
+                            match self.pressed_keys.contains(&rdev::Key::ShiftLeft)
+                                || self.pressed_keys.contains(&rdev::Key::ShiftRight)
                                 || (self.caps && def.change_on_caps)
                             {
                                 true => def.shift_text.clone(),
@@ -303,7 +352,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             frame,
                             def.text.clone(),
                             self.pressed_scroll_buttons,
-                            mouse_button_code_convert
+                            unit
                         );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {
@@ -313,7 +362,8 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
                             self.mouse_velocity.1.atan2(self.mouse_velocity.0),
                         );
-                        let squashed_magnitude = (0.03 * polar_velocity.0).tanh();
+                        let squashed_magnitude = (0.0002 * polar_velocity.0).tanh();
+                        dbg!(squashed_magnitude);
                         let ball = Path::circle(
                             iced::Point {
                                 x: def.location.x + (def.radius * polar_velocity.1.cos()),
@@ -464,6 +514,10 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
     }
 }
 
+fn unit<T>(var: T) -> T {
+    var
+}
+
 /// NuhxBoard - The Linux port of NohBoard
 #[derive(Parser, Debug)]
 #[command(
@@ -559,10 +613,6 @@ fn main() -> Result<()> {
         ..iced::Settings::default()
     };
     NuhxBoard::run(settings)?;
-
-    std::process::Command::new("killall")
-        .arg("xinput")
-        .spawn()?;
 
     Ok(())
 }

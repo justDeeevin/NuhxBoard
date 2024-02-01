@@ -9,7 +9,7 @@ repository = "https://github.com/ThePyroTF2/NuhxBoard"
 keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
 readme = "README.md"
-rust-version = "1.75.0"
+rust-version = "1.72.0"
 include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md", "NuhxBoard.png"]
 
 [dependencies]
@@ -27,7 +27,7 @@ iced = { version = "0.10.0", features = [
 ] }
 image = { version = "0.24.8", features = ["ico"] }
 inquire = "0.6.2"
-regex = "1.10.2"
+rdev = "0.5.3"
 serde = { version = "1.0.195", features = ["serde_derive"] }
 serde_json = "1.0.111"
 
