@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: awalsh128/cache-apt-pkgs-action@ubuntu-latest
+      - uses: awalsh128/cache-apt-pkgs-action@v1.3.1
         with:
           packages: libx11-dev
           version: 1.0
