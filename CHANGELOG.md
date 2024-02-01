@@ -9,4 +9,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cross-platform functionality with (`rdev`)[crates.io/crates/rdev]. #3
+- Cross-platform functionality with [`rdev`](https://crates.io/crates/rdev). [#3](https://github.com/thepyrotf2/nuhxboard/pull/3)
