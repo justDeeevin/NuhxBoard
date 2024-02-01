@@ -28,7 +28,11 @@ pub fn bind() -> Subscription<Event> {
                     let (tx, rx) = mpsc::unbounded();
                     std::thread::spawn(move || {
                         listen(move |event| {
-                            tx.unbounded_send(event).unwrap();
+                            if let Err(e) = tx.unbounded_send(event) {
+                                if !e.is_disconnected() {
+                                    panic!("{}", e);
+                                }
+                            }
                         })
                         .unwrap();
                     });
