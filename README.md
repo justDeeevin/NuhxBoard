@@ -8,6 +8,7 @@
 
 1. [Goals](#goals)
 2. [Usage](#usage)
+3. [Installation](#installation)
 
 ## Goals
 
@@ -38,3 +39,8 @@ Add keyboard groups to ~/.local/share/NuhxBoard/keyboards/
 ```
 
 _God, I love `clap`._
+
+## Installation
+
+NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
+If you use Linux and either install without binstall or build from source, you will need the `libxi-dev` and `lib-xtst` packages installed.
