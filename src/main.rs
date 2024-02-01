@@ -517,7 +517,7 @@ fn unit<T>(var: T) -> T {
     var
 }
 
-/// NuhxBoard - The Linux port of NohBoard
+/// NuhxBoard - The cross-platform alternative to NohBoard
 #[derive(Parser, Debug)]
 #[command(
     version,
