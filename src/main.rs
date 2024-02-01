@@ -531,6 +531,10 @@ struct Args {
     /// The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used.
     #[arg(short, long)]
     style: Option<String>,
+
+    /// List available keyboard groups or keyboards in a group specified by `--keyboard`
+    #[arg(short, long, conflicts_with("style"))]
+    list: bool,
 }
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
@@ -561,6 +565,23 @@ fn main() -> Result<()> {
     }
 
     let args = Args::parse();
+
+    if args.list {
+        let list = std::fs::read_dir(
+            home::home_dir()
+                .unwrap()
+                .join(".local/share/NuhxBoard/keyboards")
+                .join(args.keyboard),
+        )
+        .wrap_err("Error listing keyboards")
+        .suggestion("Make sure the given keyboard group exists")?;
+        for entry in list {
+            let entry = entry?;
+            println!("{}", &entry.file_name().to_str().unwrap_or(""));
+        }
+
+        return Ok(());
+    }
 
     let mut config_file = File::open(format!(
         "{}/.local/share/NuhxBoard/keyboards/{}/keyboard.json",
