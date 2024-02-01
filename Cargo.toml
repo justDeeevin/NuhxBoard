@@ -30,7 +30,6 @@ iced = { version = "0.10.0", features = [
   "canvas",
   "advanced",
   "async-std",
-  "system",
 ] }
 image = { version = "0.24.8", features = ["ico"] }
 inquire = "0.6.2"

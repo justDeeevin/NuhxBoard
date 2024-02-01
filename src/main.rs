@@ -48,7 +48,6 @@ struct Flags {
 enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
-    SystemInfoRead(iced::system::Information),
 }
 
 impl Application for NuhxBoard {
@@ -58,6 +57,13 @@ impl Application for NuhxBoard {
     type Message = Message;
 
     fn new(flags: Flags) -> (Self, Command<Self::Message>) {
+        #[cfg(target_os = "linux")]
+        {
+            if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
+                println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
+            }
+        }
+
         (
             Self {
                 config: flags.config,
@@ -72,7 +78,7 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
             },
-            iced::system::fetch_information(Message::SystemInfoRead),
+            Command::none(),
         )
     }
 
@@ -182,11 +188,6 @@ impl Application for NuhxBoard {
                 }
                 _ => {}
             },
-            Message::SystemInfoRead(info) => {
-                if info.graphics_backend == "Wayland" || info.graphics_backend == "XWayland" {
-                    println!("Warning: listening for input through XWayland. Some applications, when focused, may consume input events.");
-                }
-            }
             _ => {}
         }
         self.canvas.clear();
