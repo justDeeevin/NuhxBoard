@@ -1,5 +1,9 @@
 # <img src="NuhxBoard.png" alt="The NuhxBoard logo" width="34"> NuhxBoard
 
+![Crates.io Version](https://img.shields.io/crates/v/nuhxboard)
+![Crates.io License](https://img.shields.io/crates/l/nuhxboard)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/nuhxboard)
+
 ## Contents
 
 1. [Goals](#goals)
