@@ -363,7 +363,6 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             self.mouse_velocity.1.atan2(self.mouse_velocity.0),
                         );
                         let squashed_magnitude = (0.0002 * polar_velocity.0).tanh();
-                        dbg!(squashed_magnitude);
                         let ball = Path::circle(
                             iced::Point {
                                 x: def.location.x + (def.radius * polar_velocity.1.cos()),
