@@ -18,6 +18,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: awalsh128/cache-apt-pkgs-action@ubuntu-latest
+      with:
+        packages: libx11-dev
+        version: 1.0
     - name: Build
       run: cargo build --verbose
     - name: Run tests
