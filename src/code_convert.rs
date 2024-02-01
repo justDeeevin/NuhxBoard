@@ -1,211 +1,122 @@
-pub fn mouse_button_code_convert(xinput_code: u32) -> u32 {
-    match xinput_code {
-        1 => 0,
-        2 => 2,
-        3 => 1,
-        4 => 0,
-        5 => 1,
-        6 => 3,
-        7 => 2,
-        8 => 3,
-        9 => 4,
-        _ => panic!("Unknown xinput code: {}", xinput_code),
+use rdev::{Button, Key};
+
+pub fn mouse_button_code_convert(rdev_button: Button) -> u32 {
+    match rdev_button {
+        Button::Left => 0,
+        Button::Middle => 2,
+        Button::Right => 1,
+        Button::Unknown(code) => match code {
+            8 => 3,
+            9 => 4,
+            _ => panic!("Unknown mouse button code: {:?}", rdev_button),
+        },
     }
 }
 
-pub fn keycode_convert(xinput_code: u32) -> u32 {
-    // 1-9
-    if (10..=18).contains(&xinput_code) {
-        return xinput_code + 39;
-    }
-    // bckspce + tab
-    if (22..=23).contains(&xinput_code) {
-        return xinput_code - 14;
-    }
-
-    match xinput_code {
-        // esc
-        9 => 27,
-        // 0
-        19 => 48,
-        // -
-        20 => 189,
-        // =
-        21 => 187,
-        // q
-        24 => 81,
-        // w
-        25 => 87,
-        // e
-        26 => 69,
-        // r
-        27 => 82,
-        // t
-        28 => 84,
-        // y
-        29 => 89,
-        // u
-        30 => 85,
-        // i
-        31 => 73,
-        // o
-        32 => 79,
-        // p
-        33 => 80,
-        // [
-        34 => 219,
-        // ]
-        35 => 221,
-        // enter
-        36 => 13,
-        // ctrl
-        37 => 162,
-        // a
-        38 => 65,
-        // s
-        39 => 83,
-        // d
-        40 => 68,
-        // f
-        41 => 70,
-        // g
-        42 => 71,
-        // h
-        43 => 72,
-        // j
-        44 => 74,
-        // k
-        45 => 75,
-        // l
-        46 => 76,
-        // ;
-        47 => 186,
-        // '
-        48 => 222,
-        // `
-        49 => 192,
-        // shift
-        50 => 160,
-        // \
-        51 => 220,
-        // z
-        52 => 90,
-        // x
-        53 => 88,
-        // c
-        54 => 67,
-        // v
-        55 => 86,
-        // b
-        56 => 66,
-        // n
-        57 => 78,
-        // m
-        58 => 77,
-        // ,
-        59 => 188,
-        // .
-        60 => 190,
-        // /
-        61 => 191,
-        // shift
-        62 => 161,
-        // *
-        17 => 106,
-        // alt
-        64 => 164,
-        // space
-        65 => 32,
-        // caps
-        66 => 20,
-        // F1
-        67 => 112,
-        // F2
-        68 => 113,
-        // F3
-        69 => 114,
-        // F4
-        70 => 115,
-        // F5
-        71 => 116,
-        // F6
-        72 => 117,
-        // F7
-        73 => 118,
-        // F8
-        74 => 119,
-        // F9
-        75 => 120,
-        // F10
-        76 => 121,
-        // F11
-        95 => 122,
-        // F12
-        96 => 123,
-        // NumLock
-        77 => 144,
-        // KP /
-        106 => 111,
-        // KP *
-        63 => 106,
-        // KP -
-        82 => 109,
-        // KP 7
-        79 => 103,
-        // KP 8
-        80 => 104,
-        // KP 9
-        81 => 105,
-        // KP +
-        86 => 107,
-        // KP 4
-        83 => 100,
-        // KP 5
-        84 => 101,
-        // KP 6
-        85 => 102,
-        // KP 1
-        87 => 97,
-        // KP 2
-        88 => 98,
-        // KP 3
-        89 => 99,
-        // KP 0
-        90 => 96,
-        // KP .
-        91 => 110,
-        // KP enter
-        104 => 1025,
-        // print screen
-        107 => 44,
-        // Pause
-        127 => 19,
-        // Insert
-        118 => 45,
-        // Del
-        119 => 46,
-        // Home
-        110 => 36,
-        // End
-        115 => 35,
-        // PgUp
-        112 => 33,
-        // PgDn
-        117 => 34,
-        // Up
-        111 => 38,
-        // Down
-        116 => 40,
-        // Left
-        113 => 37,
-        // Right
-        114 => 39,
-        // RAlt
-        108 => 165,
+pub fn keycode_convert(rdev_key: Key) -> u32 {
+    match rdev_key {
+        Key::Backspace => 8,
+        Key::Tab => 9,
+        Key::Return => 13,
+        Key::Pause => 19,
+        Key::CapsLock => 20,
+        Key::Escape => 27,
+        Key::Space => 32,
+        Key::PageUp => 33,
+        Key::PageDown => 34,
+        Key::End => 35,
+        Key::Home => 36,
+        Key::LeftArrow => 37,
+        Key::UpArrow => 38,
+        Key::RightArrow => 39,
+        Key::DownArrow => 40,
+        Key::PrintScreen => 44,
+        Key::Insert => 45,
+        Key::Delete => 46,
+        Key::Num0 => 48,
+        Key::Num1 => 49,
+        Key::Num2 => 50,
+        Key::Num3 => 51,
+        Key::Num4 => 52,
+        Key::Num5 => 53,
+        Key::Num6 => 54,
+        Key::Num7 => 55,
+        Key::Num8 => 56,
+        Key::Num9 => 57,
+        Key::KeyA => 65,
+        Key::KeyB => 66,
+        Key::KeyC => 67,
+        Key::KeyD => 68,
+        Key::KeyE => 69,
+        Key::KeyF => 70,
+        Key::KeyG => 71,
+        Key::KeyH => 72,
+        Key::KeyI => 73,
+        Key::KeyJ => 74,
+        Key::KeyK => 75,
+        Key::KeyL => 76,
+        Key::KeyM => 77,
+        Key::KeyN => 78,
+        Key::KeyO => 79,
+        Key::KeyP => 80,
+        Key::KeyQ => 81,
+        Key::KeyR => 82,
+        Key::KeyS => 83,
+        Key::KeyT => 84,
+        Key::KeyU => 85,
+        Key::KeyV => 86,
+        Key::KeyW => 87,
+        Key::KeyX => 88,
+        Key::KeyY => 89,
+        Key::KeyZ => 90,
+        Key::Kp0 => 96,
+        Key::Kp1 => 97,
+        Key::Kp2 => 98,
+        Key::Kp3 => 99,
+        Key::Kp4 => 100,
+        Key::Kp5 => 101,
+        Key::Kp6 => 102,
+        Key::Kp7 => 103,
+        Key::Kp8 => 104,
+        Key::Kp9 => 105,
+        Key::KpMultiply => 106,
+        Key::KpPlus => 107,
+        Key::KpMinus => 109,
+        Key::KpDelete => 110,
+        Key::KpDivide => 111,
+        Key::F1 => 112,
+        Key::F2 => 113,
+        Key::F3 => 114,
+        Key::F4 => 115,
+        Key::F5 => 116,
+        Key::F6 => 117,
+        Key::F7 => 118,
+        Key::F8 => 119,
+        Key::F9 => 120,
+        Key::F10 => 121,
+        Key::F11 => 122,
+        Key::F12 => 123,
+        Key::ShiftLeft => 160,
+        Key::ShiftRight => 161,
+        Key::ControlLeft => 162,
+        Key::ControlRight => 163,
+        Key::Alt => 164,
+        Key::AltGr => 165,
+        Key::SemiColon => 186,
+        Key::Equal => 187,
+        Key::Comma => 188,
+        Key::Minus => 189,
+        Key::Dot => 190,
+        Key::Slash => 191,
+        Key::BackQuote => 192,
+        Key::LeftBracket => 219,
+        Key::BackSlash => 220,
+        Key::RightBracket => 221,
+        Key::Quote => 222,
+        Key::NumLock => 144,
+        Key::KpReturn => 1025,
         // Menu
-        135 => 93,
-        // RCtrl
-        105 => 163,
-        _ => panic!("Unknown xinput code: {}", xinput_code),
+        Key::Unknown(135) => 93,
+        _ => panic!("Unknown xinput code: {:?}", rdev_key),
     }
 }
