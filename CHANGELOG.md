@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/ThePyroTF2/NuhxBoard/compare/v0.2.1...HEAD)
 
 ### Added
 
 - Function to list keyboards and keyboard groups. [67e5308](https://github.com/ThePyroTF2/NuhxBoard/commit/67e5308a3b7b76253bef1b7de5dd8d830190d35c)
+- Warning when running under Wayland. [b389725](https://github.com/ThePyroTF2/NuhxBoard/commit/b3897255979f55006802939eee9dab4bcc03c478)
 
 ### Changed
 
@@ -19,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Occasional panic on window close. [aad1d09](https://github.com/ThePyroTF2/NuhxBoard/commit/aad1d0997be01f58092feb43fcc81625b717c450)
 
-## [v0.2.0] - 2024-01-31
+## [v0.2.1](https://github.com/thepyrotf2/nuhxboard/releases/v0.2.1) - 2024-01-31
 
 ### Added
 
