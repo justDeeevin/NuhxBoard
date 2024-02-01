@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Function to list keyboards and keyboard groups. [67e5308](https://github.com/ThePyroTF2/NuhxBoard/commit/67e5308a3b7b76253bef1b7de5dd8d830190d35c)
+
+### Changed
+
+- Help message tagline now matches NuhxBoard's cross-platform capability. [d300ee9](https://github.com/ThePyroTF2/NuhxBoard/commit/d300ee9f8902d8c745b47662c9319061c317b7e7)
+
 ### Fixed
 
 - Occasional panic on window close. [aad1d09](https://github.com/ThePyroTF2/NuhxBoard/commit/aad1d0997be01f58092feb43fcc81625b717c450)
