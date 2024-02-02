@@ -12,13 +12,13 @@ use color_eyre::{
 };
 use config::*;
 use iced::{
-    mouse,
+    keyboard, mouse,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
+    Application, Color, Command, Event, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use std::{fs::File, io::prelude::*};
 use style::*;
@@ -217,7 +217,100 @@ impl Application for NuhxBoard {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        listener::bind().map(Message::Listener)
+        Subscription::batch([
+            listener::bind().map(Message::Listener),
+            iced::subscription::events_with(|event, _status| match event {
+                Event::Mouse(event) => match event {
+                    mouse::Event::CursorMoved { position } => Some(Message::Listener(
+                        listener::Event::KeyReceived(rdev::Event {
+                            event_type: rdev::EventType::MouseMove {
+                                x: position.x as f64,
+                                y: position.y as f64,
+                            },
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        }),
+                    )),
+                    mouse::Event::ButtonPressed(button) => {
+                        let button = match button {
+                            mouse::Button::Left => rdev::Button::Left,
+                            mouse::Button::Right => rdev::Button::Right,
+                            mouse::Button::Middle => rdev::Button::Middle,
+                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::ButtonPress(button),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
+                    mouse::Event::ButtonReleased(button) => {
+                        let button = match button {
+                            mouse::Button::Left => rdev::Button::Left,
+                            mouse::Button::Right => rdev::Button::Right,
+                            mouse::Button::Middle => rdev::Button::Middle,
+                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::ButtonRelease(button),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
+                    mouse::Event::WheelScrolled { delta } => match delta {
+                        mouse::ScrollDelta::Lines { x, y } => Some(Message::Listener(
+                            listener::Event::KeyReceived(rdev::Event {
+                                event_type: rdev::EventType::Wheel {
+                                    delta_x: -x as i64,
+                                    delta_y: y as i64,
+                                },
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            }),
+                        )),
+                        mouse::ScrollDelta::Pixels { x, y } => Some(Message::Listener(
+                            listener::Event::KeyReceived(rdev::Event {
+                                event_type: rdev::EventType::Wheel {
+                                    delta_x: -x as i64,
+                                    delta_y: y as i64,
+                                },
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            }),
+                        )),
+                    },
+                    _ => None,
+                },
+                Event::Keyboard(event) => match event {
+                    keyboard::Event::KeyPressed {
+                        key_code,
+                        modifiers: _,
+                    } => Some(Message::Listener(listener::Event::KeyReceived(
+                        rdev::Event {
+                            event_type: rdev::EventType::KeyPress(iced_to_rdev(key_code)),
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        },
+                    ))),
+                    keyboard::Event::KeyReleased {
+                        key_code,
+                        modifiers: _,
+                    } => Some(Message::Listener(listener::Event::KeyReceived(
+                        rdev::Event {
+                            event_type: rdev::EventType::KeyRelease(iced_to_rdev(key_code)),
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        },
+                    ))),
+                    _ => None,
+                },
+                _ => None,
+            }),
+        ])
     }
 }
 
