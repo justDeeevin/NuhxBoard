@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Occasional panic on window close. [aad1d09](https://github.com/ThePyroTF2/NuhxBoard/commit/aad1d0997be01f58092feb43fcc81625b717c450)
+- Events not being handled when NuhxBoard is focused. [#4](https://github.com/ThePyroTF2/NuhxBoard/issues/4)
 
 ## [v0.2.1](https://github.com/thepyrotf2/nuhxboard/releases/v0.2.1) - 2024-01-31
 
