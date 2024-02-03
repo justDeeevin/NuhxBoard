@@ -146,9 +146,10 @@ impl Application for NuhxBoard {
                 rdev::EventType::MouseMove { x, y } => {
                     let (x, y) = (x as f32, y as f32);
                     let current_time = event.time;
-                    let time_diff = current_time
-                        .duration_since(self.previous_mouse_time)
-                        .unwrap();
+                    let time_diff = match current_time.duration_since(self.previous_mouse_time) {
+                        Ok(diff) => diff,
+                        Err(_) => return Command::none(),
+                    };
                     let position_diff = (
                         x - self.previous_mouse_position.0,
                         y - self.previous_mouse_position.1,
