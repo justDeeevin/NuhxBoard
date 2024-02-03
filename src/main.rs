@@ -722,9 +722,22 @@ fn main() -> Result<()> {
     let icon_image = image::load_from_memory(IMAGE)?;
     let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { config, style };
+
+    let height;
+
+    if cfg!(target_os = "linux") {
+        if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
+            height = flags.config.height - 35;
+        } else {
+            height = flags.config.height;
+        }
+    } else {
+        height = flags.config.height;
+    }
+
     let settings = iced::Settings {
         window: iced::window::Settings {
-            size: (flags.config.width, flags.config.height),
+            size: (flags.config.width, height),
             resizable: false,
             icon: Some(icon),
             ..iced::window::Settings::default()
