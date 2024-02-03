@@ -13,12 +13,13 @@ use color_eyre::{
 use config::*;
 use iced::{
     mouse,
+    multi_window::Application,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
+    Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use std::{fs::File, io::prelude::*};
 use style::*;
@@ -82,7 +83,7 @@ impl Application for NuhxBoard {
         )
     }
 
-    fn title(&self) -> String {
+    fn title(&self, _window: iced::window::Id) -> String {
         String::from("NuhxBoard")
     }
 
@@ -195,7 +196,10 @@ impl Application for NuhxBoard {
         Command::none()
     }
 
-    fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
+    fn view(
+        &self,
+        _window: iced::window::Id,
+    ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
         let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
             .height(Length::Fill)
             .width(Length::Fill);
@@ -206,7 +210,7 @@ impl Application for NuhxBoard {
             .into()
     }
 
-    fn theme(&self) -> Self::Theme {
+    fn theme(&self, _window: iced::window::Id) -> Self::Theme {
         let red = self.style.background_color.red / 255.0;
         let green = self.style.background_color.green / 255.0;
         let blue = self.style.background_color.blue / 255.0;

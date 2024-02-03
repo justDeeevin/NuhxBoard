@@ -30,6 +30,7 @@ iced = { git = "https://github.com/iced-rs/iced", branch = "master", features = 
   "canvas",
   "advanced",
   "async-std",
+  "multi-window",
 ] }
 image = { version = "0.24.8", features = ["ico"] }
 inquire = "0.6.2"
