@@ -25,7 +25,7 @@ color-eyre = { version = "0.6.2", default-features = false }
 colorgrad = "0.6.2"
 futures = "0.3.30"
 home = "0.5.9"
-iced = { version = "0.10.0", features = [
+iced = { git = "https://github.com/iced-rs/iced", branch = "master", features = [
   "image",
   "canvas",
   "advanced",
