@@ -19,7 +19,7 @@ use iced::{
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
+    Application, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use owo_colors::OwoColorize;
 use std::{fs::File, io::prelude::*};
@@ -231,10 +231,7 @@ impl Application for NuhxBoard {
         Command::none()
     }
 
-    fn view(
-        &self,
-        _window: iced::window::Id,
-    ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
+    fn view(&self) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
         let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
             .height(Length::Fill)
             .width(Length::Fill);
