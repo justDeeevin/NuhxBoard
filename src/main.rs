@@ -336,12 +336,20 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
                             self,
                             def,
                             frame,
-                            match self.pressed_keys.contains(&rdev::Key::ShiftLeft)
-                                || self.pressed_keys.contains(&rdev::Key::ShiftRight)
-                                || (self.caps && def.change_on_caps)
                             {
-                                true => def.shift_text.clone(),
-                                false => def.text.clone(),
+                                let shift_pressed =
+                                    self.pressed_keys.contains(&rdev::Key::ShiftLeft)
+                                        || self.pressed_keys.contains(&rdev::Key::ShiftRight);
+                                match def.change_on_caps {
+                                    true => match self.caps ^ shift_pressed {
+                                        true => def.shift_text.clone(),
+                                        false => def.text.clone(),
+                                    },
+                                    false => match shift_pressed {
+                                        true => def.shift_text.clone(),
+                                        false => def.text.clone(),
+                                    },
+                                }
                             },
                             self.pressed_keys,
                             keycode_convert
