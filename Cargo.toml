@@ -34,6 +34,7 @@ iced = { git = "https://github.com/iced-rs/iced", branch = "master", features = 
 ] }
 image = { version = "0.24.8", features = ["ico"] }
 inquire = "0.6.2"
+owo-colors = "4.0.0"
 rdev = "0.5.3"
 serde = { version = "1.0.195", features = ["serde_derive"] }
 serde_json = "1.0.111"
