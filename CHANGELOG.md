@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.2](https://github.com/justDeevin/NuhxBoard/releases/v0.3.2) - 2024-2-13
+
+### Fixed
+
+- Crash when either meta key or scroll lock was pressed. [4b6dc1b1](https://github.com/justDeeevin/NuhxBoard/commit/4b6dc1b17a4984a592457436dc2132727f28960a)
+- Crash when caps lock was pressed with window focused. [ca073ab](https://github.com/justDeeevin/NuhxBoard/commit/ca073ab4739a75f974e153d6c8a8a029fa271b1b)
+- Shift text behaving incorrectly. [a677332](https://github.com/justDeeevin/NuhxBoard/commit/a677332c34b92c7f935272dd041ec65bf3116c20)
+
 ## [v0.3.1](https://github.com/justDeevin/NuhxBoard/releases/v0.3.1) - 2024-2-2
 
 ### Fixed
