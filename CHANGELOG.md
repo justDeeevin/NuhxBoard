@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Fixed
 
-- Missing iced keycode `LWin` and `RWin`. [13951ab](https://github.com/justDeeevin/NuhxBoard/commit/13951ab8190ce8f93b1372219a87d65262a74b77)
+- Missing iced keycodes `LWin` and `RWin`. [13951ab](https://github.com/justDeeevin/NuhxBoard/commit/13951ab8190ce8f93b1372219a87d65262a74b77)
 
 ## [v0.3.2](https://github.com/justDeevin/NuhxBoard/releases/v0.3.2) - 2024-2-13
 
