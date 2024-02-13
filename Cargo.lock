@@ -2135,7 +2135,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard"
-version = "0.2.1"
+version = "0.3.1"
 dependencies = [
  "async-std",
  "clap",

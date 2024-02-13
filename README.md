@@ -8,6 +8,7 @@
 
 1. [Goals](#goals)
 2. [Usage](#usage)
+3. [Installation](#installation)
 
 ## Goals
 
@@ -24,13 +25,14 @@ To specify a keyboard layout, provide the group and the keyboard name in the `--
 Here's the output of the `--help` command:
 
 ```
-NuhxBoard - The Linux port of NohBoard
+NuhxBoard - The cross-platform alternative to NohBoard
 
-Usage: NuhxBoard [OPTIONS] --keyboard <KEYBOARD>
+Usage: nuhxboard [OPTIONS] --keyboard <KEYBOARD>
 
 Options:
   -k, --keyboard <KEYBOARD>  The keyboard to use. [GROUP]/[KEYBOARD]
   -s, --style <STYLE>        The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used
+  -l, --list                 List available keyboard groups or keyboards in a group specified by `--keyboard`
   -h, --help                 Print help
   -V, --version              Print version
 
@@ -38,3 +40,9 @@ Add keyboard groups to ~/.local/share/NuhxBoard/keyboards/
 ```
 
 _God, I love `clap`._
+
+## Installation
+
+NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
+If you use Linux and either install without binstall or build from source, you will need the `libxi-dev` and `lib-xtst` packages installed.
+You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest).

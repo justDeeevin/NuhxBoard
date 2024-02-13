@@ -1,16 +1,22 @@
 [package]
 name = "nuhxboard"
-version = "0.2.1"
+version = "0.3.1"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
 description = "A Linux port of NohBoard"
-repository = "https://github.com/ThePyroTF2/NuhxBoard"
+repository = "https://github.com/justDeevin/NuhxBoard"
 keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
 readme = "README.md"
 rust-version = "1.72.0"
 include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md", "NuhxBoard.png"]
+
+[package.metadata.wix]
+upgrade-guid = "531C0F4B-FFE1-4F4C-BD42-A8449DB1E0BD"
+path-guid = "6BCE453A-D71C-4EF5-A85D-B4A43D72A35F"
+license = false
+eula = false
 
 [dependencies]
 async-std = "1.12.0"
@@ -43,9 +49,14 @@ cargo-dist-version = "0.8.2"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = []
+installers = ["msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 

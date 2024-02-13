@@ -12,13 +12,13 @@ use color_eyre::{
 };
 use config::*;
 use iced::{
-    mouse,
+    keyboard, mouse,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
+    Application, Color, Command, Event, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use std::{fs::File, io::prelude::*};
 use style::*;
@@ -57,6 +57,13 @@ impl Application for NuhxBoard {
     type Message = Message;
 
     fn new(flags: Flags) -> (Self, Command<Self::Message>) {
+        #[cfg(target_os = "linux")]
+        {
+            if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
+                println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
+            }
+        }
+
         (
             Self {
                 config: flags.config,
@@ -139,9 +146,10 @@ impl Application for NuhxBoard {
                 rdev::EventType::MouseMove { x, y } => {
                     let (x, y) = (x as f32, y as f32);
                     let current_time = event.time;
-                    let time_diff = current_time
-                        .duration_since(self.previous_mouse_time)
-                        .unwrap();
+                    let time_diff = match current_time.duration_since(self.previous_mouse_time) {
+                        Ok(diff) => diff,
+                        Err(_) => return Command::none(),
+                    };
                     let position_diff = (
                         x - self.previous_mouse_position.0,
                         y - self.previous_mouse_position.1,
@@ -210,7 +218,100 @@ impl Application for NuhxBoard {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        listener::bind().map(Message::Listener)
+        Subscription::batch([
+            listener::bind().map(Message::Listener),
+            iced::subscription::events_with(|event, _status| match event {
+                Event::Mouse(event) => match event {
+                    mouse::Event::CursorMoved { position } => Some(Message::Listener(
+                        listener::Event::KeyReceived(rdev::Event {
+                            event_type: rdev::EventType::MouseMove {
+                                x: position.x as f64,
+                                y: position.y as f64,
+                            },
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        }),
+                    )),
+                    mouse::Event::ButtonPressed(button) => {
+                        let button = match button {
+                            mouse::Button::Left => rdev::Button::Left,
+                            mouse::Button::Right => rdev::Button::Right,
+                            mouse::Button::Middle => rdev::Button::Middle,
+                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::ButtonPress(button),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
+                    mouse::Event::ButtonReleased(button) => {
+                        let button = match button {
+                            mouse::Button::Left => rdev::Button::Left,
+                            mouse::Button::Right => rdev::Button::Right,
+                            mouse::Button::Middle => rdev::Button::Middle,
+                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::ButtonRelease(button),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
+                    mouse::Event::WheelScrolled { delta } => match delta {
+                        mouse::ScrollDelta::Lines { x, y } => Some(Message::Listener(
+                            listener::Event::KeyReceived(rdev::Event {
+                                event_type: rdev::EventType::Wheel {
+                                    delta_x: -x as i64,
+                                    delta_y: y as i64,
+                                },
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            }),
+                        )),
+                        mouse::ScrollDelta::Pixels { x, y } => Some(Message::Listener(
+                            listener::Event::KeyReceived(rdev::Event {
+                                event_type: rdev::EventType::Wheel {
+                                    delta_x: -x as i64,
+                                    delta_y: y as i64,
+                                },
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            }),
+                        )),
+                    },
+                    _ => None,
+                },
+                Event::Keyboard(event) => match event {
+                    keyboard::Event::KeyPressed {
+                        key_code,
+                        modifiers: _,
+                    } => Some(Message::Listener(listener::Event::KeyReceived(
+                        rdev::Event {
+                            event_type: rdev::EventType::KeyPress(iced_to_rdev(key_code)),
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        },
+                    ))),
+                    keyboard::Event::KeyReleased {
+                        key_code,
+                        modifiers: _,
+                    } => Some(Message::Listener(listener::Event::KeyReceived(
+                        rdev::Event {
+                            event_type: rdev::EventType::KeyRelease(iced_to_rdev(key_code)),
+                            name: None,
+                            time: std::time::SystemTime::now(),
+                        },
+                    ))),
+                    _ => None,
+                },
+                _ => None,
+            }),
+        ])
     }
 }
 
@@ -517,7 +618,7 @@ fn unit<T>(var: T) -> T {
     var
 }
 
-/// NuhxBoard - The Linux port of NohBoard
+/// NuhxBoard - The cross-platform alternative to NohBoard
 #[derive(Parser, Debug)]
 #[command(
     version,
@@ -531,6 +632,10 @@ struct Args {
     /// The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used.
     #[arg(short, long)]
     style: Option<String>,
+
+    /// List available keyboard groups or keyboards in a group specified by `--keyboard`
+    #[arg(short, long, conflicts_with("style"))]
+    list: bool,
 }
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
@@ -561,6 +666,23 @@ fn main() -> Result<()> {
     }
 
     let args = Args::parse();
+
+    if args.list {
+        let list = std::fs::read_dir(
+            home::home_dir()
+                .unwrap()
+                .join(".local/share/NuhxBoard/keyboards")
+                .join(args.keyboard),
+        )
+        .wrap_err("Error listing keyboards")
+        .suggestion("Make sure the given keyboard group exists")?;
+        for entry in list {
+            let entry = entry?;
+            println!("{}", &entry.file_name().to_str().unwrap_or(""));
+        }
+
+        return Ok(());
+    }
 
     let mut config_file = File::open(format!(
         "{}/.local/share/NuhxBoard/keyboards/{}/keyboard.json",
@@ -601,9 +723,22 @@ fn main() -> Result<()> {
     let icon_image = image::load_from_memory(IMAGE)?;
     let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { config, style };
+
+    let height;
+
+    if cfg!(target_os = "linux") {
+        if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
+            height = flags.config.height - 35;
+        } else {
+            height = flags.config.height;
+        }
+    } else {
+        height = flags.config.height;
+    }
+
     let settings = iced::Settings {
         window: iced::window::Settings {
-            size: (flags.config.width, flags.config.height),
+            size: (flags.config.width, height),
             resizable: false,
             icon: Some(icon),
             ..iced::window::Settings::default()
