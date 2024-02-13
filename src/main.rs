@@ -20,6 +20,7 @@ use iced::{
     },
     Application, Color, Command, Event, Length, Rectangle, Renderer, Subscription, Theme,
 };
+use owo_colors::OwoColorize;
 use std::{fs::File, io::prelude::*};
 use style::*;
 
@@ -27,8 +28,8 @@ struct NuhxBoard {
     config: Config,
     style: Style,
     canvas: Cache,
-    pressed_keys: Vec<rdev::Key>,
-    pressed_mouse_buttons: Vec<rdev::Button>,
+    pressed_keys: Vec<u32>,
+    pressed_mouse_buttons: Vec<u32>,
     pressed_scroll_buttons: Vec<u32>,
     mouse_velocity: (f32, f32),
     previous_mouse_position: (f32, f32),
@@ -36,12 +37,14 @@ struct NuhxBoard {
     /// `(up, down, right, left)`
     queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
+    verbose: bool,
 }
 
 #[derive(Default)]
 struct Flags {
     config: Config,
     style: Style,
+    verbose: bool,
 }
 
 #[derive(Debug)]
@@ -77,6 +80,7 @@ impl Application for NuhxBoard {
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
+                verbose: flags.verbose,
             },
             Command::none(),
         )
@@ -87,27 +91,58 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        if self.verbose {
+            dbg!(&message);
+        }
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
+                    if let Err(bad_key) = keycode_convert(key) {
+                        eprintln!("{}{:?}", "Unknown rdev keycode: ".red(), bad_key.red());
+                        return Command::none();
+                    }
                     if key == rdev::Key::CapsLock {
                         self.caps = !self.caps;
                     }
+                    let key = keycode_convert(key).unwrap();
                     if !self.pressed_keys.contains(&key) {
                         self.pressed_keys.push(key);
                     }
                 }
                 rdev::EventType::KeyRelease(key) => {
+                    if let Err(bad_key) = keycode_convert(key) {
+                        eprintln!("{}{:?}", "Unknown rdev keycode: ".red(), bad_key.red());
+                        return Command::none();
+                    }
+                    let key = keycode_convert(key).unwrap();
                     if self.pressed_keys.contains(&key) {
                         self.pressed_keys.retain(|&x| x != key);
                     }
                 }
                 rdev::EventType::ButtonPress(button) => {
+                    if let Err(bad_button) = mouse_button_code_convert(button) {
+                        eprintln!(
+                            "{}{:?}",
+                            "Unknown rdev mouse button code: ".red(),
+                            bad_button.red()
+                        );
+                        return Command::none();
+                    }
+                    let button = mouse_button_code_convert(button).unwrap();
                     if !self.pressed_mouse_buttons.contains(&button) {
                         self.pressed_mouse_buttons.push(button);
                     }
                 }
                 rdev::EventType::ButtonRelease(button) => {
+                    if let Err(bad_button) = mouse_button_code_convert(button) {
+                        eprintln!(
+                            "{}{:?}",
+                            "Unknown rdev mouse button code: ".red(),
+                            bad_button.red()
+                        );
+                        return Command::none();
+                    }
+                    let button = mouse_button_code_convert(button).unwrap();
                     if self.pressed_mouse_buttons.contains(&button) {
                         self.pressed_mouse_buttons.retain(|&x| x != button);
                     }
@@ -290,23 +325,41 @@ impl Application for NuhxBoard {
                     keyboard::Event::KeyPressed {
                         key_code,
                         modifiers: _,
-                    } => Some(Message::Listener(listener::Event::KeyReceived(
-                        rdev::Event {
-                            event_type: rdev::EventType::KeyPress(iced_to_rdev(key_code)),
-                            name: None,
-                            time: std::time::SystemTime::now(),
-                        },
-                    ))),
+                    } => {
+                        let key_code = match iced_to_rdev(key_code) {
+                            Ok(key) => key,
+                            Err(key_code) => {
+                                eprintln!("{}{:?}", "Unknown iced keycode: ".red(), key_code.red());
+                                return None;
+                            }
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::KeyPress(key_code),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
                     keyboard::Event::KeyReleased {
                         key_code,
                         modifiers: _,
-                    } => Some(Message::Listener(listener::Event::KeyReceived(
-                        rdev::Event {
-                            event_type: rdev::EventType::KeyRelease(iced_to_rdev(key_code)),
-                            name: None,
-                            time: std::time::SystemTime::now(),
-                        },
-                    ))),
+                    } => {
+                        let key_code = match iced_to_rdev(key_code) {
+                            Ok(key) => key,
+                            Err(key_code) => {
+                                eprintln!("{}{:?}", "Unknown iced keycode: ".red(), key_code.red());
+                                return None;
+                            }
+                        };
+                        Some(Message::Listener(listener::Event::KeyReceived(
+                            rdev::Event {
+                                event_type: rdev::EventType::KeyRelease(key_code),
+                                name: None,
+                                time: std::time::SystemTime::now(),
+                            },
+                        )))
+                    }
                     _ => None,
                 },
                 _ => None,
@@ -316,7 +369,7 @@ impl Application for NuhxBoard {
 }
 
 macro_rules! draw_key {
-    ($self: ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr, $keycode_map: expr) => {
+    ($self: ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr) => {
         let mut boundaries_iter = $def.boundaries.iter();
         let key = Path::new(|builder| {
             builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
@@ -346,12 +399,7 @@ macro_rules! draw_key {
         let mut pressed = false;
 
         for keycode in &$def.keycodes {
-            if $pressed_button_list
-                .iter()
-                .map(|rdev_code| $keycode_map(*rdev_code))
-                .collect::<Vec<u32>>()
-                .contains(keycode)
-            {
+            if $pressed_button_list.contains(keycode) {
                 pressed = true;
                 break;
             }
@@ -426,9 +474,12 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             def,
                             frame,
                             {
-                                let shift_pressed =
-                                    self.pressed_keys.contains(&rdev::Key::ShiftLeft)
-                                        || self.pressed_keys.contains(&rdev::Key::ShiftRight);
+                                let shift_pressed = self
+                                    .pressed_keys
+                                    .contains(&keycode_convert(rdev::Key::ShiftLeft).unwrap())
+                                    || self
+                                        .pressed_keys
+                                        .contains(&keycode_convert(rdev::Key::ShiftRight).unwrap());
                                 match def.change_on_caps {
                                     true => match self.caps ^ shift_pressed {
                                         true => def.shift_text.clone(),
@@ -440,8 +491,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                                     },
                                 }
                             },
-                            self.pressed_keys,
-                            keycode_convert
+                            self.pressed_keys
                         );
                     }
                     BoardElement::MouseKey(def) => {
@@ -450,8 +500,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             def,
                             frame,
                             def.text.clone(),
-                            self.pressed_mouse_buttons,
-                            mouse_button_code_convert
+                            self.pressed_mouse_buttons
                         );
                     }
                     BoardElement::MouseScroll(def) => {
@@ -460,8 +509,7 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
                             def,
                             frame,
                             def.text.clone(),
-                            self.pressed_scroll_buttons,
-                            unit
+                            self.pressed_scroll_buttons
                         );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {
@@ -622,10 +670,6 @@ impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
     }
 }
 
-fn unit<T>(var: T) -> T {
-    var
-}
-
 /// NuhxBoard - The cross-platform alternative to NohBoard
 #[derive(Parser, Debug)]
 #[command(
@@ -644,6 +688,10 @@ struct Args {
     /// List available keyboard groups or keyboards in a group specified by `--keyboard`
     #[arg(short, long, conflicts_with("style"))]
     list: bool,
+
+    /// Display debug info
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
@@ -730,7 +778,11 @@ fn main() -> Result<()> {
 
     let icon_image = image::load_from_memory(IMAGE)?;
     let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
-    let flags = Flags { config, style };
+    let flags = Flags {
+        config,
+        style,
+        verbose: args.verbose,
+    };
 
     let height;
 
