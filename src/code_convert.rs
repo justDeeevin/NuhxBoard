@@ -226,6 +226,8 @@ pub fn iced_to_rdev(iced_code: iced::keyboard::KeyCode) -> rdev::Key {
         KeyCode::Apostrophe => Key::Quote,
         KeyCode::Grave => Key::BackQuote,
         KeyCode::Capital => Key::CapsLock,
+        KeyCode::LWin => Key::MetaLeft,
+        KeyCode::RWin => Key::MetaRight,
         _ => panic!("Unknown iced code: {:?}", iced_code),
     }
 }
