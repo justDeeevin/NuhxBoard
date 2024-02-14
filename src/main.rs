@@ -12,13 +12,14 @@ use color_eyre::{
 };
 use config::*;
 use iced::{
-    keyboard, mouse,
+    mouse,
+    multi_window::Application,
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
         container,
     },
-    Application, Color, Command, Event, Length, Rectangle, Renderer, Subscription, Theme,
+    Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use owo_colors::OwoColorize;
 use std::{fs::File, io::prelude::*};
@@ -86,7 +87,7 @@ impl Application for NuhxBoard {
         )
     }
 
-    fn title(&self) -> String {
+    fn title(&self, _window: iced::window::Id) -> String {
         String::from("NuhxBoard")
     }
 
@@ -230,10 +231,13 @@ impl Application for NuhxBoard {
         Command::none()
     }
 
-    fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
-        let canvas = canvas(self as &Self)
-            .width(Length::Fill)
-            .height(Length::Fill);
+    fn view(
+        &self,
+        _window: iced::window::Id,
+    ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
+        let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
+            .height(Length::Fill)
+            .width(Length::Fill);
 
         container(canvas)
             .width(Length::Fill)
@@ -241,7 +245,7 @@ impl Application for NuhxBoard {
             .into()
     }
 
-    fn theme(&self) -> Self::Theme {
+    fn theme(&self, _window: iced::window::Id) -> Self::Theme {
         let red = self.style.background_color.red / 255.0;
         let green = self.style.background_color.green / 255.0;
         let blue = self.style.background_color.blue / 255.0;
@@ -249,122 +253,11 @@ impl Application for NuhxBoard {
             background: Color::from_rgb(red, green, blue),
             ..iced::theme::Palette::DARK
         };
-        Theme::Custom(Box::new(iced::theme::Custom::new(palette)))
+        Theme::Custom(Box::new(iced::theme::Custom::new("Custom".into(), palette)))
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        Subscription::batch([
-            listener::bind().map(Message::Listener),
-            iced::subscription::events_with(|event, _status| match event {
-                Event::Mouse(event) => match event {
-                    mouse::Event::CursorMoved { position } => Some(Message::Listener(
-                        listener::Event::KeyReceived(rdev::Event {
-                            event_type: rdev::EventType::MouseMove {
-                                x: position.x as f64,
-                                y: position.y as f64,
-                            },
-                            name: None,
-                            time: std::time::SystemTime::now(),
-                        }),
-                    )),
-                    mouse::Event::ButtonPressed(button) => {
-                        let button = match button {
-                            mouse::Button::Left => rdev::Button::Left,
-                            mouse::Button::Right => rdev::Button::Right,
-                            mouse::Button::Middle => rdev::Button::Middle,
-                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
-                        };
-                        Some(Message::Listener(listener::Event::KeyReceived(
-                            rdev::Event {
-                                event_type: rdev::EventType::ButtonPress(button),
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            },
-                        )))
-                    }
-                    mouse::Event::ButtonReleased(button) => {
-                        let button = match button {
-                            mouse::Button::Left => rdev::Button::Left,
-                            mouse::Button::Right => rdev::Button::Right,
-                            mouse::Button::Middle => rdev::Button::Middle,
-                            mouse::Button::Other(n) => rdev::Button::Unknown(n as u8),
-                        };
-                        Some(Message::Listener(listener::Event::KeyReceived(
-                            rdev::Event {
-                                event_type: rdev::EventType::ButtonRelease(button),
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            },
-                        )))
-                    }
-                    mouse::Event::WheelScrolled { delta } => match delta {
-                        mouse::ScrollDelta::Lines { x, y } => Some(Message::Listener(
-                            listener::Event::KeyReceived(rdev::Event {
-                                event_type: rdev::EventType::Wheel {
-                                    delta_x: -x as i64,
-                                    delta_y: y as i64,
-                                },
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            }),
-                        )),
-                        mouse::ScrollDelta::Pixels { x, y } => Some(Message::Listener(
-                            listener::Event::KeyReceived(rdev::Event {
-                                event_type: rdev::EventType::Wheel {
-                                    delta_x: -x as i64,
-                                    delta_y: y as i64,
-                                },
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            }),
-                        )),
-                    },
-                    _ => None,
-                },
-                Event::Keyboard(event) => match event {
-                    keyboard::Event::KeyPressed {
-                        key_code,
-                        modifiers: _,
-                    } => {
-                        let key_code = match iced_to_rdev(key_code) {
-                            Ok(key) => key,
-                            Err(key_code) => {
-                                eprintln!("{}{:?}", "Unknown iced keycode: ".red(), key_code.red());
-                                return None;
-                            }
-                        };
-                        Some(Message::Listener(listener::Event::KeyReceived(
-                            rdev::Event {
-                                event_type: rdev::EventType::KeyPress(key_code),
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            },
-                        )))
-                    }
-                    keyboard::Event::KeyReleased {
-                        key_code,
-                        modifiers: _,
-                    } => {
-                        let key_code = match iced_to_rdev(key_code) {
-                            Ok(key) => key,
-                            Err(key_code) => {
-                                eprintln!("{}{:?}", "Unknown iced keycode: ".red(), key_code.red());
-                                return None;
-                            }
-                        };
-                        Some(Message::Listener(listener::Event::KeyReceived(
-                            rdev::Event {
-                                event_type: rdev::EventType::KeyRelease(key_code),
-                                name: None,
-                                time: std::time::SystemTime::now(),
-                            },
-                        )))
-                    }
-                    _ => None,
-                },
-                _ => None,
-            }),
-        ])
+        listener::bind().map(Message::Listener)
     }
 }
 
@@ -426,7 +319,7 @@ macro_rules! draw_key {
                 current_style.text.green / 255.0,
                 current_style.text.blue / 255.0,
             ),
-            size: style.loose.font.size,
+            size: iced::Pixels(style.loose.font.size),
             font: iced::Font {
                 family: iced::font::Family::Name(
                     // Leak is required because Name requires static lifetime
@@ -440,12 +333,12 @@ macro_rules! draw_key {
                 } else {
                     iced::font::Weight::Normal
                 },
-                stretch: if current_style.font.style & 0b10 != 0 {
-                    iced::font::Stretch::Expanded
+                stretch: iced::font::Stretch::Normal,
+                style: if current_style.font.style & 0b10 != 0 {
+                    iced::font::Style::Italic
                 } else {
-                    iced::font::Stretch::Normal
+                    iced::font::Style::Normal
                 },
-                monospaced: false,
             },
             horizontal_alignment: iced::alignment::Horizontal::Center,
             vertical_alignment: iced::alignment::Vertical::Center,
@@ -454,7 +347,7 @@ macro_rules! draw_key {
     };
 }
 
-impl<Message> canvas::Program<Message, Renderer> for NuhxBoard {
+impl<Message> canvas::Program<Message> for NuhxBoard {
     type State = ();
 
     fn draw(
@@ -784,21 +677,12 @@ fn main() -> Result<()> {
         verbose: args.verbose,
     };
 
-    let height;
-
-    if cfg!(target_os = "linux") {
-        if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
-            height = flags.config.height - 35;
-        } else {
-            height = flags.config.height;
-        }
-    } else {
-        height = flags.config.height;
-    }
-
     let settings = iced::Settings {
         window: iced::window::Settings {
-            size: (flags.config.width, height),
+            size: (iced::Size {
+                width: flags.config.width as f32,
+                height: flags.config.height as f32,
+            }),
             resizable: false,
             icon: Some(icon),
             ..iced::window::Settings::default()
