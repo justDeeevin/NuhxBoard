@@ -22,6 +22,7 @@ use iced::{
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use owo_colors::OwoColorize;
+use std::sync::Arc;
 use std::{fs::File, io::prelude::*};
 use style::*;
 
@@ -254,6 +255,7 @@ impl Application for NuhxBoard {
             ..iced::theme::Palette::DARK
         };
         Theme::Custom(Box::new(iced::theme::Custom::new("Custom".into(), palette)))
+        Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
