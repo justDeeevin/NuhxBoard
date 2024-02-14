@@ -17,10 +17,11 @@ use iced::{
     widget::{
         canvas,
         canvas::{Cache, Geometry, Path},
-        container,
+        text,
     },
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
+use iced_aw::ContextMenu;
 use owo_colors::OwoColorize;
 use std::sync::Arc;
 use std::{fs::File, io::prelude::*};
@@ -240,10 +241,7 @@ impl Application for NuhxBoard {
             .height(Length::Fill)
             .width(Length::Fill);
 
-        container(canvas)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
+        ContextMenu::new(canvas, || text("hi").into()).into()
     }
 
     fn theme(&self, _window: iced::window::Id) -> Self::Theme {
@@ -254,7 +252,6 @@ impl Application for NuhxBoard {
             background: Color::from_rgb(red, green, blue),
             ..iced::theme::Palette::DARK
         };
-        Theme::Custom(Box::new(iced::theme::Custom::new("Custom".into(), palette)))
         Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
     }
 
