@@ -18,14 +18,17 @@ use iced::{
     widget::{
         button, canvas,
         canvas::{Cache, Geometry, Path},
-        column, container,
+        column, container, pick_list, text,
     },
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use iced_aw::ContextMenu;
 use owo_colors::OwoColorize;
 use std::sync::Arc;
-use std::{fs::File, io::prelude::*};
+use std::{
+    fs::{self, File},
+    io::prelude::*,
+};
 use style::*;
 use stylesheets::*;
 
@@ -44,6 +47,7 @@ struct NuhxBoard {
     caps: bool,
     verbose: bool,
     load_keyboard_window_id: Option<iced::window::Id>,
+    keyboard_group: Option<String>,
 }
 
 #[derive(Default)]
@@ -58,6 +62,7 @@ enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
     LoadKeyboardMenu,
+    ChangeKeyboardGroup(String),
 }
 
 impl Application for NuhxBoard {
@@ -89,6 +94,7 @@ impl Application for NuhxBoard {
                 queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
                 load_keyboard_window_id: None,
+                keyboard_group: None,
             },
             Command::none(),
         )
@@ -240,6 +246,9 @@ impl Application for NuhxBoard {
                 self.load_keyboard_window_id = Some(id);
                 return command;
             }
+            Message::ChangeKeyboardGroup(group) => {
+                self.keyboard_group = Some(group);
+            }
             _ => {}
         }
         self.canvas.clear();
@@ -250,22 +259,46 @@ impl Application for NuhxBoard {
         &self,
         window: iced::window::Id,
     ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
-        match window {
-            iced::window::Id::MAIN => {
-                let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
-                    .height(Length::Fill)
-                    .width(Length::Fill);
+        if window == iced::window::Id::MAIN {
+            let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
+                .height(Length::Fill)
+                .width(Length::Fill);
 
-                ContextMenu::new(canvas, || {
-                    container(column([button("Load Keyboard")
-                        .on_press(Message::LoadKeyboard)
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .into()]))
-                    .into()
-                })
+            ContextMenu::new(canvas, || {
+                container(column([button("Load Keyboard")
+                    .on_press(Message::LoadKeyboardMenu)
+                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                    .into()]))
                 .into()
+            })
+            .into()
+        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id {
+            if load_keyboard_window == window {
+                let mut keybs_path = home::home_dir().unwrap();
+                keybs_path.push(".local/share/NuhxBoard/keyboards");
+
+                let keyboard_options = fs::read_dir(keybs_path)
+                    .unwrap()
+                    .map(|r| r.unwrap())
+                    .filter(|entry| entry.file_type().unwrap().is_dir())
+                    .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                    .collect::<Vec<_>>();
+
+                column([
+                    text("Category:").into(),
+                    pick_list(
+                        keyboard_options,
+                        self.keyboard_group.clone(),
+                        Message::ChangeKeyboardGroup,
+                    )
+                    .into(),
+                ])
+                .into()
+            } else {
+                unreachable!()
             }
-            _ => button("Awooga").into(),
+        } else {
+            unreachable!()
         }
     }
 
