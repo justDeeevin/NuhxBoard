@@ -43,7 +43,7 @@ struct NuhxBoard {
     queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
     verbose: bool,
-    settings_window_id: Option<iced::window::Id>,
+    load_keyboard_window_id: Option<iced::window::Id>,
 }
 
 #[derive(Default)]
@@ -57,7 +57,7 @@ struct Flags {
 enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
-    LoadKeyboard,
+    LoadKeyboardMenu,
 }
 
 impl Application for NuhxBoard {
@@ -88,7 +88,7 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
-                settings_window_id: None,
+                load_keyboard_window_id: None,
             },
             Command::none(),
         )
@@ -232,10 +232,12 @@ impl Application for NuhxBoard {
                 }
                 _ => {}
             },
-            Message::LoadKeyboard => {
-                let (id, command) =
-                    iced::window::spawn::<Message>(iced::window::Settings::default());
-                self.settings_window_id = Some(id);
+            Message::LoadKeyboardMenu => {
+                let (id, command) = iced::window::spawn::<Message>(iced::window::Settings {
+                    resizable: false,
+                    ..Default::default()
+                });
+                self.load_keyboard_window_id = Some(id);
                 return command;
             }
             _ => {}
@@ -267,15 +269,25 @@ impl Application for NuhxBoard {
         }
     }
 
-    fn theme(&self, _window: iced::window::Id) -> Self::Theme {
-        let red = self.style.background_color.red / 255.0;
-        let green = self.style.background_color.green / 255.0;
-        let blue = self.style.background_color.blue / 255.0;
-        let palette: iced::theme::Palette = iced::theme::Palette {
-            background: Color::from_rgb(red, green, blue),
-            ..iced::theme::Palette::DARK
-        };
-        Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
+    fn theme(&self, window: iced::window::Id) -> Self::Theme {
+        if window == iced::window::Id::MAIN {
+            let red = self.style.background_color.red / 255.0;
+            let green = self.style.background_color.green / 255.0;
+            let blue = self.style.background_color.blue / 255.0;
+            let palette = iced::theme::Palette {
+                background: Color::from_rgb(red, green, blue),
+                ..iced::theme::Palette::DARK
+            };
+            Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
+        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id {
+            if load_keyboard_window == window {
+                Theme::Light
+            } else {
+                unreachable!()
+            }
+        } else {
+            unreachable!()
+        }
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
