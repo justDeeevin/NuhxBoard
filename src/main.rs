@@ -4,6 +4,7 @@ mod code_convert;
 mod config;
 mod listener;
 mod style;
+mod stylesheets;
 use clap::Parser;
 use code_convert::*;
 use color_eyre::{
@@ -15,9 +16,9 @@ use iced::{
     mouse,
     multi_window::Application,
     widget::{
-        canvas,
+        button, canvas,
         canvas::{Cache, Geometry, Path},
-        text,
+        column, container,
     },
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
@@ -26,6 +27,7 @@ use owo_colors::OwoColorize;
 use std::sync::Arc;
 use std::{fs::File, io::prelude::*};
 use style::*;
+use stylesheets::*;
 
 struct NuhxBoard {
     config: Config,
@@ -41,6 +43,7 @@ struct NuhxBoard {
     queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
     verbose: bool,
+    settings_window_id: Option<iced::window::Id>,
 }
 
 #[derive(Default)]
@@ -50,10 +53,11 @@ struct Flags {
     verbose: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
+    LoadKeyboard,
 }
 
 impl Application for NuhxBoard {
@@ -84,6 +88,7 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
+                settings_window_id: None,
             },
             Command::none(),
         )
@@ -227,6 +232,12 @@ impl Application for NuhxBoard {
                 }
                 _ => {}
             },
+            Message::LoadKeyboard => {
+                let (id, command) =
+                    iced::window::spawn::<Message>(iced::window::Settings::default());
+                self.settings_window_id = Some(id);
+                return command;
+            }
             _ => {}
         }
         self.canvas.clear();
@@ -235,13 +246,25 @@ impl Application for NuhxBoard {
 
     fn view(
         &self,
-        _window: iced::window::Id,
+        window: iced::window::Id,
     ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
-        let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
-            .height(Length::Fill)
-            .width(Length::Fill);
+        match window {
+            iced::window::Id::MAIN => {
+                let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
+                    .height(Length::Fill)
+                    .width(Length::Fill);
 
-        ContextMenu::new(canvas, || text("hi").into()).into()
+                ContextMenu::new(canvas, || {
+                    container(column([button("Load Keyboard")
+                        .on_press(Message::LoadKeyboard)
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .into()]))
+                    .into()
+                })
+                .into()
+            }
+            _ => button("Awooga").into(),
+        }
     }
 
     fn theme(&self, _window: iced::window::Id) -> Self::Theme {

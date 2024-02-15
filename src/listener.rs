@@ -9,7 +9,7 @@ enum State {
     Ready(mpsc::UnboundedReceiver<rdev::Event>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Event {
     Ready,
     KeyReceived(rdev::Event),
