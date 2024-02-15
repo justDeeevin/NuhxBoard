@@ -7,10 +7,7 @@ mod style;
 mod stylesheets;
 use clap::Parser;
 use code_convert::*;
-use color_eyre::{
-    eyre::{Result, WrapErr},
-    Section,
-};
+use color_eyre::eyre::Result;
 use config::*;
 use iced::{
     mouse,
@@ -18,11 +15,11 @@ use iced::{
     widget::{
         button, canvas,
         canvas::{Cache, Geometry, Path},
-        column, container, pick_list, text,
+        column, container, pick_list, row, text,
     },
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
-use iced_aw::ContextMenu;
+use iced_aw::{ContextMenu, SelectionList};
 use owo_colors::OwoColorize;
 use std::sync::Arc;
 use std::{
@@ -52,8 +49,6 @@ struct NuhxBoard {
 
 #[derive(Default)]
 struct Flags {
-    config: Config,
-    style: Style,
     verbose: bool,
 }
 
@@ -61,8 +56,10 @@ struct Flags {
 enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
-    LoadKeyboardMenu,
+    OpenLoadKeyboardMenu,
+    WindowClosed(iced::window::Id),
     ChangeKeyboardGroup(String),
+    LoadKeyboard(String),
 }
 
 impl Application for NuhxBoard {
@@ -78,11 +75,22 @@ impl Application for NuhxBoard {
                 println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
             }
         }
+        let (id, command) = iced::window::spawn::<Message>(iced::window::Settings {
+            resizable: false,
+            ..Default::default()
+        });
+
+        let config = Config {
+            version: 2,
+            width: 1000.0,
+            height: 1000.0,
+            elements: vec![],
+        };
 
         (
             Self {
-                config: flags.config,
-                style: flags.style,
+                config,
+                style: Style::default(),
                 canvas: Cache::default(),
                 pressed_keys: Vec::new(),
                 pressed_mouse_buttons: Vec::new(),
@@ -93,10 +101,10 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
-                load_keyboard_window_id: None,
+                load_keyboard_window_id: Some(id),
                 keyboard_group: None,
             },
-            Command::none(),
+            command,
         )
     }
 
@@ -238,7 +246,7 @@ impl Application for NuhxBoard {
                 }
                 _ => {}
             },
-            Message::LoadKeyboardMenu => {
+            Message::OpenLoadKeyboardMenu => {
                 let (id, command) = iced::window::spawn::<Message>(iced::window::Settings {
                     resizable: false,
                     ..Default::default()
@@ -248,6 +256,32 @@ impl Application for NuhxBoard {
             }
             Message::ChangeKeyboardGroup(group) => {
                 self.keyboard_group = Some(group);
+            }
+            Message::LoadKeyboard(keyboard) => {
+                let mut path = home::home_dir().unwrap();
+                path.push(".local/share/NuhxBoard/keyboards");
+                path.push(self.keyboard_group.as_ref().unwrap());
+                path.push(keyboard);
+                path.push("keyboard.json");
+                let mut keyboard_file = File::open(path).unwrap();
+                let mut config_string = "".into();
+                keyboard_file.read_to_string(&mut config_string).unwrap();
+
+                self.config = serde_json::from_str(config_string.as_str()).unwrap();
+                return iced::window::resize(
+                    iced::window::Id::MAIN,
+                    iced::Size {
+                        width: self.config.width,
+                        height: self.config.height,
+                    },
+                );
+            }
+            Message::WindowClosed(id) => {
+                if let Some(load_keyboard_window_id) = self.load_keyboard_window_id {
+                    if id == load_keyboard_window_id {
+                        self.load_keyboard_window_id = None;
+                    }
+                }
             }
             _ => {}
         }
@@ -264,9 +298,13 @@ impl Application for NuhxBoard {
                 .height(Length::Fill)
                 .width(Length::Fill);
 
-            ContextMenu::new(canvas, || {
+            let load_keyboard_menu_message = match self.load_keyboard_window_id {
+                Some(_) => None,
+                None => Some(Message::OpenLoadKeyboardMenu),
+            };
+            ContextMenu::new(canvas, move || {
                 container(column([button("Load Keyboard")
-                    .on_press(Message::LoadKeyboardMenu)
+                    .on_press_maybe(load_keyboard_menu_message.clone())
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .into()]))
                 .into()
@@ -274,22 +312,42 @@ impl Application for NuhxBoard {
             .into()
         } else if let Some(load_keyboard_window) = self.load_keyboard_window_id {
             if load_keyboard_window == window {
-                let mut keybs_path = home::home_dir().unwrap();
-                keybs_path.push(".local/share/NuhxBoard/keyboards");
+                let mut groups_path = home::home_dir().unwrap();
+                groups_path.push(".local/share/NuhxBoard/keyboards");
 
-                let keyboard_options = fs::read_dir(keybs_path)
+                let keyboard_group_options = fs::read_dir(&groups_path)
                     .unwrap()
                     .map(|r| r.unwrap())
                     .filter(|entry| entry.file_type().unwrap().is_dir())
                     .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                     .collect::<Vec<_>>();
 
+                let keyboard_options = if let Some(group) = &self.keyboard_group {
+                    let mut keyboards_path = groups_path;
+                    keyboards_path.push(group);
+                    fs::read_dir(keyboards_path)
+                        .unwrap()
+                        .map(|r| r.unwrap())
+                        .filter(|entry| entry.file_type().unwrap().is_dir())
+                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                        .collect::<Vec<_>>()
+                } else {
+                    vec![]
+                };
+
                 column([
                     text("Category:").into(),
                     pick_list(
-                        keyboard_options,
+                        keyboard_group_options,
                         self.keyboard_group.clone(),
                         Message::ChangeKeyboardGroup,
+                    )
+                    .into(),
+                    row(
+                        [SelectionList::new(keyboard_options.leak(), |_, selection| {
+                            Message::LoadKeyboard(selection)
+                        })
+                        .into()],
                     )
                     .into(),
                 ])
@@ -324,7 +382,15 @@ impl Application for NuhxBoard {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        listener::bind().map(Message::Listener)
+        Subscription::batch([
+            listener::bind().map(Message::Listener),
+            iced::event::listen_with(|event, _| match event {
+                iced::Event::Window(id, iced::window::Event::Closed) => {
+                    Some(Message::WindowClosed(id))
+                }
+                _ => None,
+            }),
+        ])
     }
 }
 
@@ -637,18 +703,6 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
     after_help = "Add keyboard groups to ~/.local/share/NuhxBoard/keyboards/"
 )]
 struct Args {
-    /// The keyboard to use. [GROUP]/[KEYBOARD]
-    #[arg(short, long)]
-    keyboard: String,
-
-    /// The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used.
-    #[arg(short, long)]
-    style: Option<String>,
-
-    /// List available keyboard groups or keyboards in a group specified by `--keyboard`
-    #[arg(short, long, conflicts_with("style"))]
-    list: bool,
-
     /// Display debug info
     #[arg(short, long)]
     verbose: bool,
@@ -683,72 +737,17 @@ fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    if args.list {
-        let list = std::fs::read_dir(
-            home::home_dir()
-                .unwrap()
-                .join(".local/share/NuhxBoard/keyboards")
-                .join(args.keyboard),
-        )
-        .wrap_err("Error listing keyboards")
-        .suggestion("Make sure the given keyboard group exists")?;
-        for entry in list {
-            let entry = entry?;
-            println!("{}", &entry.file_name().to_str().unwrap_or(""));
-        }
-
-        return Ok(());
-    }
-
-    let mut config_file = File::open(format!(
-        "{}/.local/share/NuhxBoard/keyboards/{}/keyboard.json",
-        home::home_dir().unwrap().to_str().unwrap(),
-        args.keyboard
-    ))
-    .wrap_err("Error opening keyboard file")
-    .suggestion("Make sure the given keyboard file exists")?;
-    let mut config_string = String::new();
-    config_file
-        .read_to_string(&mut config_string)
-        .wrap_err("Error reading keyboard file")?;
-    let config: Config = serde_json::from_str(&config_string)
-        .wrap_err("Error parsing keyboard file")
-        .suggestion("Make sure the keyboard file is valid")?;
-
-    let style: Style;
-    if let Some(style_name) = &args.style {
-        let mut style_file = File::open(format!(
-            "{}/.local/share/NuhxBoard/keyboards/{}/{}.style",
-            home::home_dir().unwrap().to_str().unwrap(),
-            args.keyboard,
-            style_name
-        ))
-        .wrap_err("Error opening style file")
-        .suggestion("Make sure the given style file exists")?;
-        let mut style_string = String::new();
-        style_file
-            .read_to_string(&mut style_string)
-            .wrap_err("Error reading style file")?;
-        style = serde_json::from_str(&style_string)
-            .wrap_err("Error parsing style file")
-            .suggestion("Make sure the style file is valid")?;
-    } else {
-        style = Style::default()
-    }
-
     let icon_image = image::load_from_memory(IMAGE)?;
     let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags {
-        config,
-        style,
         verbose: args.verbose,
     };
 
     let settings = iced::Settings {
         window: iced::window::Settings {
             size: (iced::Size {
-                width: flags.config.width as f32,
-                height: flags.config.height as f32,
+                width: 100.0,
+                height: 100.0,
             }),
             resizable: false,
             icon: Some(icon),

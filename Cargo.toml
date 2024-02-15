@@ -33,7 +33,9 @@ iced = { git = "https://github.com/iced-rs/iced", features = [
   "multi-window",
 ] }
 image = { version = "0.24.8", features = ["ico"] }
-iced_aw = { git = "https://github.com/iced-rs/iced_aw", branch = "main" }
+iced_aw = { git = "https://github.com/iced-rs/iced_aw", branch = "main", features = [
+  "selection_list",
+] }
 inquire = "0.6.2"
 owo-colors = "4.0.0"
 rdev = "0.5.3"

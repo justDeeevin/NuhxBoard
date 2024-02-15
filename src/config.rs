@@ -6,9 +6,9 @@ pub struct Config {
     #[serde(rename = "Version")]
     pub version: u8,
     #[serde(rename = "Width")]
-    pub width: u32,
+    pub width: f32,
     #[serde(rename = "Height")]
-    pub height: u32,
+    pub height: f32,
     #[serde(rename = "Elements")]
     pub elements: Vec<BoardElement>,
 }
