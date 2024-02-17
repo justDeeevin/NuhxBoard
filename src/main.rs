@@ -19,7 +19,6 @@ use iced::{
         canvas::{Cache, Geometry, Path},
         column, container, pick_list, row, text,
     },
-    Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
     window, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use iced_aw::{ContextMenu, SelectionList};
