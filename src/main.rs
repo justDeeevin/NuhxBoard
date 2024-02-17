@@ -303,7 +303,6 @@ impl Application for NuhxBoard {
                 path.push(self.keyboard_category.as_ref().unwrap());
                 path.push(self.keyboard.as_ref().unwrap());
                 path.push(format!("{}.style", style));
-                dbg!(&path);
 
                 let mut style_file = File::open(path).unwrap();
                 let mut style_string = "".into();
