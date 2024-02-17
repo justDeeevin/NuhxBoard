@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 #![windows_subsystem = "windows"]
+#![feature(let_chains)]
 
 mod code_convert;
 mod config;
@@ -345,10 +346,11 @@ impl Application for NuhxBoard {
                 .into()
             })
             .into()
-        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id {
-            if load_keyboard_window == window {
-                let mut path = home::home_dir().unwrap();
-                path.push(".local/share/NuhxBoard/keyboards");
+        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
+            && load_keyboard_window == window
+        {
+            let mut path = home::home_dir().unwrap();
+            path.push(".local/share/NuhxBoard/keyboards");
 
                 let keyboard_category_options = fs::read_dir(&path)
                     .unwrap()
@@ -431,12 +433,10 @@ impl Application for NuhxBoard {
                 ..iced::theme::Palette::DARK
             };
             Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
-        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id {
-            if load_keyboard_window == window {
-                Theme::Light
-            } else {
-                unreachable!()
-            }
+        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
+            && load_keyboard_window == window
+        {
+            Theme::Light
         } else {
             unreachable!()
         }
