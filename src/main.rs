@@ -432,7 +432,7 @@ impl Application for NuhxBoard {
         {
             Theme::Light
         } else {
-            unreachable!()
+            Theme::Dark
         }
     }
 
