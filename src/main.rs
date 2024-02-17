@@ -950,8 +950,19 @@ fn main() -> Result<()> {
                 fs::File::create(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
             }
             "windows" => {
-                eprintln!("Sorry, the install command isn't implemented for Windows yet.");
-                std::process::exit(1);
+                let mut lnk_path = home::home_dir().unwrap();
+                lnk_path
+                    .push("AppData/Roaming/Microsoft/Windows/Start Menu/Programs/NuhxBoard.lnk");
+
+                let lnk = lnk_path.to_str().unwrap();
+
+                let mut target_path = home::home_dir().unwrap();
+                target_path.push(".cargo/bin/nuhxboard.exe");
+
+                let target = target_path.to_str().unwrap();
+
+                let sl = mslnk::ShellLink::new(target)?;
+                sl.create_lnk(lnk)?;
             }
             "macos" => {
                 eprintln!("Sorry, the install command isn't implemented for MacOS yet.");
