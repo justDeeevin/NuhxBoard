@@ -47,8 +47,13 @@ struct NuhxBoard {
     verbose: bool,
     load_keyboard_window_id: Option<window::Id>,
     keyboard_category: Option<String>,
-    keyboard: Option<String>,
+    keyboard: Option<usize>,
+    style_choice: Option<usize>,
     error_windows: HashMap<window::Id, Error>,
+    keyboard_options: Vec<String>,
+    keyboard_category_options: Vec<String>,
+    style_options: Vec<StyleChoice>,
+    keyboards_path: std::path::PathBuf,
 }
 
 #[derive(Default)]
@@ -56,15 +61,30 @@ struct Flags {
     verbose: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum StyleChoice {
+    Default,
+    Custom(String),
+}
+
+impl std::fmt::Display for StyleChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StyleChoice::Default => write!(f, "Global Default"),
+            StyleChoice::Custom(s) => write!(f, "{}", s),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
-    LoadStyle(String),
+    LoadStyle(usize),
     OpenLoadKeyboardMenu,
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
-    LoadKeyboard(String),
+    LoadKeyboard(usize),
 }
 
 #[derive(Debug)]
@@ -87,6 +107,8 @@ const LOAD_KEYBOARD_WINDOW_SIZE: iced::Size = iced::Size {
     height: 250.0,
 };
 
+async fn noop() {}
+
 impl Application for NuhxBoard {
     type Flags = Flags;
     type Theme = Theme;
@@ -100,12 +122,9 @@ impl Application for NuhxBoard {
                 println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
             }
         }
-        let (id, command) = window::spawn::<Message>(window::Settings {
-            resizable: false,
-            size: LOAD_KEYBOARD_WINDOW_SIZE,
-            ..Default::default()
-        });
 
+        let mut path = home::home_dir().unwrap();
+        path.push(".local/share/NuhxBoard/keyboards");
         let config = Config {
             version: 2,
             width: DEFAULT_WINDOW_SIZE.width,
@@ -127,12 +146,17 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
-                load_keyboard_window_id: Some(id),
+                load_keyboard_window_id: None,
                 keyboard_category: None,
                 keyboard: None,
+                style_choice: None,
                 error_windows: HashMap::new(),
+                keyboard_options: vec![],
+                keyboard_category_options: vec![],
+                style_options: vec![],
+                keyboards_path: path,
             },
-            command,
+            Command::perform(noop(), |_| Message::OpenLoadKeyboardMenu),
         )
     }
 
@@ -263,26 +287,49 @@ impl Application for NuhxBoard {
                 _ => {}
             },
             Message::OpenLoadKeyboardMenu => {
+                let path = self.keyboards_path.clone();
                 let (id, command) = window::spawn::<Message>(window::Settings {
                     resizable: false,
                     size: LOAD_KEYBOARD_WINDOW_SIZE,
                     ..Default::default()
                 });
                 self.load_keyboard_window_id = Some(id);
+
+                self.keyboard_category_options = fs::read_dir(path)
+                    .unwrap()
+                    .map(|r| r.unwrap())
+                    .filter(|entry| entry.file_type().unwrap().is_dir())
+                    .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                    .collect::<Vec<_>>();
+
                 return command;
             }
             Message::ChangeKeyboardCategory(category) => {
+                let mut path = self.keyboards_path.clone();
+
                 self.keyboard_category = Some(category);
                 self.keyboard = None;
+                self.style_choice = None;
+                self.style_options = vec![];
+                self.keyboard_options = if let Some(category) = &self.keyboard_category {
+                    path.push(category);
+                    fs::read_dir(&path)
+                        .unwrap()
+                        .map(|r| r.unwrap())
+                        .filter(|entry| entry.file_type().unwrap().is_dir())
+                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                        .collect()
+                } else {
+                    vec![]
+                };
             }
             Message::LoadKeyboard(keyboard) => {
-                self.keyboard = Some(keyboard.clone());
+                self.keyboard = Some(keyboard);
                 self.style = Style::default();
 
-                let mut path = home::home_dir().unwrap();
-                path.push(".local/share/NuhxBoard/keyboards");
+                let mut path = self.keyboards_path.clone();
                 path.push(self.keyboard_category.as_ref().unwrap());
-                path.push(keyboard);
+                path.push(self.keyboard_options[keyboard].clone());
                 path.push("keyboard.json");
                 let mut config_file = match File::open(path) {
                     Ok(file) => file,
@@ -297,6 +344,35 @@ impl Application for NuhxBoard {
                     Ok(config) => config,
                     Err(e) => return self.error(Error::ConfigParse(e)),
                 };
+
+                let mut path = self.keyboards_path.clone();
+                path.push(self.keyboard_category.as_ref().unwrap());
+                path.push(self.keyboard_options[keyboard].clone());
+
+                self.style_options.push(StyleChoice::Default);
+                self.style_options.append(
+                    &mut fs::read_dir(&path)
+                        .unwrap()
+                        .map(|r| r.unwrap())
+                        .filter(|entry| entry.file_type().unwrap().is_file())
+                        .filter(|entry| {
+                            entry.path().extension() == Some(std::ffi::OsStr::new("style"))
+                        })
+                        .map(|entry| {
+                            StyleChoice::Custom(
+                                entry
+                                    .path()
+                                    .file_stem()
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
+                                    .to_owned(),
+                            )
+                        })
+                        .collect(),
+                );
+                self.style_choice = Some(0);
+
                 return window::resize(
                     window::Id::MAIN,
                     iced::Size {
@@ -306,10 +382,20 @@ impl Application for NuhxBoard {
                 );
             }
             Message::LoadStyle(style) => {
+                self.style_choice = Some(style);
+
+                if self.style_options[style] == StyleChoice::Default {
+                    self.style = Style::default();
+                    return Command::none();
+                }
+                let style = match &self.style_options[style] {
+                    StyleChoice::Custom(style) => style,
+                    _ => unreachable!(),
+                };
                 let mut path = home::home_dir().unwrap();
                 path.push(".local/share/NuhxBoard/keyboards");
                 path.push(self.keyboard_category.as_ref().unwrap());
-                path.push(self.keyboard.as_ref().unwrap());
+                path.push(self.keyboard_options[self.keyboard.unwrap()].clone());
                 path.push(format!("{}.style", style));
 
                 let mut style_file = match File::open(path) {
@@ -374,65 +460,34 @@ impl Application for NuhxBoard {
         } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
             && load_keyboard_window == window
         {
-            let mut path = home::home_dir().unwrap();
-            path.push(".local/share/NuhxBoard/keyboards");
-
-            let keyboard_category_options = fs::read_dir(&path)
-                .unwrap()
-                .map(|r| r.unwrap())
-                .filter(|entry| entry.file_type().unwrap().is_dir())
-                .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                .collect::<Vec<_>>();
-
-            let keyboard_options = if let Some(category) = &self.keyboard_category {
-                path.push(category);
-                fs::read_dir(&path)
-                    .unwrap()
-                    .map(|r| r.unwrap())
-                    .filter(|entry| entry.file_type().unwrap().is_dir())
-                    .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                    .collect()
-            } else {
-                vec![]
-            };
-
-            let style_options = if let Some(keyboard) = &self.keyboard {
-                path.push(keyboard);
-                fs::read_dir(&path)
-                    .unwrap()
-                    .map(|r| r.unwrap())
-                    .filter(|entry| entry.file_type().unwrap().is_file())
-                    .filter(|entry| entry.path().extension() == Some(std::ffi::OsStr::new("style")))
-                    .map(|entry| {
-                        entry
-                            .path()
-                            .file_stem()
-                            .unwrap()
-                            .to_str()
-                            .unwrap()
-                            .to_owned()
-                    })
-                    .collect()
-            } else {
-                vec![]
-            };
-
             column([
                 text("Category:").into(),
                 pick_list(
-                    keyboard_category_options,
+                    self.keyboard_category_options.clone(),
                     self.keyboard_category.clone(),
                     Message::ChangeKeyboardCategory,
                 )
                 .into(),
                 row([
-                    SelectionList::new(keyboard_options.leak(), |_, selection| {
-                        Message::LoadKeyboard(selection)
-                    })
+                    SelectionList::new_with(
+                        self.keyboard_options.clone().leak(),
+                        |i, _| Message::LoadKeyboard(i),
+                        12.0,
+                        5.0,
+                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        self.keyboard,
+                        iced::Font::default(),
+                    )
                     .into(),
-                    SelectionList::new(style_options.leak(), |_, selection| {
-                        Message::LoadStyle(selection)
-                    })
+                    SelectionList::new_with(
+                        self.style_options.clone().leak(),
+                        |i, _| Message::LoadStyle(i),
+                        12.0,
+                        5.0,
+                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        self.style_choice,
+                        iced::Font::default(),
+                    )
                     .into(),
                 ])
                 .into(),
