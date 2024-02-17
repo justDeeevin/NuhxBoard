@@ -9,7 +9,7 @@
 1. [Goals](#goals)
 2. [Usage](#usage)
 3. [Installation](#installation)
-   - [0.5.0](#0.5.0)
+   - [0.5.0](#050)
 
 ## Goals
 
