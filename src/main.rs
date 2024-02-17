@@ -19,6 +19,7 @@ use iced::{
         column, container, pick_list, row, text,
     },
     Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
+    window, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use iced_aw::{ContextMenu, SelectionList};
 use owo_colors::OwoColorize;
@@ -44,7 +45,7 @@ struct NuhxBoard {
     queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
     verbose: bool,
-    load_keyboard_window_id: Option<iced::window::Id>,
+    load_keyboard_window_id: Option<window::Id>,
     keyboard_category: Option<String>,
     keyboard: Option<String>,
 }
@@ -60,7 +61,7 @@ enum Message {
     ReleaseScroll(u32),
     LoadStyle(String),
     OpenLoadKeyboardMenu,
-    WindowClosed(iced::window::Id),
+    WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(String),
 }
@@ -88,7 +89,7 @@ impl Application for NuhxBoard {
                 println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
             }
         }
-        let (id, command) = iced::window::spawn::<Message>(iced::window::Settings {
+        let (id, command) = window::spawn::<Message>(window::Settings {
             resizable: false,
             size: LOAD_KEYBOARD_WINDOW_SIZE,
             ..Default::default()
@@ -123,7 +124,7 @@ impl Application for NuhxBoard {
         )
     }
 
-    fn title(&self, _window: iced::window::Id) -> String {
+    fn title(&self, _window: window::Id) -> String {
         String::from("NuhxBoard")
     }
 
@@ -262,7 +263,7 @@ impl Application for NuhxBoard {
                 _ => {}
             },
             Message::OpenLoadKeyboardMenu => {
-                let (id, command) = iced::window::spawn::<Message>(iced::window::Settings {
+                let (id, command) = window::spawn::<Message>(window::Settings {
                     resizable: false,
                     size: LOAD_KEYBOARD_WINDOW_SIZE,
                     ..Default::default()
@@ -288,8 +289,8 @@ impl Application for NuhxBoard {
                 config_file.read_to_string(&mut config_string).unwrap();
 
                 self.config = serde_json::from_str(config_string.as_str()).unwrap();
-                return iced::window::resize(
-                    iced::window::Id::MAIN,
+                return window::resize(
+                    window::Id::MAIN,
                     iced::Size {
                         width: self.config.width,
                         height: self.config.height,
@@ -326,9 +327,9 @@ impl Application for NuhxBoard {
 
     fn view(
         &self,
-        window: iced::window::Id,
+        window: window::Id,
     ) -> iced::Element<'_, Self::Message, Self::Theme, crate::Renderer> {
-        if window == iced::window::Id::MAIN {
+        if window == window::Id::MAIN {
             let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(self)
                 .height(Length::Fill)
                 .width(Length::Fill);
@@ -421,8 +422,8 @@ impl Application for NuhxBoard {
         }
     }
 
-    fn theme(&self, window: iced::window::Id) -> Self::Theme {
-        if window == iced::window::Id::MAIN {
+    fn theme(&self, window: window::Id) -> Self::Theme {
+        if window == window::Id::MAIN {
             let red = self.style.background_color.red / 255.0;
             let green = self.style.background_color.green / 255.0;
             let blue = self.style.background_color.blue / 255.0;
@@ -446,9 +447,7 @@ impl Application for NuhxBoard {
         Subscription::batch([
             listener::bind().map(Message::Listener),
             iced::event::listen_with(|event, _| match event {
-                iced::Event::Window(id, iced::window::Event::Closed) => {
-                    Some(Message::WindowClosed(id))
-                }
+                iced::Event::Window(id, window::Event::Closed) => Some(Message::WindowClosed(id)),
                 _ => None,
             }),
         ])
@@ -799,17 +798,17 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let icon_image = image::load_from_memory(IMAGE)?;
-    let icon = iced::window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
+    let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags {
         verbose: args.verbose,
     };
 
     let settings = iced::Settings {
-        window: iced::window::Settings {
+        window: window::Settings {
             size: DEFAULT_WINDOW_SIZE,
             resizable: false,
             icon: Some(icon),
-            ..iced::window::Settings::default()
+            ..window::Settings::default()
         },
         flags,
         ..iced::Settings::default()
