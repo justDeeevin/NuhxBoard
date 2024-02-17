@@ -951,6 +951,7 @@ fn main() -> Result<()> {
             }
             _ => unreachable!(),
         }
+        return Ok(());
     }
 
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
