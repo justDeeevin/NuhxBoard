@@ -468,13 +468,19 @@ impl Application for NuhxBoard {
                 Error::UnknownKey(key) => format!("Key: {:?}", key),
                 Error::UnknownButton(button) => format!("Button: {:?}", button),
             };
-            column([
-                text("Error:").into(),
-                text(kind).into(),
-                text("More info:").into(),
-                text(info).into(),
-            ])
-            .align_items(iced::Alignment::Center)
+            container(
+                column([
+                    text("Error:").into(),
+                    text(kind).into(),
+                    text("More info:").into(),
+                    text(info).into(),
+                ])
+                .align_items(iced::Alignment::Center),
+            )
+            .height(iced::Length::Fill)
+            .width(iced::Length::Fill)
+            .align_x(iced::alignment::Horizontal::Center)
+            .align_y(iced::alignment::Vertical::Center)
             .into()
         } else {
             unreachable!()
