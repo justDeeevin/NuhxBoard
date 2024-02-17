@@ -899,6 +899,10 @@ struct Args {
     /// Display debug info
     #[arg(short, long)]
     verbose: bool,
+
+    /// Install the app to your system; Create a desktop entry and install the icon.
+    #[arg(long)]
+    install: bool,
 }
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
@@ -931,6 +935,24 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let icon_image = image::load_from_memory(IMAGE)?;
+
+    if args.install {
+        match std::env::consts::OS {
+            "linux" => {
+                let mut path = home::home_dir().unwrap();
+                path.push(".local/share/");
+
+                let res = reqwest::blocking::get("https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop")?;
+                let desktop_entry = res.bytes()?;
+                fs::File::create_new(path.clone().join("applications/nuhxboard.desktop"))?
+                    .write_all(&desktop_entry)?;
+
+                fs::File::create_new(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
+            }
+            _ => unreachable!(),
+        }
+    }
+
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags {
         verbose: args.verbose,
