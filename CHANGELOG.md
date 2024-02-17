@@ -14,7 +14,7 @@ On launch, you'll be prompted to load a keyboard and select its style through a 
 
 ### Added
 
-- `--install` command to put NuhxBoard in your OS's app list (Linux only).
+- `--install` command to put NuhxBoard in your OS's app list (Not implemented for MacOS).
 
 ### Changed
 
