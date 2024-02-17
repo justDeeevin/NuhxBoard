@@ -10,6 +10,7 @@
 2. [Usage](#usage)
 3. [Installation](#installation)
    - [0.5.0](#050)
+4. [Demo](#demo)
 
 ## Goals
 
@@ -81,3 +82,7 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
    ```
 
    (Use `nuhxboard.exe` instead of `nuhxboard` if on Windows. Although, you really should just use NohBoard if you're on Windows.)
+
+## Demo
+
+![A demonstration of NuhxBoard's functionality](./media/NuhxBoard Demo.mp4)
