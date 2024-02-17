@@ -73,6 +73,8 @@ enum Error {
     ConfigParse(serde_json::Error),
     StyleOpen(std::io::Error),
     StyleParse(serde_json::Error),
+    UnknownKey(rdev::Key),
+    UnknownButton(rdev::Button),
 }
 
 const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
@@ -146,8 +148,7 @@ impl Application for NuhxBoard {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
                     if let Err(bad_key) = keycode_convert(key) {
-                        eprintln!("{}{:?}", "Unknown rdev keycode: ".red(), bad_key.red());
-                        return Command::none();
+                        return self.error(Error::UnknownKey(bad_key));
                     }
                     if key == rdev::Key::CapsLock {
                         self.caps = !self.caps;
@@ -159,8 +160,7 @@ impl Application for NuhxBoard {
                 }
                 rdev::EventType::KeyRelease(key) => {
                     if let Err(bad_key) = keycode_convert(key) {
-                        eprintln!("{}{:?}", "Unknown rdev keycode: ".red(), bad_key.red());
-                        return Command::none();
+                        return self.error(Error::UnknownKey(bad_key));
                     }
                     let key = keycode_convert(key).unwrap();
                     if self.pressed_keys.contains(&key) {
@@ -169,12 +169,7 @@ impl Application for NuhxBoard {
                 }
                 rdev::EventType::ButtonPress(button) => {
                     if let Err(bad_button) = mouse_button_code_convert(button) {
-                        eprintln!(
-                            "{}{:?}",
-                            "Unknown rdev mouse button code: ".red(),
-                            bad_button.red()
-                        );
-                        return Command::none();
+                        return self.error(Error::UnknownButton(bad_button));
                     }
                     let button = mouse_button_code_convert(button).unwrap();
                     if !self.pressed_mouse_buttons.contains(&button) {
@@ -183,12 +178,7 @@ impl Application for NuhxBoard {
                 }
                 rdev::EventType::ButtonRelease(button) => {
                     if let Err(bad_button) = mouse_button_code_convert(button) {
-                        eprintln!(
-                            "{}{:?}",
-                            "Unknown rdev mouse button code: ".red(),
-                            bad_button.red()
-                        );
-                        return Command::none();
+                        return self.error(Error::UnknownButton(bad_button));
                     }
                     let button = mouse_button_code_convert(button).unwrap();
                     if self.pressed_mouse_buttons.contains(&button) {
@@ -455,6 +445,8 @@ impl Application for NuhxBoard {
                 Error::ConfigParse(_) => "Keyboard file could not be parsed.",
                 Error::StyleOpen(_) => "Style file could not be opened.",
                 Error::StyleParse(_) => "Style file could not be parsed.",
+                Error::UnknownKey(_) => "Unknown Key.",
+                Error::UnknownButton(_) => "Unknown Mouse Button.",
             };
             let info = match error {
                 Error::ConfigParse(e) => {
@@ -473,6 +465,8 @@ impl Application for NuhxBoard {
                     }
                 }
                 Error::StyleOpen(e) => format!("{}", e),
+                Error::UnknownKey(key) => format!("Key: {:?}", key),
+                Error::UnknownButton(button) => format!("Button: {:?}", button),
             };
             column([
                 text("Error:").into(),
