@@ -949,7 +949,18 @@ fn main() -> Result<()> {
 
                 fs::File::create_new(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
             }
-            _ => unreachable!(),
+            "windows" => {
+                eprintln!("Sorry, the install command isn't implemented for Windows yet.");
+                std::process::exit(1);
+            }
+            "macos" => {
+                eprintln!("Sorry, the install command isn't implemented for MacOS yet.");
+                std::process::exit(1);
+            }
+            _ => {
+                eprintln!("Sorry, the install command isn't implemented for your OS yet. If there isn't a GitHub issue open for your OS, open one!");
+                std::process::exit(1);
+            }
         }
 
         println!("NuhxBoard installed successfully!");
