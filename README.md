@@ -85,4 +85,4 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
 
 ## Demo
 
-![A demonstration of NuhxBoard's functionality](./media/NuhxBoard Demo.mp4)
+![A demonstration of NuhxBoard's functionality](./media/NuhxBoard%20Demo.mp4)
