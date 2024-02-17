@@ -944,10 +944,10 @@ fn main() -> Result<()> {
 
                 let res = reqwest::blocking::get("https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop")?;
                 let desktop_entry = res.bytes()?;
-                fs::File::create_new(path.clone().join("applications/nuhxboard.desktop"))?
+                fs::File::create(path.clone().join("applications/nuhxboard.desktop"))?
                     .write_all(&desktop_entry)?;
 
-                fs::File::create_new(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
+                fs::File::create(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
             }
             "windows" => {
                 eprintln!("Sorry, the install command isn't implemented for Windows yet.");
