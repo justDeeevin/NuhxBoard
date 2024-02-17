@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/justDeeevin/NuhxBoard/compare/v0.4.0...HEAD)
 
-##### NuhxBoard is now a fully graphical application!
+#### NuhxBoard is now a fully graphical application!
 
 No more command-line arguments. The future is now.  
 On launch, you'll be prompted to load a keyboard and select its style through a menu that's as close to NohBoard as I could get. If you want to change the keyboard or style, you can right-click anywhere in the main window and select "Load keyboard" to change your selection.
