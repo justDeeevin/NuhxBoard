@@ -25,6 +25,7 @@ use iced_aw::{ContextMenu, SelectionList};
 use owo_colors::OwoColorize;
 use std::sync::Arc;
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::prelude::*,
 };
@@ -48,6 +49,7 @@ struct NuhxBoard {
     load_keyboard_window_id: Option<window::Id>,
     keyboard_category: Option<String>,
     keyboard: Option<String>,
+    error_windows: HashMap<window::Id, Error>,
 }
 
 #[derive(Default)]
@@ -64,6 +66,14 @@ enum Message {
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(String),
+}
+
+#[derive(Debug)]
+enum Error {
+    ConfigOpen(std::io::Error),
+    ConfigParse(serde_json::Error),
+    StyleOpen(std::io::Error),
+    StyleParse(serde_json::Error),
 }
 
 const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
@@ -119,6 +129,7 @@ impl Application for NuhxBoard {
                 load_keyboard_window_id: Some(id),
                 keyboard_category: None,
                 keyboard: None,
+                error_windows: HashMap::new(),
             },
             command,
         )
@@ -284,11 +295,19 @@ impl Application for NuhxBoard {
                 path.push(self.keyboard_category.as_ref().unwrap());
                 path.push(keyboard);
                 path.push("keyboard.json");
-                let mut config_file = File::open(path).unwrap();
+                let mut config_file = match File::open(path) {
+                    Ok(file) => file,
+                    Err(e) => {
+                        return self.error(Error::ConfigOpen(e));
+                    }
+                };
                 let mut config_string = "".into();
                 config_file.read_to_string(&mut config_string).unwrap();
 
-                self.config = serde_json::from_str(config_string.as_str()).unwrap();
+                self.config = match serde_json::from_str(config_string.as_str()) {
+                    Ok(config) => config,
+                    Err(e) => return self.error(Error::ConfigParse(e)),
+                };
                 return window::resize(
                     window::Id::MAIN,
                     iced::Size {
@@ -304,19 +323,37 @@ impl Application for NuhxBoard {
                 path.push(self.keyboard.as_ref().unwrap());
                 path.push(format!("{}.style", style));
 
-                let mut style_file = File::open(path).unwrap();
+                let mut style_file = match File::open(path) {
+                    Ok(f) => f,
+                    Err(e) => {
+                        return self.error(Error::StyleOpen(e));
+                    }
+                };
                 let mut style_string = "".into();
                 style_file.read_to_string(&mut style_string).unwrap();
-                self.style = serde_json::from_str(style_string.as_str()).unwrap();
+                self.style = match serde_json::from_str(style_string.as_str()) {
+                    Ok(style) => style,
+                    Err(e) => return self.error(Error::StyleParse(e)),
+                };
             }
             Message::WindowClosed(id) => {
-                if let Some(load_keyboard_window_id) = self.load_keyboard_window_id {
-                    if id == load_keyboard_window_id {
-                        self.load_keyboard_window_id = None;
-                    } else if id == iced::window::Id::MAIN {
-                        return iced::window::close(load_keyboard_window_id);
+                let mut commands = vec![];
+                if let Some(load_keyboard_window_id) = self.load_keyboard_window_id
+                    && id == load_keyboard_window_id
+                {
+                    self.load_keyboard_window_id = None;
+                } else if id == window::Id::MAIN {
+                    if let Some(load_keyboard_window_id) = self.load_keyboard_window_id {
+                        commands.push(window::close(load_keyboard_window_id));
+                    }
+                    for error_window in &self.error_windows {
+                        commands.push(window::close(*error_window.0));
                     }
                 }
+                if self.error_windows.contains_key(&id) {
+                    self.error_windows.remove(&id);
+                }
+                return Command::batch(commands);
             }
             _ => {}
         }
@@ -411,6 +448,40 @@ impl Application for NuhxBoard {
                 ])
                 .into(),
             ])
+            .into()
+        } else if self.error_windows.contains_key(&window) {
+            let error = self.error_windows.get(&window).unwrap();
+            let kind = match error {
+                Error::ConfigOpen(_) => "Keyboard file could not be opened.",
+                Error::ConfigParse(_) => "Keyboard file could not be parsed.",
+                Error::StyleOpen(_) => "Style file could not be opened.",
+                Error::StyleParse(_) => "Style file could not be parsed.",
+            };
+            let info = match error {
+                Error::ConfigParse(e) => {
+                    if e.is_eof() {
+                        format!("Unexpected EOF (End of file) at line {}", e.line())
+                    } else {
+                        format!("{}", e)
+                    }
+                }
+                Error::ConfigOpen(e) => format!("{}", e),
+                Error::StyleParse(e) => {
+                    if e.is_eof() {
+                        format!("Unexpeted EOF (End of file) at line {}", e.line())
+                    } else {
+                        format!("{}", e)
+                    }
+                }
+                Error::StyleOpen(e) => format!("{}", e),
+            };
+            column([
+                text("Error:").into(),
+                text(kind).into(),
+                text("More info:").into(),
+                text(info).into(),
+            ])
+            .align_items(iced::Alignment::Center)
             .into()
         } else {
             unreachable!()
@@ -746,6 +817,21 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
             }
         });
         vec![canvas]
+    }
+}
+
+impl NuhxBoard {
+    fn error<T>(&mut self, error: Error) -> iced::Command<T> {
+        let (id, command) = window::spawn(window::Settings {
+            size: iced::Size {
+                width: 400.0,
+                height: 150.0,
+            },
+            resizable: false,
+            ..Default::default()
+        });
+        self.error_windows.insert(id, error);
+        command
     }
 }
 
