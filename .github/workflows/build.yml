@@ -18,6 +18,8 @@ jobs:
           packages: libxi-dev libxtst-dev
           version: 1.0
       - name: Build
+        run: rustup update nightly
         run: cargo +nightly build --verbose
       - name: Run tests
+        run: rustup update nightly
         run: cargo +nightly test --verbose
