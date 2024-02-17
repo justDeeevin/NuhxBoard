@@ -351,72 +351,67 @@ impl Application for NuhxBoard {
             let mut path = home::home_dir().unwrap();
             path.push(".local/share/NuhxBoard/keyboards");
 
-                let keyboard_category_options = fs::read_dir(&path)
+            let keyboard_category_options = fs::read_dir(&path)
+                .unwrap()
+                .map(|r| r.unwrap())
+                .filter(|entry| entry.file_type().unwrap().is_dir())
+                .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                .collect::<Vec<_>>();
+
+            let keyboard_options = if let Some(category) = &self.keyboard_category {
+                path.push(category);
+                fs::read_dir(&path)
                     .unwrap()
                     .map(|r| r.unwrap())
                     .filter(|entry| entry.file_type().unwrap().is_dir())
                     .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                    .collect::<Vec<_>>();
+                    .collect()
+            } else {
+                vec![]
+            };
 
-                let keyboard_options = if let Some(category) = &self.keyboard_category {
-                    path.push(category);
-                    fs::read_dir(&path)
-                        .unwrap()
-                        .map(|r| r.unwrap())
-                        .filter(|entry| entry.file_type().unwrap().is_dir())
-                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                        .collect()
-                } else {
-                    vec![]
-                };
+            let style_options = if let Some(keyboard) = &self.keyboard {
+                path.push(keyboard);
+                fs::read_dir(&path)
+                    .unwrap()
+                    .map(|r| r.unwrap())
+                    .filter(|entry| entry.file_type().unwrap().is_file())
+                    .filter(|entry| entry.path().extension() == Some(std::ffi::OsStr::new("style")))
+                    .map(|entry| {
+                        entry
+                            .path()
+                            .file_stem()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_owned()
+                    })
+                    .collect()
+            } else {
+                vec![]
+            };
 
-                let style_options = if let Some(keyboard) = &self.keyboard {
-                    path.push(keyboard);
-                    fs::read_dir(&path)
-                        .unwrap()
-                        .map(|r| r.unwrap())
-                        .filter(|entry| entry.file_type().unwrap().is_file())
-                        .filter(|entry| {
-                            entry.path().extension() == Some(std::ffi::OsStr::new("style"))
-                        })
-                        .map(|entry| {
-                            entry
-                                .path()
-                                .file_stem()
-                                .unwrap()
-                                .to_str()
-                                .unwrap()
-                                .to_owned()
-                        })
-                        .collect()
-                } else {
-                    vec![]
-                };
-
-                column([
-                    text("Category:").into(),
-                    pick_list(
-                        keyboard_category_options,
-                        self.keyboard_category.clone(),
-                        Message::ChangeKeyboardCategory,
-                    )
+            column([
+                text("Category:").into(),
+                pick_list(
+                    keyboard_category_options,
+                    self.keyboard_category.clone(),
+                    Message::ChangeKeyboardCategory,
+                )
+                .into(),
+                row([
+                    SelectionList::new(keyboard_options.leak(), |_, selection| {
+                        Message::LoadKeyboard(selection)
+                    })
                     .into(),
-                    row([
-                        SelectionList::new(keyboard_options.leak(), |_, selection| {
-                            Message::LoadKeyboard(selection)
-                        })
-                        .into(),
-                        SelectionList::new(style_options.leak(), |_, selection| {
-                            Message::LoadStyle(selection)
-                        })
-                        .into(),
-                    ])
+                    SelectionList::new(style_options.leak(), |_, selection| {
+                        Message::LoadStyle(selection)
+                    })
                     .into(),
                 ])
-                .into()
-            } else {
-                unreachable!()
-            }
+                .into(),
+            ])
+            .into()
         } else {
             unreachable!()
         }
