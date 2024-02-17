@@ -37,7 +37,6 @@ iced_aw = { git = "https://github.com/iced-rs/iced_aw", branch = "main", feature
   "selection_list",
 ] }
 inquire = "0.6.2"
-owo-colors = "4.0.0"
 rdev = "0.5.3"
 serde = { version = "1.0.195", features = ["serde_derive"] }
 serde_json = "1.0.111"

@@ -22,7 +22,6 @@ use iced::{
     window, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use iced_aw::{ContextMenu, SelectionList};
-use owo_colors::OwoColorize;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
