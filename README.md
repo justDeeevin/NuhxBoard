@@ -84,5 +84,3 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
    (Use `nuhxboard.exe` instead of `nuhxboard` if on Windows. Although, you really should just use NohBoard if you're on Windows.)
 
 ## Demo
-
-https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/media/NuhxBoard%20Demo.mp4
