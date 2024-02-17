@@ -951,6 +951,9 @@ fn main() -> Result<()> {
             }
             _ => unreachable!(),
         }
+
+        println!("NuhxBoard installed successfully!");
+
         return Ok(());
     }
 
