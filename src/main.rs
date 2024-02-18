@@ -237,6 +237,7 @@ impl Application for NuhxBoard {
                 }
             }
         }
+
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
@@ -301,6 +302,11 @@ impl Application for NuhxBoard {
                     if let Err(bad_button) = mouse_button_code_convert(button) {
                         return self.error(Error::UnknownButton(bad_button));
                     }
+
+                    if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
+                        return Command::none();
+                    }
+
                     let button = mouse_button_code_convert(button).unwrap();
                     self.pressed_mouse_buttons
                         .entry(button)
@@ -314,6 +320,11 @@ impl Application for NuhxBoard {
                     if let Err(bad_button) = mouse_button_code_convert(button) {
                         return self.error(Error::UnknownButton(bad_button));
                     }
+
+                    if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
+                        return Command::none();
+                    }
+
                     let button_num = mouse_button_code_convert(button).unwrap();
                     if self
                         .pressed_mouse_buttons

@@ -8,6 +8,8 @@ pub fn mouse_button_code_convert(rdev_button: Button) -> Result<u32, Button> {
         Button::Unknown(code) => match code {
             8 | 19 => Ok(3),
             9 | 20 => Ok(4),
+            6 => Ok(6),
+            7 => Ok(7),
             _ => Err(rdev_button),
         },
     }
