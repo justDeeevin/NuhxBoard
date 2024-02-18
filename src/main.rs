@@ -349,7 +349,7 @@ impl Application for NuhxBoard {
                 path.push(self.keyboard_category.as_ref().unwrap());
                 path.push(self.keyboard_options[keyboard].clone());
 
-                self.style_options.push(StyleChoice::Default);
+                self.style_options = vec![StyleChoice::Default];
                 self.style_options.append(
                     &mut fs::read_dir(&path)
                         .unwrap()
