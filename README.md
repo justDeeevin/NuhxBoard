@@ -89,4 +89,4 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
 
 ## Demo
 
-https://github.com/justDeeevin/NuhxBoard/assets/90054389/576be757-c612-4317-9fec-aa211743702a
+https://github.com/justDeeevin/NuhxBoard/assets/90054389/cc3e8164-1c30-446d-9af9-f2b09e5869cb
