@@ -75,7 +75,7 @@ pub enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
     LoadStyle(usize),
-    OpenLoadKeyboardMenu,
+    OpenLoadKeyboardWindow,
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(usize),
@@ -405,7 +405,7 @@ impl Application for NuhxBoard {
                     }
                 }
             }
-            Message::OpenLoadKeyboardMenu => {
+            Message::OpenLoadKeyboardWindow => {
                 let path = self.keyboards_path.clone();
                 let (id, command) = window::spawn::<Message>(window::Settings {
                     resizable: false,
@@ -579,13 +579,14 @@ impl Application for NuhxBoard {
                 .height(Length::Fill)
                 .width(Length::Fill);
 
-            let load_keyboard_menu_message = match self.load_keyboard_window_id {
+            let load_keyboard_window_message = match self.load_keyboard_window_id {
                 Some(_) => None,
-                None => Some(Message::OpenLoadKeyboardMenu),
+                None => Some(Message::OpenLoadKeyboardWindow),
             };
+
             ContextMenu::new(canvas, move || {
                 container(column([button("Load Keyboard")
-                    .on_press_maybe(load_keyboard_menu_message.clone())
+                    .on_press_maybe(load_keyboard_window_message.clone())
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .into()]))
                 .into()
