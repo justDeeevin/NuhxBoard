@@ -227,8 +227,15 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        if self.verbose {
-            dbg!(&message);
+        if self.verbose
+            && let Message::Listener(listener::Event::KeyReceived(event)) = &message
+        {
+            match event.event_type {
+                rdev::EventType::MouseMove { x: _, y: _ } => {}
+                _ => {
+                    dbg!(&event);
+                }
+            }
         }
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
