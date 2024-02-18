@@ -5,12 +5,15 @@
 mod code_convert;
 mod config;
 mod listener;
+mod settings;
 mod style;
 mod stylesheets;
+use async_std::task::sleep;
 use clap::Parser;
 use code_convert::*;
 use color_eyre::eyre::Result;
 use config::*;
+use display_info::DisplayInfo;
 use iced::{
     mouse,
     multi_window::Application,
@@ -22,11 +25,13 @@ use iced::{
     window, Color, Command, Length, Rectangle, Renderer, Subscription, Theme,
 };
 use iced_aw::{ContextMenu, SelectionList};
+use settings::*;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
     fs::{self, File},
     io::prelude::*,
+    time::Instant,
 };
 use style::*;
 use stylesheets::*;
@@ -35,18 +40,15 @@ struct NuhxBoard {
     config: Config,
     style: Style,
     canvas: Cache,
-    pressed_keys: Vec<u32>,
-    pressed_mouse_buttons: Vec<u32>,
-    pressed_scroll_buttons: Vec<u32>,
+    pressed_keys: HashMap<u32, (Instant, u32)>,
+    pressed_mouse_buttons: HashMap<u32, (Instant, u32)>,
+    pressed_scroll_buttons: HashMap<u32, u32>,
     mouse_velocity: (f32, f32),
     previous_mouse_position: (f32, f32),
     previous_mouse_time: std::time::SystemTime,
-    /// `(up, down, right, left)`
-    queued_scrolls: (u32, u32, u32, u32),
     caps: bool,
     verbose: bool,
     load_keyboard_window_id: Option<window::Id>,
-    keyboard_category: Option<String>,
     keyboard: Option<usize>,
     style_choice: Option<usize>,
     error_windows: HashMap<window::Id, Error>,
@@ -54,11 +56,16 @@ struct NuhxBoard {
     keyboard_category_options: Vec<String>,
     style_options: Vec<StyleChoice>,
     keyboards_path: std::path::PathBuf,
+    startup: bool,
+    settings: Settings,
+    /// `(width, height)`
+    center: (f32, f32),
 }
 
 #[derive(Default)]
 struct Flags {
     verbose: bool,
+    settings: Settings,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -85,6 +92,25 @@ enum Message {
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(usize),
+    Quitting,
+}
+
+impl Message {
+    pub fn key_release(key: rdev::Key) -> Self {
+        Message::Listener(listener::Event::KeyReceived(rdev::Event {
+            event_type: rdev::EventType::KeyRelease(key),
+            time: std::time::SystemTime::now(),
+            name: None,
+        }))
+    }
+
+    pub fn button_release(button: rdev::Button) -> Self {
+        Message::Listener(listener::Event::KeyReceived(rdev::Event {
+            event_type: rdev::EventType::ButtonRelease(button),
+            time: std::time::SystemTime::now(),
+            name: None,
+        }))
+    }
 }
 
 #[derive(Debug)]
@@ -107,6 +133,11 @@ const LOAD_KEYBOARD_WINDOW_SIZE: iced::Size = iced::Size {
     height: 250.0,
 };
 
+const ERROR_WINDOW_SIZE: iced::Size = iced::Size {
+    width: 400.0,
+    height: 150.0,
+};
+
 async fn noop() {}
 
 impl Application for NuhxBoard {
@@ -123,8 +154,9 @@ impl Application for NuhxBoard {
             }
         }
 
-        let mut path = home::home_dir().unwrap();
-        path.push(".local/share/NuhxBoard/keyboards");
+        let path = home::home_dir()
+            .unwrap()
+            .join(".local/share/NuhxBoard/keyboards");
         let config = Config {
             version: 2,
             width: DEFAULT_WINDOW_SIZE.width,
@@ -132,36 +164,66 @@ impl Application for NuhxBoard {
             elements: vec![],
         };
 
+        let category = flags.settings.category.clone();
+
+        let mut center = (0.0, 0.0);
+
+        let displays = DisplayInfo::all().unwrap();
+
+        for display in displays {
+            if display.id == flags.settings.display_id {
+                center = (
+                    display.x as f32 + (display.width as f32 / 2.0),
+                    display.height as f32 / 2.0,
+                )
+            }
+        }
+
         (
             Self {
                 config,
                 style: Style::default(),
                 canvas: Cache::default(),
-                pressed_keys: Vec::new(),
-                pressed_mouse_buttons: Vec::new(),
-                caps: false,
+                pressed_keys: HashMap::new(),
+                pressed_mouse_buttons: HashMap::new(),
+                caps: match flags.settings.capitalization {
+                    Capitalization::Upper => true,
+                    Capitalization::Lower => false,
+                    Capitalization::Follow => false,
+                },
                 mouse_velocity: (0.0, 0.0),
-                pressed_scroll_buttons: Vec::new(),
+                pressed_scroll_buttons: HashMap::new(),
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
-                queued_scrolls: (0, 0, 0, 0),
                 verbose: flags.verbose,
                 load_keyboard_window_id: None,
-                keyboard_category: None,
-                keyboard: None,
-                style_choice: None,
+                keyboard: Some(flags.settings.keyboard),
+                style_choice: Some(flags.settings.style),
                 error_windows: HashMap::new(),
                 keyboard_options: vec![],
                 keyboard_category_options: vec![],
                 style_options: vec![],
                 keyboards_path: path,
+                startup: true,
+                settings: flags.settings,
+                center,
             },
-            Command::perform(noop(), |_| Message::OpenLoadKeyboardMenu),
+            Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
         )
     }
 
-    fn title(&self, _window: window::Id) -> String {
-        String::from("NuhxBoard")
+    fn title(&self, window: window::Id) -> String {
+        if window == window::Id::MAIN {
+            self.settings.window_title.clone()
+        } else if let Some(load_keyboard_window_id) = self.load_keyboard_window_id
+            && window == load_keyboard_window_id
+        {
+            "Load Keyboard".to_owned()
+        } else if self.error_windows.contains_key(&window) {
+            "Error".to_owned()
+        } else {
+            unreachable!()
+        }
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -174,21 +236,58 @@ impl Application for NuhxBoard {
                     if let Err(bad_key) = keycode_convert(key) {
                         return self.error(Error::UnknownKey(bad_key));
                     }
-                    if key == rdev::Key::CapsLock {
+                    if key == rdev::Key::CapsLock
+                        && self.settings.capitalization == Capitalization::Follow
+                    {
                         self.caps = !self.caps;
                     }
                     let key = keycode_convert(key).unwrap();
-                    if !self.pressed_keys.contains(&key) {
-                        self.pressed_keys.push(key);
-                    }
+                    self.pressed_keys
+                        .entry(key)
+                        .and_modify(|(time, count)| {
+                            *time = Instant::now();
+                            *count += 1;
+                        })
+                        .or_insert((Instant::now(), 1));
                 }
                 rdev::EventType::KeyRelease(key) => {
                     if let Err(bad_key) = keycode_convert(key) {
                         return self.error(Error::UnknownKey(bad_key));
                     }
-                    let key = keycode_convert(key).unwrap();
-                    if self.pressed_keys.contains(&key) {
-                        self.pressed_keys.retain(|&x| x != key);
+                    let key_num = keycode_convert(key).unwrap();
+                    if self
+                        .pressed_keys
+                        .get(&key_num)
+                        .unwrap()
+                        .0
+                        .elapsed()
+                        .as_millis()
+                        < self.settings.min_press_time
+                    {
+                        return Command::perform(
+                            sleep(std::time::Duration::from_millis(
+                                (self.settings.min_press_time
+                                    - self
+                                        .pressed_keys
+                                        .get(&key_num)
+                                        .unwrap()
+                                        .0
+                                        .elapsed()
+                                        .as_millis())
+                                .try_into()
+                                .unwrap(),
+                            )),
+                            move |_| Message::key_release(key),
+                        );
+                    } else {
+                        match &mut self.pressed_keys.get_mut(&key_num).unwrap().1 {
+                            1 => {
+                                self.pressed_keys.remove(&key_num);
+                            }
+                            n => {
+                                *n -= 1;
+                            }
+                        }
                     }
                 }
                 rdev::EventType::ButtonPress(button) => {
@@ -196,17 +295,52 @@ impl Application for NuhxBoard {
                         return self.error(Error::UnknownButton(bad_button));
                     }
                     let button = mouse_button_code_convert(button).unwrap();
-                    if !self.pressed_mouse_buttons.contains(&button) {
-                        self.pressed_mouse_buttons.push(button);
-                    }
+                    self.pressed_mouse_buttons
+                        .entry(button)
+                        .and_modify(|(time, count)| {
+                            *time = Instant::now();
+                            *count += 1;
+                        })
+                        .or_insert((Instant::now(), 1));
                 }
                 rdev::EventType::ButtonRelease(button) => {
                     if let Err(bad_button) = mouse_button_code_convert(button) {
                         return self.error(Error::UnknownButton(bad_button));
                     }
-                    let button = mouse_button_code_convert(button).unwrap();
-                    if self.pressed_mouse_buttons.contains(&button) {
-                        self.pressed_mouse_buttons.retain(|&x| x != button);
+                    let button_num = mouse_button_code_convert(button).unwrap();
+                    if self
+                        .pressed_mouse_buttons
+                        .get(&button_num)
+                        .unwrap()
+                        .0
+                        .elapsed()
+                        .as_millis()
+                        < self.settings.min_press_time
+                    {
+                        return Command::perform(
+                            sleep(std::time::Duration::from_millis(
+                                (self.settings.min_press_time
+                                    - self
+                                        .pressed_mouse_buttons
+                                        .get(&button_num)
+                                        .unwrap()
+                                        .0
+                                        .elapsed()
+                                        .as_millis())
+                                .try_into()
+                                .unwrap(),
+                            )),
+                            move |_| Message::button_release(button),
+                        );
+                    } else {
+                        match &mut self.pressed_mouse_buttons.get_mut(&button_num).unwrap().1 {
+                            1 => {
+                                self.pressed_mouse_buttons.remove(&button_num);
+                            }
+                            n => {
+                                *n -= 1;
+                            }
+                        }
                     }
                 }
                 rdev::EventType::Wheel { delta_x, delta_y } => {
@@ -221,22 +355,17 @@ impl Application for NuhxBoard {
                         button = 0;
                     }
 
-                    match button {
-                        0 => self.queued_scrolls.0 += 1,
-                        1 => self.queued_scrolls.1 += 1,
-                        2 => self.queued_scrolls.2 += 1,
-                        3 => self.queued_scrolls.3 += 1,
-                        _ => {}
-                    }
-
-                    if !self.pressed_scroll_buttons.contains(&button) {
-                        self.pressed_scroll_buttons.push(button);
-                    }
+                    self.pressed_scroll_buttons
+                        .entry(button)
+                        .and_modify(|v| *v += 1)
+                        .or_insert(1);
 
                     self.canvas.clear();
 
                     return Command::perform(
-                        async_std::task::sleep(std::time::Duration::from_millis(100)),
+                        sleep(std::time::Duration::from_millis(
+                            self.settings.scroll_hold_time,
+                        )),
                         move |_| Message::ReleaseScroll(button),
                     );
                 }
@@ -247,10 +376,12 @@ impl Application for NuhxBoard {
                         Ok(diff) => diff,
                         Err(_) => return Command::none(),
                     };
-                    let position_diff = (
-                        x - self.previous_mouse_position.0,
-                        y - self.previous_mouse_position.1,
-                    );
+
+                    let previous_pos = match self.settings.mouse_from_center {
+                        true => (self.center.0, self.center.1),
+                        false => self.previous_mouse_position,
+                    };
+                    let position_diff = (x - previous_pos.0, y - previous_pos.1);
                     self.mouse_velocity = (
                         position_diff.0 / time_diff.as_secs_f32(),
                         position_diff.1 / time_diff.as_secs_f32(),
@@ -259,33 +390,16 @@ impl Application for NuhxBoard {
                     self.previous_mouse_time = current_time;
                 }
             },
-            Message::ReleaseScroll(button) => match button {
-                0 => {
-                    self.queued_scrolls.0 -= 1;
-                    if self.queued_scrolls.0 == 0 {
-                        self.pressed_scroll_buttons.retain(|&x| x != button);
+            Message::ReleaseScroll(button) => {
+                match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
+                    1 => {
+                        self.pressed_scroll_buttons.remove(&button);
+                    }
+                    n => {
+                        *n -= 1;
                     }
                 }
-                1 => {
-                    self.queued_scrolls.1 -= 1;
-                    if self.queued_scrolls.1 == 0 {
-                        self.pressed_scroll_buttons.retain(|&x| x != button);
-                    }
-                }
-                2 => {
-                    self.queued_scrolls.2 -= 1;
-                    if self.queued_scrolls.2 == 0 {
-                        self.pressed_scroll_buttons.retain(|&x| x != button);
-                    }
-                }
-                3 => {
-                    self.queued_scrolls.3 -= 1;
-                    if self.queued_scrolls.3 == 0 {
-                        self.pressed_scroll_buttons.retain(|&x| x != button);
-                    }
-                }
-                _ => {}
-            },
+            }
             Message::OpenLoadKeyboardMenu => {
                 let path = self.keyboards_path.clone();
                 let (id, command) = window::spawn::<Message>(window::Settings {
@@ -306,13 +420,15 @@ impl Application for NuhxBoard {
             }
             Message::ChangeKeyboardCategory(category) => {
                 let mut path = self.keyboards_path.clone();
+                self.settings.category = category.clone();
 
-                self.keyboard_category = Some(category);
-                self.keyboard = None;
-                self.style_choice = None;
-                self.style_options = vec![];
-                self.keyboard_options = if let Some(category) = &self.keyboard_category {
-                    path.push(category);
+                if !self.startup {
+                    self.keyboard = None;
+                    self.style_choice = None;
+                    self.style_options = vec![];
+                }
+                self.keyboard_options = {
+                    path.push(&self.settings.category);
                     fs::read_dir(&path)
                         .unwrap()
                         .map(|r| r.unwrap())
@@ -321,34 +437,38 @@ impl Application for NuhxBoard {
                         })
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                         .collect()
-                } else {
-                    vec![]
                 };
+
+                if self.startup {
+                    self.startup = false;
+                    let keyboard = self.keyboard.unwrap();
+                    return Command::perform(noop(), move |_| Message::LoadKeyboard(keyboard));
+                }
             }
             Message::LoadKeyboard(keyboard) => {
+                self.settings.keyboard = keyboard;
+
                 self.keyboard = Some(keyboard);
                 self.style = Style::default();
 
                 let mut path = self.keyboards_path.clone();
-                path.push(self.keyboard_category.as_ref().unwrap());
+                path.push(&self.settings.category);
                 path.push(self.keyboard_options[keyboard].clone());
                 path.push("keyboard.json");
-                let mut config_file = match File::open(path) {
+                let config_file = match File::open(path) {
                     Ok(file) => file,
                     Err(e) => {
                         return self.error(Error::ConfigOpen(e));
                     }
                 };
-                let mut config_string = "".into();
-                config_file.read_to_string(&mut config_string).unwrap();
 
-                self.config = match serde_json::from_str(config_string.as_str()) {
+                self.config = match serde_json::from_reader(config_file) {
                     Ok(config) => config,
                     Err(e) => return self.error(Error::ConfigParse(e)),
                 };
 
                 let mut path = self.keyboards_path.clone();
-                path.push(self.keyboard_category.as_ref().unwrap());
+                path.push(&self.settings.category);
                 path.push(self.keyboard_options[keyboard].clone());
 
                 self.style_options = vec![StyleChoice::Default];
@@ -384,6 +504,8 @@ impl Application for NuhxBoard {
                 );
             }
             Message::LoadStyle(style) => {
+                self.settings.style = style;
+
                 self.style_choice = Some(style);
 
                 if self.style_options[style] == StyleChoice::Default {
@@ -396,40 +518,48 @@ impl Application for NuhxBoard {
                 };
                 let mut path = home::home_dir().unwrap();
                 path.push(".local/share/NuhxBoard/keyboards");
-                path.push(self.keyboard_category.as_ref().unwrap());
+                path.push(&self.settings.category);
                 path.push(self.keyboard_options[self.keyboard.unwrap()].clone());
                 path.push(format!("{}.style", style));
 
-                let mut style_file = match File::open(path) {
+                let style_file = match File::open(path) {
                     Ok(f) => f,
                     Err(e) => {
                         return self.error(Error::StyleOpen(e));
                     }
                 };
-                let mut style_string = "".into();
-                style_file.read_to_string(&mut style_string).unwrap();
-                self.style = match serde_json::from_str(style_string.as_str()) {
+                self.style = match serde_json::from_reader(style_file) {
                     Ok(style) => style,
                     Err(e) => return self.error(Error::StyleParse(e)),
                 };
             }
             Message::WindowClosed(id) => {
-                let mut commands = vec![];
                 if let Some(load_keyboard_window_id) = self.load_keyboard_window_id
                     && id == load_keyboard_window_id
                 {
                     self.load_keyboard_window_id = None;
-                } else if id == window::Id::MAIN {
-                    if let Some(load_keyboard_window_id) = self.load_keyboard_window_id {
-                        commands.push(window::close(load_keyboard_window_id));
-                    }
-                    for error_window in &self.error_windows {
-                        commands.push(window::close(*error_window.0));
-                    }
                 }
                 if self.error_windows.contains_key(&id) {
                     self.error_windows.remove(&id);
                 }
+            }
+            Message::Quitting => {
+                let mut settings_file = File::create(
+                    home::home_dir()
+                        .unwrap()
+                        .join(".local/share/NuhxBoard/NuhxBoard.json"),
+                )
+                .unwrap();
+                serde_json::to_writer_pretty(&mut settings_file, &self.settings).unwrap();
+                let mut commands = vec![];
+                if let Some(load_keyboard_window_id) = self.load_keyboard_window_id {
+                    commands.push(window::close(load_keyboard_window_id));
+                }
+                for error_window in &self.error_windows {
+                    commands.push(window::close(*error_window.0));
+                }
+
+                commands.push(window::close(window::Id::MAIN));
                 return Command::batch(commands);
             }
             _ => {}
@@ -466,7 +596,7 @@ impl Application for NuhxBoard {
                 text("Category:").into(),
                 pick_list(
                     self.keyboard_category_options.clone(),
-                    self.keyboard_category.clone(),
+                    Some(self.settings.category.clone()),
                     Message::ChangeKeyboardCategory,
                 )
                 .into(),
@@ -568,6 +698,9 @@ impl Application for NuhxBoard {
             listener::bind().map(Message::Listener),
             iced::event::listen_with(|event, _| match event {
                 iced::Event::Window(id, window::Event::Closed) => Some(Message::WindowClosed(id)),
+                iced::Event::Window(window::Id::MAIN, window::Event::CloseRequested) => {
+                    Some(Message::Quitting)
+                }
                 _ => None,
             }),
         ])
@@ -605,7 +738,7 @@ macro_rules! draw_key {
         let mut pressed = false;
 
         for keycode in &$def.keycodes {
-            if $pressed_button_list.contains(keycode) {
+            if $pressed_button_list.contains_key(keycode) {
                 pressed = true;
                 break;
             }
@@ -682,16 +815,24 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
                             {
                                 let shift_pressed = self
                                     .pressed_keys
-                                    .contains(&keycode_convert(rdev::Key::ShiftLeft).unwrap())
-                                    || self
-                                        .pressed_keys
-                                        .contains(&keycode_convert(rdev::Key::ShiftRight).unwrap());
+                                    .contains_key(&keycode_convert(rdev::Key::ShiftLeft).unwrap())
+                                    || self.pressed_keys.contains_key(
+                                        &keycode_convert(rdev::Key::ShiftRight).unwrap(),
+                                    );
                                 match def.change_on_caps {
-                                    true => match self.caps ^ shift_pressed {
+                                    true => match self.caps
+                                        ^ (shift_pressed
+                                            && (self.settings.capitalization
+                                                == Capitalization::Follow
+                                                || self.settings.follow_for_caps_sensitive))
+                                    {
                                         true => def.shift_text.clone(),
                                         false => def.text.clone(),
                                     },
-                                    false => match shift_pressed {
+                                    false => match shift_pressed
+                                        && (self.settings.capitalization == Capitalization::Follow
+                                            || self.settings.follow_for_caps_insensitive)
+                                    {
                                         true => def.shift_text.clone(),
                                         false => def.text.clone(),
                                     },
@@ -725,7 +866,8 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
                             (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
                             self.mouse_velocity.1.atan2(self.mouse_velocity.0),
                         );
-                        let squashed_magnitude = (0.0002 * polar_velocity.0).tanh();
+                        let squashed_magnitude =
+                            (self.settings.mouse_sensitivity * 0.000001 * polar_velocity.0).tanh();
                         let ball = Path::circle(
                             iced::Point {
                                 x: def.location.x + (def.radius * polar_velocity.1.cos()),
@@ -879,10 +1021,7 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
 impl NuhxBoard {
     fn error<T>(&mut self, error: Error) -> iced::Command<T> {
         let (id, command) = window::spawn(window::Settings {
-            size: iced::Size {
-                width: 400.0,
-                height: 150.0,
-            },
+            size: ERROR_WINDOW_SIZE,
             resizable: false,
             ..Default::default()
         });
@@ -929,6 +1068,13 @@ fn main() -> Result<()> {
                     .unwrap()
                     .join(".local/share/NuhxBoard/keyboards"),
             )?;
+            let mut settings = File::create(
+                home::home_dir()
+                    .unwrap()
+                    .join(".local/share/NuhxBoard/NuhxBoard.json"),
+            )?;
+
+            settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
         } else {
             std::process::exit(0);
         }
@@ -937,6 +1083,14 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let icon_image = image::load_from_memory(IMAGE)?;
+
+    let settings_file = File::open(
+        home::home_dir()
+            .unwrap()
+            .join(".local/share/NuhxBoard/NuhxBoard.json"),
+    )?;
+
+    let settings: Settings = serde_json::from_reader(settings_file)?;
 
     if args.install {
         match std::env::consts::OS {
@@ -986,6 +1140,7 @@ fn main() -> Result<()> {
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags {
         verbose: args.verbose,
+        settings,
     };
 
     let settings = iced::Settings {
@@ -993,6 +1148,7 @@ fn main() -> Result<()> {
             size: DEFAULT_WINDOW_SIZE,
             resizable: false,
             icon: Some(icon),
+            exit_on_close_request: false,
             ..window::Settings::default()
         },
         flags,
