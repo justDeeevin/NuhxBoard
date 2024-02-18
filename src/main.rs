@@ -316,7 +316,9 @@ impl Application for NuhxBoard {
                     fs::read_dir(&path)
                         .unwrap()
                         .map(|r| r.unwrap())
-                        .filter(|entry| entry.file_type().unwrap().is_dir())
+                        .filter(|entry| {
+                            entry.file_type().unwrap().is_dir() && entry.file_name() != "images"
+                        })
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                         .collect()
                 } else {
