@@ -938,6 +938,7 @@ fn main() -> Result<()> {
 
     if args.install {
         match std::env::consts::OS {
+            #[cfg(target_os = "linux")]
             "linux" => {
                 let mut path = home::home_dir().unwrap();
                 path.push(".local/share/");
@@ -949,6 +950,7 @@ fn main() -> Result<()> {
 
                 fs::File::create(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
             }
+            #[cfg(target_os = "windows")]
             "windows" => {
                 let mut lnk_path = home::home_dir().unwrap();
                 lnk_path
