@@ -220,29 +220,25 @@ impl Application for NuhxBoard {
     fn title(&self, window: window::Id) -> String {
         if window == window::Id::MAIN {
             self.settings.window_title.clone()
-        } else if let Some(load_keyboard_window_id) = self.load_keyboard_window_id
-            && window == load_keyboard_window_id
-        {
-            "Load Keyboard".to_owned()
+        } else if Some(window) == self.load_keyboard_window_id {
+            return "Load Keyboard".to_owned();
         } else if self.error_windows.contains_key(&window) {
-            "Error".to_owned()
-        } else if let Some(settings_window_id) = self.settings_window_id
-            && settings_window_id == window
-        {
-            "Settings".to_owned()
+            return "Error".to_owned();
+        } else if Some(window) == self.settings_window_id {
+            return "Settings".to_owned();
         } else {
             unreachable!()
         }
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        if self.verbose
-            && let Message::Listener(listener::Event::KeyReceived(event)) = &message
-        {
-            match event.event_type {
-                rdev::EventType::MouseMove { x: _, y: _ } => {}
-                _ => {
-                    dbg!(&event);
+        if self.verbose {
+            if let Message::Listener(listener::Event::KeyReceived(event)) = &message {
+                match event.event_type {
+                    rdev::EventType::MouseMove { x: _, y: _ } => {}
+                    _ => {
+                        dbg!(&event);
+                    }
                 }
             }
         }
@@ -585,15 +581,11 @@ impl Application for NuhxBoard {
                 };
             }
             Message::WindowClosed(id) => {
-                if let Some(load_keyboard_window_id) = self.load_keyboard_window_id
-                    && id == load_keyboard_window_id
-                {
+                if Some(id) == self.load_keyboard_window_id {
                     self.load_keyboard_window_id = None;
                 }
                 self.error_windows.remove(&id);
-                if let Some(settings_window_id) = self.settings_window_id
-                    && id == settings_window_id
-                {
+                if Some(id) == self.settings_window_id {
                     self.settings_window_id = None;
                 }
             }
@@ -698,9 +690,7 @@ impl Application for NuhxBoard {
                 .into()
             })
             .into()
-        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
-            && load_keyboard_window == window
-        {
+        } else if Some(window) == self.load_keyboard_window_id {
             column![
                 text("Category:"),
                 pick_list(
@@ -769,9 +759,7 @@ impl Application for NuhxBoard {
             .align_x(iced::alignment::Horizontal::Center)
             .align_y(iced::alignment::Vertical::Center)
             .into()
-        } else if let Some(settings_window_id) = self.settings_window_id
-            && settings_window_id == window
-        {
+        } else if Some(window) == self.settings_window_id {
             let input = column![
                 row![
                     text("Mouse sensitivity: ").size(12),
@@ -914,14 +902,11 @@ impl Application for NuhxBoard {
                 background: Color::from_rgb(red, green, blue),
                 ..iced::theme::Palette::DARK
             };
-            Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
-        } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
-            && load_keyboard_window == window
-        {
-            Theme::Light
-        } else {
-            Theme::Dark
+            return Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)));
+        } else if Some(window) == self.load_keyboard_window_id {
+            return Theme::Light;
         }
+        Theme::Dark
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
