@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.5.1](https://github.com/justdeeevin/nuhxboard/compare/v0.5.0...HEAD) - 2024-2-20
+## [v0.5.2](https://github.com/justdeeevin/nuhxboard/compare/v0.5.1...HEAD)
+
+### Fixed
+
+- Crash where a key release was received with no preceding key press. [d5cc1aa](https://github.com/justdeeevin/nuhxboard/commits/d5cc1aa31924f9087a7d7e6b60254253cf0b5c81)
+
+## [v0.5.1](https://github.com/justdeeevin/nuhxboard/releases/v0.5.1) - 2024-2-20
 
 ### Changed
 
