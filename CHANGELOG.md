@@ -21,7 +21,7 @@ On launch, you'll be prompted to load a keyboard and select its style through a 
 
 - No longer captures inputs when window is focused. [93aa6d0](https://github.com/justDeeevin/NuhxBoard/commit/93aa6d08bd9a002a472f58ec9cb90b1b41cab91c
 
-## [v0.4.0](https://github.com/justDeeevin/NuhxBoard/releases/v0.4.0)
+## [v0.4.0](https://github.com/justDeeevin/NuhxBoard/releases/v0.4.0) - 2024-2-13
 
 ### Changed
 
