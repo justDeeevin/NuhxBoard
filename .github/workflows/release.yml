@@ -12,10 +12,8 @@
 # title/body based on your changelogs.
 
 name: Release
-
 permissions:
   contents: write
-
 # This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
 # Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
@@ -42,7 +40,6 @@ on:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
-
 jobs:
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
@@ -70,7 +67,7 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > dist-manifest.json
+          rustup install nightly && cargo +nightly dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > dist-manifest.json
           echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -79,7 +76,6 @@ jobs:
         with:
           name: artifacts
           path: dist-manifest.json
-
   # Build and packages all the platform-specific things
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
@@ -123,7 +119,7 @@ jobs:
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          rustup install nightly && cargo +nightly dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
       - id: cargo-dist
         name: Post-build
@@ -145,7 +141,6 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
-
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
     needs:
@@ -170,7 +165,7 @@ jobs:
       - id: cargo-dist
         shell: bash
         run: |
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
+          rustup install nightly && cargo +nightly dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
           echo "cargo dist ran successfully"
 
           # Parse out what we just built and upload it to scratch storage
@@ -215,7 +210,7 @@ jobs:
       - id: host
         shell: bash
         run: |
-          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
+          rustup install nightly && cargo +nightly dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
           echo "artifacts uploaded and released successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -224,7 +219,6 @@ jobs:
         with:
           name: artifacts
           path: dist-manifest.json
-
   # Create a Github Release while uploading all files to it
   announce:
     needs:
