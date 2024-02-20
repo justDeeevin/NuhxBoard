@@ -59,9 +59,9 @@ Version 0.5.0 Takes advantage of [`iced` version 0.12.0](https://github.com/iced
 
 So, if you want to use this latest version of NuhxBoard, for the time being, you'll have to build it from its source code.
 
-1. Clone this repository
+1. Clone this repository  
    Make sure Git is installed, then run `git clone https://github.com/justdeeevin/nuhxboard` in your terminal.
-2. Build the app
+2. Build the app  
    If you haven't already, [install Rust](https://www.rust-lang.org/learn/get-started). Make sure to install the nightly version, either during initial install or after with `rustup install nightly`.
 
    `cd` into the new folder:
@@ -78,7 +78,7 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
 
    This'll take a minute. Sorry.
 
-3. Move the app somewhere on your PATH
+3. Move the app somewhere on your PATH  
    I would recommend putting it in `~/.cargo/bin` like so:
 
    ```
