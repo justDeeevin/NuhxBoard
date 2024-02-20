@@ -589,6 +589,7 @@ impl Application for NuhxBoard {
                     .on_press_maybe(load_keyboard_window_message.clone())
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .into()]))
+                .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
                 .into()
             })
             .into()

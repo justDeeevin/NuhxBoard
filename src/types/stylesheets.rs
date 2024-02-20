@@ -23,3 +23,16 @@ impl button::StyleSheet for WhiteButton {
         }
     }
 }
+
+pub struct ContextMenuBox;
+
+impl container::StyleSheet for ContextMenuBox {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(iced::Background::Color(iced::Color::WHITE)),
+            ..Default::default()
+        }
+    }
+}
