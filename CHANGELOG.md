@@ -7,15 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.5.2](https://github.com/justdeeevin/nuhxboard/compare/v0.5.1...HEAD)
 
-### Fixed
-
-- Crash where a key release was received with no preceding key press. [d5cc1aa](https://github.com/justdeeevin/nuhxboard/commits/d5cc1aa31924f9087a7d7e6b60254253cf0b5c81)
-
 ## [v0.5.1](https://github.com/justdeeevin/nuhxboard/releases/v0.5.1) - 2024-2-20
 
 ### Changed
 
 - There is no more `--install` command-line argument. If NuhxBoard sees it doesn't have any settings file to read, it'll make one and also create the start menu entry.
+
+### Fixed
+
+- Crash where a key release was received with no preceding key press. [d5cc1aa](https://github.com/justdeeevin/nuhxboard/commits/d5cc1aa31924f9087a7d7e6b60254253cf0b5c81)
 
 ## [v0.5.0](https://github.com/justDeeevin/NuhxBoard/releases/v0.5.0) - 2024-2-19
 
