@@ -34,48 +34,23 @@ static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    if !home::home_dir()
-        .unwrap()
-        .join(".local/share/NuhxBoard")
-        .exists()
-    {
-        let make_dir = inquire::Confirm::new(
-            "NuhxBoard directory does not exist. Create it? (If no, program will exit)",
-        )
-        .with_default(true)
-        .prompt()?;
-
-        if make_dir {
-            std::fs::create_dir_all(
-                home::home_dir()
-                    .unwrap()
-                    .join(".local/share/NuhxBoard/keyboards"),
-            )?;
-            let mut settings = File::create(
-                home::home_dir()
-                    .unwrap()
-                    .join(".local/share/NuhxBoard/NuhxBoard.json"),
-            )?;
-
-            settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
-        } else {
-            std::process::exit(0);
-        }
-    }
-
     let args = Args::parse();
 
     let icon_image = image::load_from_memory(IMAGE)?;
 
-    let settings_file = File::open(
-        home::home_dir()
-            .unwrap()
-            .join(".local/share/NuhxBoard/NuhxBoard.json"),
-    )?;
-
-    let settings: Settings = serde_json::from_reader(settings_file)?;
-
     if args.install {
+        std::fs::create_dir_all(
+            home::home_dir()
+                .unwrap()
+                .join(".local/share/NuhxBoard/keyboards"),
+        )?;
+        let mut settings = File::create(
+            home::home_dir()
+                .unwrap()
+                .join(".local/share/NuhxBoard/NuhxBoard.json"),
+        )?;
+
+        settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
         match std::env::consts::OS {
             #[cfg(target_os = "linux")]
             "linux" => {
@@ -119,6 +94,14 @@ fn main() -> Result<()> {
 
         return Ok(());
     }
+
+    let settings_file = File::open(
+        home::home_dir()
+            .unwrap()
+            .join(".local/share/NuhxBoard/NuhxBoard.json"),
+    )?;
+
+    let settings: Settings = serde_json::from_reader(settings_file)?;
 
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags {
