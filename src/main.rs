@@ -39,6 +39,16 @@ fn main() -> Result<()> {
     let icon_image = image::load_from_memory(IMAGE)?;
 
     if args.install {
+        println!("NuhxBoard installed successfully!");
+
+        return Ok(());
+    }
+
+    let settings_path = home::home_dir()
+        .unwrap()
+        .join(".local/share/NuhxBoard/NuhxBoard.json");
+
+    if !settings_path.exists() {
         std::fs::create_dir_all(
             home::home_dir()
                 .unwrap()
@@ -72,8 +82,7 @@ fn main() -> Result<()> {
 
                 let lnk = lnk_path.to_str().unwrap();
 
-                let mut target_path = home::home_dir().unwrap();
-                target_path.push(".cargo/bin/nuhxboard.exe");
+                let target_path = std::env::current_exe()?;
 
                 let target = target_path.to_str().unwrap();
 
@@ -89,17 +98,9 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             }
         }
-
-        println!("NuhxBoard installed successfully!");
-
-        return Ok(());
     }
 
-    let settings_file = File::open(
-        home::home_dir()
-            .unwrap()
-            .join(".local/share/NuhxBoard/NuhxBoard.json"),
-    )?;
+    let settings_file = File::open(settings_path)?;
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
 

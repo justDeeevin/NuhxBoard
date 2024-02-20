@@ -466,6 +466,9 @@ impl Application for NuhxBoard {
                 return command;
             }
             Message::ChangeKeyboardCategory(category) => {
+                if category.is_empty() {
+                    return Command::none();
+                }
                 let mut path = self.keyboards_path.clone();
                 self.settings.category = category.clone();
 
