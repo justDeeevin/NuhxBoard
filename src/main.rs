@@ -6,43 +6,18 @@ mod listener;
 mod nuhxboard;
 mod types;
 
-use clap::Parser;
 use color_eyre::eyre::Result;
 use iced::{multi_window::Application, window};
 use nuhxboard::*;
 use std::{fs::File, io::prelude::*};
 use types::settings::Settings;
 
-/// NuhxBoard - The cross-platform alternative to NohBoard
-#[derive(Parser, Debug)]
-#[command(
-    version,
-    after_help = "Add keyboard categorys to ~/.local/share/NuhxBoard/keyboards/"
-)]
-struct Args {
-    /// Display debug info
-    #[arg(short, long)]
-    verbose: bool,
-
-    /// Install the app to your system; Create a desktop entry and install the icon.
-    #[arg(long)]
-    install: bool,
-}
-
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let args = Args::parse();
-
     let icon_image = image::load_from_memory(IMAGE)?;
-
-    if args.install {
-        println!("NuhxBoard installed successfully!");
-
-        return Ok(());
-    }
 
     let settings_path = home::home_dir()
         .unwrap()
@@ -105,10 +80,7 @@ fn main() -> Result<()> {
     let settings: Settings = serde_json::from_reader(settings_file)?;
 
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
-    let flags = Flags {
-        verbose: args.verbose,
-        settings,
-    };
+    let flags = Flags { settings };
 
     let settings = iced::Settings {
         window: window::Settings {

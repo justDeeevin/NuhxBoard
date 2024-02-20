@@ -38,7 +38,6 @@ pub struct NuhxBoard {
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
     true_caps: bool,
-    verbose: bool,
     load_keyboard_window_id: Option<window::Id>,
     settings_window_id: Option<window::Id>,
     keyboard: Option<usize>,
@@ -55,7 +54,6 @@ pub struct NuhxBoard {
 
 #[derive(Default)]
 pub struct Flags {
-    pub verbose: bool,
     pub settings: Settings,
 }
 
@@ -195,7 +193,6 @@ impl Application for NuhxBoard {
                 pressed_scroll_buttons: HashMap::new(),
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
-                verbose: flags.verbose,
                 load_keyboard_window_id: None,
                 settings_window_id: None,
                 keyboard: Some(flags.settings.keyboard),
@@ -232,17 +229,6 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        if self.verbose {
-            if let Message::Listener(listener::Event::KeyReceived(event)) = &message {
-                match event.event_type {
-                    rdev::EventType::MouseMove { x: _, y: _ } => {}
-                    _ => {
-                        dbg!(&event);
-                    }
-                }
-            }
-        }
-
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
