@@ -24,38 +24,17 @@ I may add functionality where I think it would fit, but I want to prioritize int
 
 ## Usage
 
-Right now, NuhxBoard has to be launched from the command line. In a future release, I plan on porting the graphical interface present in NohBoard. Launch arguments are used to decide the keyboard and style. This means that the app has to be relaunched to change the keyboard or style.
-
-To specify a keyboard layout, provide the group and the keyboard name in the `--keyboard` argument, in the format `[GROUP]/[KEYBOARD]`. To specify a style, just provide the name of the style in the `--style` argument.
-
-Here's the output of the `--help` command:
-
-```
-NuhxBoard - The cross-platform alternative to NohBoard
-
-Usage: nuhxboard [OPTIONS] --keyboard <KEYBOARD>
-
-Options:
-  -k, --keyboard <KEYBOARD>  The keyboard to use. [GROUP]/[KEYBOARD]
-  -s, --style <STYLE>        The style to use. Must be in the same directory as the provided keyboard. If not provided, global default will be used
-  -l, --list                 List available keyboard groups or keyboards in a group specified by `--keyboard`
-  -h, --help                 Print help
-  -V, --version              Print version
-
-Add keyboard groups to ~/.local/share/NuhxBoard/keyboards/
-```
-
-_God, I love `clap`._
+Just right-click anywhere in the window, and pick which keyboard you want to use!
 
 ## Installation
 
 NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
 If you use Linux and either install without binstall or build from source, you will need the `libxi-dev` and `lib-xtst` packages installed.
-You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest).
+You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). Once you've installed it, you'll have to run it from the command line using the `--install` to add it to your start menu and create the necessary program files.
 
 ### 0.5.0
 
-Version 0.5.0 Takes advantage of [`iced` version 0.12.0](https://github.com/iced-rs/iced)'s new features and [`iced_aw`](https://github.com/iced-rs/iced_aw)'s context menu to make the the application purely graphical, with a seperate window for loading a keyboard, error pop-up windows (instead of crashing over an error), and an all-new settings menu, getting closer to NohBoard's behavior and usage. However, there's a problem. While most parts of `iced_aw` work with `iced` v0.12.0, there are a couple things they still need to work on (see [this issue](https://github.com/iced-rs/iced_aw/issues/196)) before a new release, so I have to depend on its github repo to use its context menu. _Crates.io won't let you publish a crate with a git dependency_, so I can't release 0.5.0 until `iced_aw` has its next release. I will push releases to GitHub, but you won't be getting the most up-to-date version from any package managers for now.
+Version 0.5.0 takes advantage of [`iced` version 0.12.0](https://github.com/iced-rs/iced)'s new features and [`iced_aw`](https://github.com/iced-rs/iced_aw)'s context menu to make the the application purely graphical, with a seperate window for loading a keyboard, error pop-up windows (instead of crashing over an error), and an all-new settings menu, getting closer to NohBoard's behavior and usage. However, there's a problem. While most parts of `iced_aw` work with `iced` v0.12.0, there are a couple things they still need to work on (see [this issue](https://github.com/iced-rs/iced_aw/issues/196)) before a new release, so I have to depend on its github repo to use its context menu. _Crates.io won't let you publish a crate with a git dependency_, so I can't release 0.5.0 until `iced_aw` has its next release. I will push releases to GitHub, but you won't be getting the most up-to-date version from any package managers for now.
 
 ## Demo
 
