@@ -55,37 +55,7 @@ You can also install NuhxBoard using the option matching your platform on the [l
 
 ### 0.5.0
 
-Version 0.5.0 Takes advantage of [`iced` version 0.12.0](https://github.com/iced-rs/iced)'s new features and [`iced_aw`](https://github.com/iced-rs/iced_aw)'s context menu to make the the application purely graphical, with a seperate window for loading a keyboard, error pop-up windows (instead of crashing over an error), and an all-new settings menu, getting closer to NohBoard's behavior and usage. However, there's a problem. While most parts of `iced_aw` work with `iced` v0.12.0, there are a couple things they still need to work on (see [this issue](https://github.com/iced-rs/iced_aw/issues/196)) before a new release, so I have to depend on its github repo to use its context menu. _Crates.io won't let you publish a crate with a git dependency_, so I can't release 0.5.0 until `iced_aw` has its next release.
-
-So, if you want to use this latest version of NuhxBoard, for the time being, you'll have to build it from its source code.
-
-1. Clone this repository  
-   Make sure Git is installed, then run `git clone https://github.com/justdeeevin/nuhxboard` in your terminal.
-2. Build the app  
-   If you haven't already, [install Rust](https://www.rust-lang.org/learn/get-started). Make sure to install the nightly version, either during initial install or after with `rustup install nightly`.
-
-   `cd` into the new folder:
-
-   ```
-   cd NuhxBoard
-   ```
-
-   Then build the app:
-
-   ```
-   cargo +nightly build --release
-   ```
-
-   This'll take a minute. Sorry.
-
-3. Move the app somewhere on your PATH  
-   I would recommend putting it in `~/.cargo/bin` like so:
-
-   ```
-   mv ./target/release/nuhxboard ~/.cargo/bin
-   ```
-
-   (Use `nuhxboard.exe` instead of `nuhxboard` if on Windows. Although, you really should just use NohBoard if you're on Windows.)
+Version 0.5.0 Takes advantage of [`iced` version 0.12.0](https://github.com/iced-rs/iced)'s new features and [`iced_aw`](https://github.com/iced-rs/iced_aw)'s context menu to make the the application purely graphical, with a seperate window for loading a keyboard, error pop-up windows (instead of crashing over an error), and an all-new settings menu, getting closer to NohBoard's behavior and usage. However, there's a problem. While most parts of `iced_aw` work with `iced` v0.12.0, there are a couple things they still need to work on (see [this issue](https://github.com/iced-rs/iced_aw/issues/196)) before a new release, so I have to depend on its github repo to use its context menu. _Crates.io won't let you publish a crate with a git dependency_, so I can't release 0.5.0 until `iced_aw` has its next release. I will push releases to GitHub, but you won't be getting the most up-to-date version from any package managers for now.
 
 ## Demo
 
