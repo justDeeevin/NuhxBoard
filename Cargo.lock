@@ -543,9 +543,9 @@ dependencies = [
 
 [[package]]
 name = "clipboard-win"
-version = "5.1.0"
+version = "5.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ec832972fefb8cf9313b45a0d1945e29c9c251f1d4c6eafc5fe2124c02d2e81"
+checksum = "12f9a0700e0127ba15d1d52dd742097f821cd9c65939303a44d970465040a297"
 dependencies = [
  "error-code",
 ]
@@ -1778,7 +1778,7 @@ dependencies = [
 [[package]]
 name = "iced_aw"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced_aw?branch=main#687fe55689517c82d289af311bc6a17d9d08c01a"
+source = "git+https://github.com/iced-rs/iced_aw?branch=main#26713920fd2b52c2b8d7f3da42802473207aeb7a"
 dependencies = [
  "cfg-if",
  "chrono",
@@ -2491,7 +2491,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard"
-version = "0.5.2"
+version = "0.5.1"
 dependencies = [
  "async-std",
  "color-eyre",
