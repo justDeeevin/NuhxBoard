@@ -35,6 +35,7 @@ iced = { version = "0.12.0", features = [
 image = { version = "0.24.8", features = ["ico"] }
 iced_aw = { git = "https://github.com/iced-rs/iced_aw", branch = "main", features = [
   "selection_list",
+  "number_input",
 ] }
 inquire = "0.6.2"
 rdev = "0.5.3"

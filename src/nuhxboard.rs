@@ -7,10 +7,13 @@ use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{
     multi_window::Application,
-    widget::{button, canvas, canvas::Cache, column, container, pick_list, row, text},
+    widget::{
+        button, canvas, canvas::Cache, checkbox, column, container, horizontal_space, pick_list,
+        radio, row, text, text_input,
+    },
     window, Color, Command, Length, Renderer, Subscription, Theme,
 };
-use iced_aw::{ContextMenu, SelectionList};
+use iced_aw::{number_input, ContextMenu, SelectionList};
 use std::sync::Arc;
 use std::{
     collections::HashMap,
@@ -34,8 +37,10 @@ pub struct NuhxBoard {
     pub previous_mouse_position: (f32, f32),
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
+    true_caps: bool,
     verbose: bool,
     load_keyboard_window_id: Option<window::Id>,
+    settings_window_id: Option<window::Id>,
     keyboard: Option<usize>,
     style_choice: Option<usize>,
     error_windows: HashMap<window::Id, Error>,
@@ -45,8 +50,7 @@ pub struct NuhxBoard {
     keyboards_path: std::path::PathBuf,
     startup: bool,
     pub settings: Settings,
-    /// `(x, y)`
-    center: (f32, f32),
+    display_options: Vec<DisplayInfo>,
 }
 
 #[derive(Default)]
@@ -76,10 +80,25 @@ pub enum Message {
     ReleaseScroll(u32),
     LoadStyle(usize),
     OpenLoadKeyboardWindow,
+    OpenSettingsWindow,
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(usize),
     Quitting,
+    ChangeSetting(Setting),
+}
+
+#[derive(Debug, Clone)]
+pub enum Setting {
+    MouseSensitivity(f32),
+    ScrollHoldTime(u64),
+    CenterMouse,
+    DisplayId(u32),
+    MinPressTime(u128),
+    WindowTitle(String),
+    Capitalization(Capitalization),
+    FollowForCapsSensitive,
+    FollowForCapsInsensitive,
 }
 
 impl Message {
@@ -98,6 +117,10 @@ impl Message {
             name: None,
         }))
     }
+
+    pub fn none() -> Self {
+        Message::Listener(listener::Event::None)
+    }
 }
 
 #[derive(Debug)]
@@ -115,15 +138,17 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
     height: 200.0,
 };
 
-pub const LOAD_KEYBOARD_WINDOW_SIZE: iced::Size = iced::Size {
+const LOAD_KEYBOARD_WINDOW_SIZE: iced::Size = iced::Size {
     width: 300.0,
     height: 250.0,
 };
 
-pub const ERROR_WINDOW_SIZE: iced::Size = iced::Size {
+const ERROR_WINDOW_SIZE: iced::Size = iced::Size {
     width: 400.0,
     height: 150.0,
 };
+
+const CONTEXT_MENU_WIDTH: f32 = 160.0;
 
 async fn noop() {}
 
@@ -153,19 +178,6 @@ impl Application for NuhxBoard {
 
         let category = flags.settings.category.clone();
 
-        let mut center = (0.0, 0.0);
-
-        let displays = DisplayInfo::all().unwrap();
-
-        for display in displays {
-            if display.id == flags.settings.display_id {
-                center = (
-                    display.x as f32 + (display.width as f32 / 2.0),
-                    display.height as f32 / 2.0,
-                )
-            }
-        }
-
         (
             Self {
                 config,
@@ -178,12 +190,14 @@ impl Application for NuhxBoard {
                     Capitalization::Lower => false,
                     Capitalization::Follow => false,
                 },
+                true_caps: false,
                 mouse_velocity: (0.0, 0.0),
                 pressed_scroll_buttons: HashMap::new(),
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
                 verbose: flags.verbose,
                 load_keyboard_window_id: None,
+                settings_window_id: None,
                 keyboard: Some(flags.settings.keyboard),
                 style_choice: Some(flags.settings.style),
                 error_windows: HashMap::new(),
@@ -193,9 +207,13 @@ impl Application for NuhxBoard {
                 keyboards_path: path,
                 startup: true,
                 settings: flags.settings,
-                center,
+                display_options: DisplayInfo::all().unwrap(),
             },
-            Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
+            Command::batch([
+                Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
+                iced::font::load(iced_aw::graphics::icons::BOOTSTRAP_FONT_BYTES)
+                    .map(|_| Message::none()),
+            ]),
         )
     }
 
@@ -208,6 +226,10 @@ impl Application for NuhxBoard {
             "Load Keyboard".to_owned()
         } else if self.error_windows.contains_key(&window) {
             "Error".to_owned()
+        } else if let Some(settings_window_id) = self.settings_window_id
+            && settings_window_id == window
+        {
+            "Settings".to_owned()
         } else {
             unreachable!()
         }
@@ -236,6 +258,7 @@ impl Application for NuhxBoard {
                     {
                         self.caps = !self.caps;
                     }
+                    self.true_caps = !self.true_caps;
                     let key = keycode_convert(key).unwrap();
                     self.pressed_keys
                         .entry(key)
@@ -382,8 +405,19 @@ impl Application for NuhxBoard {
                         Err(_) => return Command::none(),
                     };
 
+                    let mut center = (0.0, 0.0);
+
+                    for display in &self.display_options {
+                        if display.id == self.settings.display_id {
+                            center = (
+                                display.x as f32 + (display.width as f32 / 2.0),
+                                display.height as f32 / 2.0,
+                            )
+                        }
+                    }
+
                     let previous_pos = match self.settings.mouse_from_center {
-                        true => (self.center.0, self.center.1),
+                        true => (center.0, center.1),
                         false => self.previous_mouse_position,
                     };
                     let position_diff = (x - previous_pos.0, y - previous_pos.1);
@@ -404,6 +438,18 @@ impl Application for NuhxBoard {
                         *n -= 1;
                     }
                 }
+            }
+            Message::OpenSettingsWindow => {
+                let (id, command) = window::spawn(window::Settings {
+                    resizable: false,
+                    size: iced::Size {
+                        width: 420.0,
+                        height: 255.0,
+                    },
+                    ..Default::default()
+                });
+                self.settings_window_id = Some(id);
+                return command;
             }
             Message::OpenLoadKeyboardWindow => {
                 let path = self.keyboards_path.clone();
@@ -544,8 +590,11 @@ impl Application for NuhxBoard {
                 {
                     self.load_keyboard_window_id = None;
                 }
-                if self.error_windows.contains_key(&id) {
-                    self.error_windows.remove(&id);
+                self.error_windows.remove(&id);
+                if let Some(settings_window_id) = self.settings_window_id
+                    && id == settings_window_id
+                {
+                    self.settings_window_id = None;
                 }
             }
             Message::Quitting => {
@@ -563,10 +612,55 @@ impl Application for NuhxBoard {
                 for error_window in &self.error_windows {
                     commands.push(window::close(*error_window.0));
                 }
+                if let Some(settings_window_id) = self.settings_window_id {
+                    commands.push(window::close(settings_window_id));
+                }
 
                 commands.push(window::close(window::Id::MAIN));
                 return Command::batch(commands);
             }
+            Message::ChangeSetting(setting) => match setting {
+                Setting::MouseSensitivity(sens) => {
+                    self.settings.mouse_sensitivity = sens;
+                }
+                Setting::ScrollHoldTime(time) => {
+                    self.settings.scroll_hold_time = time;
+                }
+                Setting::CenterMouse => {
+                    self.settings.mouse_from_center = !self.settings.mouse_from_center;
+                }
+                Setting::DisplayId(id) => {
+                    self.settings.display_id = id;
+                }
+                Setting::MinPressTime(time) => {
+                    self.settings.min_press_time = time;
+                }
+                Setting::WindowTitle(title) => {
+                    self.settings.window_title = title;
+                }
+                Setting::Capitalization(cap) => {
+                    match cap {
+                        Capitalization::Lower => {
+                            self.caps = false;
+                        }
+                        Capitalization::Upper => {
+                            self.caps = true;
+                        }
+                        Capitalization::Follow => {
+                            self.caps = self.true_caps;
+                        }
+                    }
+                    self.settings.capitalization = cap;
+                }
+                Setting::FollowForCapsSensitive => {
+                    self.settings.follow_for_caps_sensitive =
+                        !self.settings.follow_for_caps_sensitive;
+                }
+                Setting::FollowForCapsInsensitive => {
+                    self.settings.follow_for_caps_insensitive =
+                        !self.settings.follow_for_caps_insensitive;
+                }
+            },
             _ => {}
         }
         self.canvas.clear();
@@ -584,11 +678,22 @@ impl Application for NuhxBoard {
                 None => Some(Message::OpenLoadKeyboardWindow),
             };
 
+            let settings_window_message = match self.settings_window_id {
+                Some(_) => None,
+                None => Some(Message::OpenSettingsWindow),
+            };
+
             ContextMenu::new(canvas, move || {
-                container(column([button("Load Keyboard")
-                    .on_press_maybe(load_keyboard_window_message.clone())
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .into()]))
+                container(column![
+                    button("Settings")
+                        .on_press_maybe(settings_window_message.clone())
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH)),
+                    button("Load Keyboard")
+                        .on_press_maybe(load_keyboard_window_message.clone())
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                ])
                 .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
                 .into()
             })
@@ -596,15 +701,14 @@ impl Application for NuhxBoard {
         } else if let Some(load_keyboard_window) = self.load_keyboard_window_id
             && load_keyboard_window == window
         {
-            column([
-                text("Category:").into(),
+            column![
+                text("Category:"),
                 pick_list(
                     self.keyboard_category_options.clone(),
                     Some(self.settings.category.clone()),
                     Message::ChangeKeyboardCategory,
-                )
-                .into(),
-                row([
+                ),
+                row![
                     SelectionList::new_with(
                         self.keyboard_options.clone().leak(),
                         |i, _| Message::LoadKeyboard(i),
@@ -613,8 +717,7 @@ impl Application for NuhxBoard {
                         <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
                         self.keyboard,
                         iced::Font::default(),
-                    )
-                    .into(),
+                    ),
                     SelectionList::new_with(
                         self.style_options.clone().leak(),
                         |i, _| Message::LoadStyle(i),
@@ -623,11 +726,9 @@ impl Application for NuhxBoard {
                         <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
                         self.style_choice,
                         iced::Font::default(),
-                    )
-                    .into(),
-                ])
-                .into(),
-            ])
+                    ),
+                ]
+            ]
             .into()
         } else if self.error_windows.contains_key(&window) {
             let error = self.error_windows.get(&window).unwrap();
@@ -660,18 +761,144 @@ impl Application for NuhxBoard {
                 Error::UnknownButton(button) => format!("Button: {:?}", button),
             };
             container(
-                column([
-                    text("Error:").into(),
-                    text(kind).into(),
-                    text("More info:").into(),
-                    text(info).into(),
-                ])
-                .align_items(iced::Alignment::Center),
+                column![text("Error:"), text(kind), text("More info:"), text(info),]
+                    .align_items(iced::Alignment::Center),
             )
             .height(iced::Length::Fill)
             .width(iced::Length::Fill)
             .align_x(iced::alignment::Horizontal::Center)
             .align_y(iced::alignment::Vertical::Center)
+            .into()
+        } else if let Some(settings_window_id) = self.settings_window_id
+            && settings_window_id == window
+        {
+            let input = column![
+                row![
+                    text("Mouse sensitivity: ").size(12),
+                    horizontal_space(),
+                    number_input(self.settings.mouse_sensitivity, f32::MAX, |v| {
+                        Message::ChangeSetting(Setting::MouseSensitivity(v))
+                    })
+                    .size(12.0)
+                ]
+                .padding(5)
+                .align_items(iced::Alignment::Center),
+                row![
+                    text("Scroll hold time (ms): ").size(12),
+                    horizontal_space(),
+                    number_input(self.settings.scroll_hold_time, u64::MAX, |v| {
+                        Message::ChangeSetting(Setting::ScrollHoldTime(v))
+                    })
+                    .size(12.0)
+                ]
+                .padding(5)
+                .align_items(iced::Alignment::Center),
+                checkbox(
+                    "Calculate mouse speed from center of screen",
+                    self.settings.mouse_from_center
+                )
+                .text_size(12)
+                .size(15)
+                .on_toggle(|_| { Message::ChangeSetting(Setting::CenterMouse) }),
+                row![
+                    text("Display to use: ").size(12),
+                    pick_list(
+                        self.display_options
+                            .iter()
+                            .map(|d| d.id)
+                            .collect::<Vec<_>>(),
+                        Some(self.settings.display_id),
+                        |v| Message::ChangeSetting(Setting::DisplayId(v))
+                    )
+                    .text_size(12)
+                ]
+                .padding(5)
+                .align_items(iced::Alignment::Center),
+                text("Show keypresses for at least").size(12),
+                row![
+                    number_input(self.settings.min_press_time, u128::MAX, |v| {
+                        Message::ChangeSetting(Setting::MinPressTime(v))
+                    })
+                    .size(12.0)
+                    .width(Length::Shrink),
+                    text("ms").size(12)
+                ]
+                .padding(5)
+                .align_items(iced::Alignment::Center),
+            ]
+            .align_items(iced::Alignment::Center);
+
+            let follow_for_sensitive_function =
+                match self.settings.capitalization != Capitalization::Follow {
+                    true => Some(|_| Message::ChangeSetting(Setting::FollowForCapsSensitive)),
+                    false => None,
+                };
+
+            let follow_for_caps_insensitive_function = match self.settings.capitalization
+                != Capitalization::Follow
+            {
+                true => Some(|_: bool| Message::ChangeSetting(Setting::FollowForCapsInsensitive)),
+                false => None,
+            };
+
+            let capitalization = row![
+                column![
+                    radio(
+                        "Follow Caps-Lock and Shift",
+                        Capitalization::Follow,
+                        Some(self.settings.capitalization),
+                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                    )
+                    .text_size(12)
+                    .size(15),
+                    radio(
+                        "Show all buttons capitalized",
+                        Capitalization::Upper,
+                        Some(self.settings.capitalization),
+                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                    )
+                    .text_size(12)
+                    .size(15),
+                    radio(
+                        "Show all buttons lowercase",
+                        Capitalization::Lower,
+                        Some(self.settings.capitalization),
+                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                    )
+                    .text_size(12)
+                    .size(15),
+                ],
+                horizontal_space(),
+                column![
+                    text("Still follow shift for").size(12),
+                    checkbox(
+                        "Caps Lock insensitive keys",
+                        self.settings.follow_for_caps_insensitive
+                    )
+                    .text_size(12)
+                    .size(15)
+                    .on_toggle_maybe(follow_for_caps_insensitive_function),
+                    checkbox(
+                        "Caps Lock sensitive keys",
+                        self.settings.follow_for_caps_sensitive
+                    )
+                    .text_size(12)
+                    .size(15)
+                    .on_toggle_maybe(follow_for_sensitive_function),
+                ]
+            ];
+
+            column![
+                input,
+                row![
+                    text("Window title: ").size(12),
+                    text_input("NuhxBoard", self.settings.window_title.as_str())
+                        .size(12)
+                        .on_input(|v| Message::ChangeSetting(Setting::WindowTitle(v)))
+                ]
+                .align_items(iced::Alignment::Center),
+                capitalization
+            ]
             .into()
         } else {
             unreachable!()

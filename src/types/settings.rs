@@ -16,7 +16,7 @@ pub struct Settings {
     pub display_id: u32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Default, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Default, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Capitalization {
     Lower,
     Upper,
