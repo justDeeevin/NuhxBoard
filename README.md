@@ -91,3 +91,6 @@ So, if you want to use this latest version of NuhxBoard, for the time being, you
 
 https://github.com/justDeeevin/NuhxBoard/assets/90054389/36dc9cf6-3b23-435c-a742-18dddf9c7c19
 
+Configurable like NohBoard:
+
+https://github.com/justDeeevin/NuhxBoard/assets/90054389/80c69a52-e76d-4715-a22c-78db34743959
