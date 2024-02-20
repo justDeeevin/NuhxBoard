@@ -255,6 +255,9 @@ impl Application for NuhxBoard {
                         return self.error(Error::UnknownKey(bad_key));
                     }
                     let key_num = keycode_convert(key).unwrap();
+                    if !self.pressed_keys.contains_key(&key_num) {
+                        return Command::none();
+                    }
                     if self
                         .pressed_keys
                         .get(&key_num)
