@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/justDeeevin/NuhxBoard/compare/v0.4.0...HEAD)
+## [v0.5.0](https://github.com/justDeeevin/NuhxBoard/releases/v0.5.0)
 
 #### NuhxBoard is now a fully graphical application!
 
@@ -15,6 +15,7 @@ On launch, you'll be prompted to load a keyboard and select its style through a 
 ### Added
 
 - `--install` command to put NuhxBoard in your OS's app list (Not implemented for MacOS).
+- Settings and graphical menu to change them.
 
 ### Changed
 
