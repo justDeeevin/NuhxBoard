@@ -26,6 +26,8 @@ I may add functionality where I think it would fit, but I want to prioritize int
 
 Just right-click anywhere in the window, and pick which keyboard you want to use!
 
+See [NohBoard's documentation](https://github.com/ThoNohT/NohBoard/wiki/How-To-Use) for more info on usage. NuhxBoard can't do everything that NohBoard can, but everything it does, NohBoard does too.
+
 ## Installation
 
 NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
