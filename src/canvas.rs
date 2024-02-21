@@ -91,7 +91,8 @@ macro_rules! draw_key {
             },
             horizontal_alignment: iced::alignment::Horizontal::Center,
             vertical_alignment: iced::alignment::Vertical::Center,
-            ..canvas::Text::default()
+            shaping: iced::widget::text::Shaping::Advanced,
+            ..Default::default()
         })
     };
 }
