@@ -60,6 +60,7 @@ pub struct Flags {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum StyleChoice {
     Default,
+    Global(String),
     Custom(String),
 }
 
@@ -68,6 +69,7 @@ impl std::fmt::Display for StyleChoice {
         match self {
             StyleChoice::Default => write!(f, "Global Default"),
             StyleChoice::Custom(s) => write!(f, "{}", s),
+            StyleChoice::Global(s) => write!(f, "Global: {}", s),
         }
     }
 }
@@ -533,6 +535,27 @@ impl Application for NuhxBoard {
                         })
                         .collect(),
                 );
+                self.style_options.append(
+                    &mut fs::read_dir(self.keyboards_path.clone().join("global"))
+                        .unwrap()
+                        .map(|r| r.unwrap())
+                        .filter(|entry| entry.file_type().unwrap().is_file())
+                        .filter(|entry| {
+                            entry.path().extension() == Some(std::ffi::OsStr::new("style"))
+                        })
+                        .map(|entry| {
+                            StyleChoice::Global(
+                                entry
+                                    .path()
+                                    .file_stem()
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
+                                    .to_owned(),
+                            )
+                        })
+                        .collect(),
+                );
                 self.style_choice = Some(0);
 
                 return window::resize(
@@ -552,15 +575,20 @@ impl Application for NuhxBoard {
                     self.style = Style::default();
                     return Command::none();
                 }
-                let style = match &self.style_options[style] {
-                    StyleChoice::Custom(style) => style,
-                    _ => unreachable!(),
-                };
-                let mut path = home::home_dir().unwrap();
-                path.push(".local/share/NuhxBoard/keyboards");
-                path.push(&self.settings.category);
-                path.push(self.keyboard_options[self.keyboard.unwrap()].clone());
-                path.push(format!("{}.style", style));
+
+                let path = self
+                    .keyboards_path
+                    .clone()
+                    .join(match &self.style_options[style] {
+                        StyleChoice::Default => unreachable!(),
+                        StyleChoice::Global(style_name) => format!("global/{}.style", style_name),
+                        StyleChoice::Custom(style_name) => format!(
+                            "{}/{}/{}.style",
+                            self.settings.category,
+                            self.keyboard_options[self.keyboard.unwrap()],
+                            style_name
+                        ),
+                    });
 
                 let style_file = match File::open(path) {
                     Ok(f) => f,
