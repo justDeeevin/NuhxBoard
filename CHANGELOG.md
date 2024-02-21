@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.5.2](https://github.com/justdeeevin/nuhxboard/compare/v0.5.1...HEAD)
 
+### Fixed
+
+- Certain characters not rendering. [dfa8f08](https://githb.com/justdeeevin/commits/dfa8f08d577b4296bc0f8a478bcbc4349c5ed8f8)
+
 ## [v0.5.1](https://github.com/justdeeevin/nuhxboard/releases/v0.5.1) - 2024-2-20
 
 ### Changed
