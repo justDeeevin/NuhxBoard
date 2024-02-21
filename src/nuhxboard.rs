@@ -84,6 +84,7 @@ pub enum Message {
     LoadKeyboard(usize),
     Quitting,
     ChangeSetting(Setting),
+    ClearPressedKeys,
 }
 
 #[derive(Debug, Clone)]
@@ -645,7 +646,10 @@ impl Application for NuhxBoard {
                         !self.settings.follow_for_caps_insensitive;
                 }
             },
-            _ => {}
+            Message::ClearPressedKeys => {
+                self.pressed_keys.clear();
+            }
+            Message::Listener(_) => {}
         }
         self.canvas.clear();
         Command::none()
@@ -675,6 +679,10 @@ impl Application for NuhxBoard {
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH)),
                     button("Load Keyboard")
                         .on_press_maybe(load_keyboard_window_message.clone())
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH)),
+                    button("Clear Pressed Keys")
+                        .on_press(Message::ClearPressedKeys)
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                 ])
@@ -877,7 +885,7 @@ impl Application for NuhxBoard {
                         .on_input(|v| Message::ChangeSetting(Setting::WindowTitle(v)))
                 ]
                 .align_items(iced::Alignment::Center),
-                capitalization
+                capitalization,
             ]
             .into()
         } else {
