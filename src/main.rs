@@ -27,7 +27,7 @@ fn main() -> Result<()> {
         std::fs::create_dir_all(
             home::home_dir()
                 .unwrap()
-                .join(".local/share/NuhxBoard/keyboards"),
+                .join(".local/share/NuhxBoard/keyboards/global"),
         )?;
         let mut settings = File::create(
             home::home_dir()
