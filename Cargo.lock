@@ -2481,7 +2481,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "async-std",
  "color-eyre",
