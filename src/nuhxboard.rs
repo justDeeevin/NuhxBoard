@@ -89,7 +89,6 @@ pub enum Message {
     ChangeSetting(Setting),
     ClearPressedKeys,
     ToggleEditMode,
-    UpdateCanvas,
 }
 
 #[derive(Debug, Clone)]

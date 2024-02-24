@@ -119,7 +119,6 @@ impl canvas::Program<Message> for NuhxBoard {
         if !self.edit_mode {
             if state.hovered_element.is_some() {
                 state.hovered_element = None;
-                return (Status::Captured, Some(Message::UpdateCanvas));
             }
             return (Status::Ignored, None);
         }
@@ -159,7 +158,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                 if state.hovered_element != Some(index) {
                                     state.hovered_element = Some(index);
                                 }
-                                return (Status::Captured, Some(Message::UpdateCanvas));
+                                return (Status::Captured, None);
                             }
                         }
                     }
@@ -167,7 +166,7 @@ impl canvas::Program<Message> for NuhxBoard {
 
                 if state.hovered_element.is_some() {
                     state.hovered_element = None;
-                    return (Status::Captured, Some(Message::UpdateCanvas));
+                    return (Status::Captured, None);
                 }
             }
             _ => {}
