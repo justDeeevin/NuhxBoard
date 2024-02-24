@@ -3,15 +3,15 @@ use crate::{
     nuhxboard::*,
     types::{config::*, settings::*, style::*},
 };
+use geo::{Coord, LineString, Polygon, Within};
 use iced::{
     mouse,
-    widget::canvas,
-    widget::canvas::{Geometry, Path},
+    widget::canvas::{self, event::Status, Geometry, Path},
     Color, Rectangle, Renderer, Theme,
 };
 
 macro_rules! draw_key {
-    ($self: ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr) => {
+    ($self: ident, $state:ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr, $index: expr) => {
         let mut boundaries_iter = $def.boundaries.iter();
         let key = Path::new(|builder| {
             builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
@@ -93,27 +93,103 @@ macro_rules! draw_key {
             vertical_alignment: iced::alignment::Vertical::Center,
             shaping: iced::widget::text::Shaping::Advanced,
             ..Default::default()
-        })
+        });
+
+        if $state.hovered_element == Some($index) {
+            $frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+        }
     };
 }
 
-impl<Message> canvas::Program<Message> for NuhxBoard {
-    type State = ();
+#[derive(Default)]
+pub struct CanvasState {
+    hovered_element: Option<usize>,
+}
+
+impl canvas::Program<Message> for NuhxBoard {
+    type State = CanvasState;
+
+    fn update(
+        &self,
+        state: &mut Self::State,
+        event: canvas::Event,
+        bounds: Rectangle,
+        cursor: iced::advanced::mouse::Cursor,
+    ) -> (canvas::event::Status, Option<Message>) {
+        if !self.edit_mode {
+            if state.hovered_element.is_some() {
+                state.hovered_element = None;
+                return (Status::Captured, Some(Message::UpdateCanvas));
+            }
+            return (Status::Ignored, None);
+        }
+
+        let Some(cursor_position) = cursor.position_in(bounds) else {
+            return (Status::Ignored, None);
+        };
+
+        let cursor_position = Coord {
+            x: cursor_position.x as f64,
+            y: cursor_position.y as f64,
+        };
+
+        #[allow(clippy::single_match)]
+        match event {
+            canvas::Event::Mouse(mouse::Event::CursorMoved { position: _ }) => {
+                for (index, element) in self.config.elements.iter().enumerate() {
+                    match element {
+                        BoardElement::MouseSpeedIndicator(_) => {
+                            continue;
+                        }
+                        _ => {
+                            let mut vertices = match element {
+                                BoardElement::KeyboardKey(def) => def.boundaries.clone(),
+                                BoardElement::MouseKey(def) => def.boundaries.clone(),
+                                BoardElement::MouseScroll(def) => def.boundaries.clone(),
+                                BoardElement::MouseSpeedIndicator(_) => {
+                                    unreachable!()
+                                }
+                            };
+
+                            vertices.push(vertices[0].clone());
+
+                            let bounds = Polygon::new(LineString::from(vertices), vec![]);
+
+                            if cursor_position.is_within(&bounds) {
+                                if state.hovered_element != Some(index) {
+                                    state.hovered_element = Some(index);
+                                }
+                                return (Status::Captured, Some(Message::UpdateCanvas));
+                            }
+                        }
+                    }
+                }
+
+                if state.hovered_element.is_some() {
+                    state.hovered_element = None;
+                    return (Status::Captured, Some(Message::UpdateCanvas));
+                }
+            }
+            _ => {}
+        }
+        (Status::Ignored, None)
+    }
 
     fn draw(
         &self,
-        _state: &Self::State,
+        state: &Self::State,
         renderer: &Renderer,
         _theme: &Theme,
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
         let canvas = self.canvas.draw(renderer, bounds.size(), |frame| {
-            for element in &self.config.elements {
+            for (index, element) in self.config.elements.iter().enumerate() {
                 match element {
                     BoardElement::KeyboardKey(def) => {
                         draw_key!(
                             self,
+                            state,
                             def,
                             frame,
                             {
@@ -142,25 +218,30 @@ impl<Message> canvas::Program<Message> for NuhxBoard {
                                     },
                                 }
                             },
-                            self.pressed_keys
+                            self.pressed_keys,
+                            index
                         );
                     }
                     BoardElement::MouseKey(def) => {
                         draw_key!(
                             self,
+                            state,
                             def,
                             frame,
                             def.text.clone(),
-                            self.pressed_mouse_buttons
+                            self.pressed_mouse_buttons,
+                            index
                         );
                     }
                     BoardElement::MouseScroll(def) => {
                         draw_key!(
                             self,
+                            state,
                             def,
                             frame,
                             def.text.clone(),
-                            self.pressed_scroll_buttons
+                            self.pressed_scroll_buttons,
+                            index
                         );
                     }
                     BoardElement::MouseSpeedIndicator(def) => {

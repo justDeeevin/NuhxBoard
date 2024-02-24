@@ -91,3 +91,12 @@ impl From<SerializablePoint> for Point {
         Point::new(point.x, point.y)
     }
 }
+
+impl From<SerializablePoint> for geo::Coord {
+    fn from(value: SerializablePoint) -> Self {
+        Self {
+            x: value.x as f64,
+            y: value.y as f64,
+        }
+    }
+}

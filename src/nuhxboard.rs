@@ -50,6 +50,7 @@ pub struct NuhxBoard {
     startup: bool,
     pub settings: Settings,
     display_options: Vec<DisplayInfo>,
+    pub edit_mode: bool,
 }
 
 #[derive(Default)]
@@ -87,6 +88,8 @@ pub enum Message {
     Quitting,
     ChangeSetting(Setting),
     ClearPressedKeys,
+    ToggleEditMode,
+    UpdateCanvas,
 }
 
 #[derive(Debug, Clone)]
@@ -208,6 +211,7 @@ impl Application for NuhxBoard {
                 startup: true,
                 settings: flags.settings,
                 display_options: DisplayInfo::all().unwrap(),
+                edit_mode: false,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -678,6 +682,9 @@ impl Application for NuhxBoard {
                 self.pressed_keys.clear();
             }
             Message::Listener(_) => {}
+            Message::ToggleEditMode => {
+                self.edit_mode = !self.edit_mode;
+            }
         }
         self.canvas.clear();
         Command::none()
@@ -689,33 +696,65 @@ impl Application for NuhxBoard {
                 .height(Length::Fill)
                 .width(Length::Fill);
 
-            let load_keyboard_window_message = match self.load_keyboard_window_id {
-                Some(_) => None,
-                None => Some(Message::OpenLoadKeyboardWindow),
-            };
+            ContextMenu::new(canvas, || {
+                let load_keyboard_window_message = match self.load_keyboard_window_id {
+                    Some(_) => None,
+                    None => Some(Message::OpenLoadKeyboardWindow),
+                };
 
-            let settings_window_message = match self.settings_window_id {
-                Some(_) => None,
-                None => Some(Message::OpenSettingsWindow),
-            };
+                let settings_window_message = match self.settings_window_id {
+                    Some(_) => None,
+                    None => Some(Message::OpenSettingsWindow),
+                };
 
-            ContextMenu::new(canvas, move || {
-                container(column![
+                let toggle_button_label = match self.edit_mode {
+                    true => "Stop Editing",
+                    false => "Start Editing",
+                };
+
+                let mut menu = vec![
                     button("Settings")
                         .on_press_maybe(settings_window_message.clone())
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH)),
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                        .into(),
                     button("Load Keyboard")
                         .on_press_maybe(load_keyboard_window_message.clone())
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH)),
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                        .into(),
+                    button(toggle_button_label)
+                        .on_press(Message::ToggleEditMode)
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                        .into(),
+                ];
+
+                if self.edit_mode {
+                    menu.append(&mut vec![
+                        button("Save Keyboard")
+                            .on_press(Message::none())
+                            .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                            .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                            .into(),
+                        button("Save Style")
+                            .on_press(Message::none())
+                            .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                            .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                            .into(),
+                    ]);
+                }
+
+                menu.push(
                     button("Clear Pressed Keys")
                         .on_press(Message::ClearPressedKeys)
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                ])
-                .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
-                .into()
+                        .into(),
+                );
+                container(column(menu))
+                    .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
+                    .into()
             })
             .into()
         } else if Some(window) == self.load_keyboard_window_id {
