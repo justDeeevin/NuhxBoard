@@ -72,7 +72,7 @@ macro_rules! draw_key {
             font: iced::Font {
                 family: iced::font::Family::Name(
                     // Leak is required because Name requires static lifetime
-                    // as opposed to application lifetime :(
+                    // as opposed to application lifetime.
                     // I suppose they were just expecting you to pass in a
                     // literal here... damn you!!
                     current_style.font.font_family.clone().leak(),
