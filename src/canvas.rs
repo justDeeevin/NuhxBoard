@@ -127,7 +127,7 @@ impl canvas::Program<Message> for NuhxBoard {
             return (Status::Ignored, None);
         };
 
-        let cursor_position = Coord {
+        let cursor_position_geo = Coord {
             x: cursor_position.x as f64,
             y: cursor_position.y as f64,
         };
@@ -137,8 +137,13 @@ impl canvas::Program<Message> for NuhxBoard {
             canvas::Event::Mouse(mouse::Event::CursorMoved { position: _ }) => {
                 for (index, element) in self.config.elements.iter().enumerate() {
                     match element {
-                        BoardElement::MouseSpeedIndicator(_) => {
-                            continue;
+                        BoardElement::MouseSpeedIndicator(def) => {
+                            if cursor_position.distance(def.location.clone().into()) < def.radius {
+                                if state.hovered_element != Some(index) {
+                                    state.hovered_element = Some(index);
+                                }
+                                return (Status::Captured, None);
+                            }
                         }
                         _ => {
                             let mut vertices = match element {
@@ -154,7 +159,7 @@ impl canvas::Program<Message> for NuhxBoard {
 
                             let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
-                            if cursor_position.is_within(&bounds) {
+                            if cursor_position_geo.is_within(&bounds) {
                                 if state.hovered_element != Some(index) {
                                     state.hovered_element = Some(index);
                                 }
@@ -344,6 +349,11 @@ impl canvas::Program<Message> for NuhxBoard {
                                 line_join: canvas::LineJoin::Round,
                             },
                         );
+
+                        if state.hovered_element == Some(index) {
+                            frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+                        }
+
                         let ball_gradient = colorgrad::CustomGradient::new()
                             .colors(&[
                                 colorgrad::Color::new(
