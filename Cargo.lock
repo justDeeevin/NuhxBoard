@@ -1761,9 +1761,9 @@ dependencies = [
 
 [[package]]
 name = "iced"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4201d43f7b74e6024a52bc20f4d742a44760685474b07c14680a6293c861644"
+checksum = "7d4eb0fbbefb8c428b70680e77ed9013887b17c1d6be366b40f264f956d1a096"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1776,13 +1776,14 @@ dependencies = [
 
 [[package]]
 name = "iced_aw"
-version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced_aw?branch=main#987617c7235309e1d8c9bbfc1491c0f91201ff0d"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "129deba9897243dd59c2038e2267a691e392c94e569680066ee63b1164429490"
 dependencies = [
  "cfg-if",
  "chrono",
  "iced",
- "itertools 0.11.0",
+ "itertools",
  "num-traits",
  "once_cell",
  "time",
@@ -1823,9 +1824,9 @@ dependencies = [
 
 [[package]]
 name = "iced_graphics"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0660df444c64a13f72999c55a324f6d3ea020167bb1af8ef43fe2bff168d8c27"
+checksum = "6a044c193ef0840eacabfa05424717331d1fc5b3ecb9a89316200c75da2ba9a4"
 dependencies = [
  "bitflags 2.4.2",
  "bytemuck",
@@ -1847,9 +1848,9 @@ dependencies = [
 
 [[package]]
 name = "iced_renderer"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d931249515deb5fe116c7d199792cd9fd32d31bf18ffc08c6c2ad2dee5fd3e"
+checksum = "5c281e03001d566058f53dec9325bbe61c62da715341206d2627f57a3ecc7f69"
 dependencies = [
  "iced_graphics",
  "iced_tiny_skia",
@@ -2046,15 +2047,6 @@ name = "ipnet"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f518f335dce6725a761382244631d86cf0ccb2863413590b31338feb467f9c3"
-
-[[package]]
-name = "itertools"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
-dependencies = [
- "either",
-]
 
 [[package]]
 name = "itertools"
@@ -2704,7 +2696,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645dcde5f119c2c454a92d0dfa271a2a3b205da92e4292a68ead4bdbfde1f33"
 dependencies = [
  "heck",
- "itertools 0.12.1",
+ "itertools",
  "proc-macro2",
  "proc-macro2-diagnostics",
  "quote",
