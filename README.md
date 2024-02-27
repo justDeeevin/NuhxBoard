@@ -13,7 +13,6 @@
 1. [Goals](#goals)
 2. [Usage](#usage)
 3. [Installation](#installation)
-   - [0.5.0](#050)
 4. [Demo](#demo)
 
 ## Goals
@@ -33,10 +32,6 @@ See [NohBoard's documentation](https://github.com/ThoNohT/NohBoard/wiki/How-To-U
 NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
 If you use Linux and either install without binstall or build from source, you will need the `libxi-dev` and `lib-xtst` packages installed.
 You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). Once you've installed it, you'll have to run it from the command line using the `--install` to add it to your start menu and create the necessary program files.
-
-### 0.5.0
-
-Version 0.5.0 takes advantage of [`iced` version 0.12.0](https://github.com/iced-rs/iced)'s new features and [`iced_aw`](https://github.com/iced-rs/iced_aw)'s context menu to make the the application purely graphical, with a seperate window for loading a keyboard, error pop-up windows (instead of crashing over an error), and an all-new settings menu, getting closer to NohBoard's behavior and usage. However, there's a problem. While most parts of `iced_aw` work with `iced` v0.12.0, there are a couple things they still need to work on (see [this issue](https://github.com/iced-rs/iced_aw/issues/196)) before a new release, so I have to depend on its github repo to use its context menu. _Crates.io won't let you publish a crate with a git dependency_, so I can't release 0.5.0 until `iced_aw` has its next release. I will push releases to GitHub, but you won't be getting the most up-to-date version from any package managers for now.
 
 ## Demo
 
