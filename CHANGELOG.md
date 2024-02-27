@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
+#### We're back on [crates.io](https://crates.io/crates/nuhxboard)!
+
+As of [iced_aw#209](https://github.com/iced-rs/iced_aw/pull/209), `iced_aw` is on `iced` v0.12.0. This means that I don't have to depend on their Git repo to have a v0.12 context menu, which means I can finally publish on crates.io again. Hurrah!
+
 ### Added
 
 - Support for global styles. [1ee37b9](https://github.com/justdeeevin/nuhxboard/commits/1ee37b973497ce78d4371c17a6d6053c0dd0f055)
