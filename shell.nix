@@ -20,6 +20,7 @@ let
     xorg.libXi
     xorg.libXrandr
   ];
+in
 mkShell {
   # Get dependencies from the main package
   inputsFrom = [ (callPackage ./package.nix { }) ];
