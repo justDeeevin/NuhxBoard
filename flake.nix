@@ -15,7 +15,7 @@
       nuxhxboard = pkgs.callPackage ./package.nix {};
     };
     devShell.x86_64-linux = rec {
-        default = nuxhxboard
+        default = nuxhxboard;
         nuxhxboard = pkgs.callPackage ./shell.nix {};
     };
   };
