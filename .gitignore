@@ -2,3 +2,4 @@ target/
 bacon.toml
 release/
 NuhxBoard*.tar.gz
+result
