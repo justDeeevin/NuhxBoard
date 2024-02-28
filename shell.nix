@@ -1,6 +1,10 @@
 { 
 callPackage
 , lib
+, libGL
+, libxkbcommon
+, vulkan-loader
+, xorg
 , mkShell
 , cargo
 , cargo-watch
