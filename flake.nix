@@ -11,9 +11,12 @@
   in
   {
     packages.x86_64-linux = rec {
-      default = halloy;
-      halloy = pkgs.callPackage ./package.nix {};
+      default = nuxhxboard;
+      nuxhxboard = pkgs.callPackage ./package.nix {};
     };
-    devShell.x86_64-linux = 
+    devShell.x86_64-linux = rec {
+        default = nuxhxboard
+        nuxhxboard = pkgs.callPackage ./shell.nix {};
+    };
   };
 }
