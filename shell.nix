@@ -1,20 +1,19 @@
-{ 
-callPackage
-, lib
-, libGL
-, libxkbcommon
-, vulkan-loader
-, xorg
-, mkShell
-, cargo
-, cargo-watch
-, rustc
-, rustup
-, clippy
-, rust-analyzer
-, pkg-config
-}:
-let
+{
+  callPackage,
+  lib,
+  libGL,
+  libxkbcommon,
+  vulkan-loader,
+  xorg,
+  mkShell,
+  cargo,
+  cargo-watch,
+  rustc,
+  rustup,
+  clippy,
+  rust-analyzer,
+  pkg-config,
+}: let
   runtimeLibs = [
     libGL
     libxkbcommon
@@ -22,21 +21,21 @@ let
     xorg.libX11
     xorg.libXcursor
     xorg.libXi
-    xorg.libXrandr
+    # xorg.libXrandr
   ];
 in
-mkShell {
-  # Get dependencies from the main package
-  inputsFrom = [ (callPackage ./package.nix { }) ];
-  LD_LIBRARY_PATH = "${lib.makeLibraryPath runtimeLibs}";
-  # Additional tooling
-  buildInputs = [
-    cargo
-    cargo-watch
-    rustc
-    rustup
-    clippy
-    rust-analyzer
-    pkg-config
-  ];
-}
+  mkShell {
+    # Get dependencies from the main package
+    inputsFrom = [ (callPackage ./package.nix { }) ];
+    LD_LIBRARY_PATH = "${lib.makeLibraryPath runtimeLibs}";
+    # Additional tooling
+    buildInputs = [
+      cargo
+      cargo-watch
+      rustc
+      rustup
+      clippy
+      rust-analyzer
+      pkg-config
+    ];
+  }
