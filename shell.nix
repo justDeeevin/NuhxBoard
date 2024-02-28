@@ -30,7 +30,7 @@ mkShell {
   inputsFrom = [ (callPackage ./package.nix { }) ];
   LD_LIBRARY_PATH = "${lib.makeLibraryPath runtimeLibs}";
   # Additional tooling
-  buildInputs = with pkgs; [
+  buildInputs = [
     cargo
     cargo-watch
     rustc
