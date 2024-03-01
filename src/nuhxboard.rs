@@ -89,6 +89,12 @@ pub enum Message {
     ChangeSetting(Setting),
     ClearPressedKeys,
     ToggleEditMode,
+    UpdateElement {
+        index: usize,
+        new_element: BoardElement,
+    },
+    SaveKeyboard(Option<std::path::PathBuf>),
+    SaveStyle(Option<std::path::PathBuf>),
 }
 
 #[derive(Debug, Clone)]
@@ -684,6 +690,28 @@ impl Application for NuhxBoard {
             Message::ToggleEditMode => {
                 self.edit_mode = !self.edit_mode;
             }
+            Message::UpdateElement { index, new_element } => {
+                self.config.elements[index] = new_element;
+            }
+            Message::SaveKeyboard(file) => {
+                let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
+                    "{}/{}/keyboard.json",
+                    self.settings.category,
+                    self.keyboard_options[self.keyboard.unwrap()]
+                )));
+                let mut file = File::create(path).unwrap();
+                serde_json::to_writer_pretty(&mut file, &self.config).unwrap();
+            }
+            Message::SaveStyle(file) => {
+                let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
+                    "{}/{}/{}.style",
+                    self.settings.category,
+                    self.keyboard_options[self.keyboard.unwrap()],
+                    self.style_options[self.style_choice.unwrap()]
+                )));
+                let mut file = File::create(path).unwrap();
+                serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
+            }
         }
         self.canvas.clear();
         Command::none()
@@ -732,12 +760,12 @@ impl Application for NuhxBoard {
                 if self.edit_mode {
                     menu.append(&mut vec![
                         button("Save Keyboard")
-                            .on_press(Message::none())
+                            .on_press(Message::SaveKeyboard(None))
                             .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                             .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                             .into(),
                         button("Save Style")
-                            .on_press(Message::none())
+                            .on_press(Message::SaveStyle(None))
                             .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                             .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                             .into(),

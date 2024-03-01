@@ -104,6 +104,16 @@ macro_rules! draw_key {
 #[derive(Default)]
 pub struct CanvasState {
     hovered_element: Option<usize>,
+    selected_element: Option<usize>,
+    interaction: Interaction,
+    previous_cursor_position: Coord,
+}
+
+#[derive(Default, Debug)]
+pub enum Interaction {
+    #[default]
+    None,
+    Dragging,
 }
 
 impl canvas::Program<Message> for NuhxBoard {
@@ -132,49 +142,184 @@ impl canvas::Program<Message> for NuhxBoard {
             y: cursor_position.y as f64,
         };
 
-        #[allow(clippy::single_match)]
-        match event {
-            canvas::Event::Mouse(mouse::Event::CursorMoved { position: _ }) => {
-                for (index, element) in self.config.elements.iter().enumerate() {
-                    match element {
-                        BoardElement::MouseSpeedIndicator(def) => {
-                            if cursor_position.distance(def.location.clone().into()) < def.radius {
-                                if state.hovered_element != Some(index) {
-                                    state.hovered_element = Some(index);
+        if let canvas::Event::Mouse(event) = event {
+            match event {
+                mouse::Event::CursorMoved { position: _ } => {
+                    match state.interaction {
+                        Interaction::None => {
+                            for (index, element) in self.config.elements.iter().enumerate() {
+                                match element {
+                                    BoardElement::MouseSpeedIndicator(def) => {
+                                        if cursor_position.distance(def.location.clone().into())
+                                            < def.radius
+                                        {
+                                            if state.hovered_element != Some(index) {
+                                                state.hovered_element = Some(index);
+                                            }
+                                            state.previous_cursor_position = cursor_position_geo;
+                                            return (Status::Captured, None);
+                                        }
+                                    }
+                                    _ => {
+                                        let mut vertices = match element {
+                                            BoardElement::KeyboardKey(def) => {
+                                                def.boundaries.clone()
+                                            }
+                                            BoardElement::MouseKey(def) => def.boundaries.clone(),
+                                            BoardElement::MouseScroll(def) => {
+                                                def.boundaries.clone()
+                                            }
+                                            BoardElement::MouseSpeedIndicator(_) => {
+                                                unreachable!()
+                                            }
+                                        };
+
+                                        vertices.push(vertices[0].clone());
+
+                                        let bounds =
+                                            Polygon::new(LineString::from(vertices), vec![]);
+
+                                        if cursor_position_geo.is_within(&bounds) {
+                                            if state.hovered_element != Some(index) {
+                                                state.hovered_element = Some(index);
+                                            }
+                                            state.previous_cursor_position = cursor_position_geo;
+                                            return (Status::Captured, None);
+                                        }
+                                    }
                                 }
+                            }
+
+                            if state.hovered_element.is_some() {
+                                state.hovered_element = None;
+                                state.previous_cursor_position = cursor_position_geo;
                                 return (Status::Captured, None);
                             }
                         }
-                        _ => {
-                            let mut vertices = match element {
-                                BoardElement::KeyboardKey(def) => def.boundaries.clone(),
-                                BoardElement::MouseKey(def) => def.boundaries.clone(),
-                                BoardElement::MouseScroll(def) => def.boundaries.clone(),
-                                BoardElement::MouseSpeedIndicator(_) => {
-                                    unreachable!()
+                        Interaction::Dragging => {
+                            if state.selected_element.is_some() {
+                                let delta = cursor_position_geo - state.previous_cursor_position;
+
+                                match &self.config.elements[state.selected_element.unwrap()] {
+                                    BoardElement::MouseSpeedIndicator(def) => {
+                                        let new_location = SerializablePoint {
+                                            x: def.location.x + delta.x as f32,
+                                            y: def.location.y + delta.y as f32,
+                                        };
+
+                                        state.previous_cursor_position = cursor_position_geo;
+                                        return (
+                                            Status::Captured,
+                                            Some(Message::UpdateElement {
+                                                index: state.selected_element.unwrap(),
+                                                new_element: BoardElement::MouseSpeedIndicator(
+                                                    MouseSpeedIndicatorDefinition {
+                                                        id: def.id,
+                                                        location: new_location,
+                                                        radius: def.radius,
+                                                    },
+                                                ),
+                                            }),
+                                        );
+                                    }
+                                    _ => {
+                                        let mut boundaries = match &self.config.elements
+                                            [state.selected_element.unwrap()]
+                                        {
+                                            BoardElement::KeyboardKey(def) => {
+                                                def.boundaries.clone()
+                                            }
+                                            BoardElement::MouseKey(def) => def.boundaries.clone(),
+                                            BoardElement::MouseScroll(def) => {
+                                                def.boundaries.clone()
+                                            }
+                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
+                                        };
+
+                                        for boundary in &mut boundaries {
+                                            boundary.x += delta.x as f32;
+                                            boundary.y += delta.y as f32;
+                                        }
+
+                                        let mut text_position = match &self.config.elements
+                                            [state.selected_element.unwrap()]
+                                        {
+                                            BoardElement::KeyboardKey(def) => {
+                                                def.text_position.clone()
+                                            }
+                                            BoardElement::MouseKey(def) => {
+                                                def.text_position.clone()
+                                            }
+                                            BoardElement::MouseScroll(def) => {
+                                                def.text_position.clone()
+                                            }
+                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
+                                        };
+
+                                        text_position.x += delta.x as f32;
+                                        text_position.y += delta.y as f32;
+
+                                        let new_element = match &self.config.elements
+                                            [state.selected_element.unwrap()]
+                                        {
+                                            BoardElement::KeyboardKey(def) => {
+                                                BoardElement::KeyboardKey(KeyboardKeyDefinition {
+                                                    id: def.id,
+                                                    boundaries,
+                                                    text_position,
+                                                    keycodes: def.keycodes.clone(),
+                                                    text: def.text.clone(),
+                                                    shift_text: def.shift_text.clone(),
+                                                    change_on_caps: def.change_on_caps,
+                                                })
+                                            }
+                                            BoardElement::MouseKey(def) => {
+                                                BoardElement::MouseKey(MouseKeyDefinition {
+                                                    id: def.id,
+                                                    boundaries,
+                                                    text_position,
+                                                    keycodes: def.keycodes.clone(),
+                                                    text: def.text.clone(),
+                                                })
+                                            }
+                                            BoardElement::MouseScroll(def) => {
+                                                BoardElement::MouseScroll(MouseScrollDefinition {
+                                                    id: def.id,
+                                                    boundaries,
+                                                    text_position,
+                                                    keycodes: def.keycodes.clone(),
+                                                    text: def.text.clone(),
+                                                })
+                                            }
+                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
+                                        };
+
+                                        state.previous_cursor_position = cursor_position_geo;
+                                        return (
+                                            Status::Captured,
+                                            Some(Message::UpdateElement {
+                                                index: state.selected_element.unwrap(),
+                                                new_element,
+                                            }),
+                                        );
+                                    }
                                 }
-                            };
-
-                            vertices.push(vertices[0].clone());
-
-                            let bounds = Polygon::new(LineString::from(vertices), vec![]);
-
-                            if cursor_position_geo.is_within(&bounds) {
-                                if state.hovered_element != Some(index) {
-                                    state.hovered_element = Some(index);
-                                }
-                                return (Status::Captured, None);
                             }
                         }
                     }
+                    state.previous_cursor_position = cursor_position_geo;
                 }
-
-                if state.hovered_element.is_some() {
-                    state.hovered_element = None;
+                mouse::Event::ButtonPressed(mouse::Button::Left) => {
+                    state.selected_element = state.hovered_element;
+                    state.interaction = Interaction::Dragging;
                     return (Status::Captured, None);
                 }
+                mouse::Event::ButtonReleased(mouse::Button::Left) => {
+                    state.interaction = Interaction::None;
+                    return (Status::Ignored, None);
+                }
+                _ => {}
             }
-            _ => {}
         }
         (Status::Ignored, None)
     }

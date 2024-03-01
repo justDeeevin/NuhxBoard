@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Style {
     #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
@@ -14,7 +14,7 @@ pub struct Style {
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: f32,
@@ -44,7 +44,7 @@ impl NohRgb {
     };
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
@@ -52,7 +52,7 @@ pub struct KeyStyle {
     pub pressed: KeySubStyle,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeySubStyle {
     #[serde(rename = "Background")]
     pub background: NohRgb,
@@ -70,7 +70,7 @@ pub struct KeySubStyle {
     pub background_image_file_name: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Font {
     #[serde(rename = "FontFamily")]
     pub font_family: String,
@@ -80,7 +80,7 @@ pub struct Font {
     pub style: u8,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MouseSpeedIndicatorStyle {
     #[serde(rename = "InnerColor")]
     pub inner_color: NohRgb,
@@ -90,7 +90,7 @@ pub struct MouseSpeedIndicatorStyle {
     pub outline_width: f32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ElementStyle {
     #[serde(rename = "Key")]
     pub key: u32,
@@ -98,7 +98,7 @@ pub struct ElementStyle {
     pub value: ElementStyleUnion,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "__type")]
 pub enum ElementStyleUnion {
     KeyStyle(KeyStyle),
