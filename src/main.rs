@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod canvas;
 mod code_convert;
 mod listener;
 mod nuhxboard;
 mod types;
+mod ui;
 
 use color_eyre::eyre::Result;
 use iced::{multi_window::Application, window};
