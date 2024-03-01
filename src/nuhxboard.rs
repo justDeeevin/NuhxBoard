@@ -51,6 +51,7 @@ pub struct NuhxBoard {
     pub settings: Settings,
     display_options: Vec<DisplayInfo>,
     pub edit_mode: bool,
+    keyboard_properties_window_id: Option<window::Id>,
 }
 
 #[derive(Default)]
@@ -95,6 +96,9 @@ pub enum Message {
     },
     SaveKeyboard(Option<std::path::PathBuf>),
     SaveStyle(Option<std::path::PathBuf>),
+    SetHeight(f32),
+    SetWidth(f32),
+    OpenKeyboardProperties,
 }
 
 #[derive(Debug, Clone)]
@@ -157,6 +161,11 @@ const ERROR_WINDOW_SIZE: iced::Size = iced::Size {
     height: 150.0,
 };
 
+const KEYBOARD_PROPERTIES_WINDOW_SIZE: iced::Size = iced::Size {
+    width: 200.0,
+    height: 100.0,
+};
+
 const CONTEXT_MENU_WIDTH: f32 = 160.0;
 
 async fn noop() {}
@@ -217,6 +226,7 @@ impl Application for NuhxBoard {
                 settings: flags.settings,
                 display_options: DisplayInfo::all().unwrap(),
                 edit_mode: false,
+                keyboard_properties_window_id: None,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -230,11 +240,13 @@ impl Application for NuhxBoard {
         if window == window::Id::MAIN {
             self.settings.window_title.clone()
         } else if Some(window) == self.load_keyboard_window_id {
-            return "Load Keyboard".to_owned();
+            "Load Keyboard".to_owned()
         } else if self.error_windows.contains_key(&window) {
-            return "Error".to_owned();
+            "Error".to_owned()
         } else if Some(window) == self.settings_window_id {
-            return "Settings".to_owned();
+            "Settings".to_owned()
+        } else if Some(window) == self.keyboard_properties_window_id {
+            "Keyboard Properties".to_owned()
         } else {
             unreachable!()
         }
@@ -712,6 +724,35 @@ impl Application for NuhxBoard {
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
             }
+            Message::SetHeight(height) => {
+                self.config.height = height;
+                return window::resize(
+                    window::Id::MAIN,
+                    iced::Size {
+                        width: self.config.width,
+                        height: self.config.height,
+                    },
+                );
+            }
+            Message::SetWidth(width) => {
+                self.config.width = width;
+                return window::resize(
+                    window::Id::MAIN,
+                    iced::Size {
+                        width: self.config.width,
+                        height: self.config.height,
+                    },
+                );
+            }
+            Message::OpenKeyboardProperties => {
+                let (id, command) = window::spawn(window::Settings {
+                    size: KEYBOARD_PROPERTIES_WINDOW_SIZE,
+                    resizable: false,
+                    ..Default::default()
+                });
+                self.keyboard_properties_window_id = Some(id);
+                return command;
+            }
         }
         self.canvas.clear();
         Command::none()
@@ -759,6 +800,11 @@ impl Application for NuhxBoard {
 
                 if self.edit_mode {
                     menu.append(&mut vec![
+                        button("Keyboard Properties")
+                            .on_press(Message::OpenKeyboardProperties)
+                            .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                            .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                            .into(),
                         button("Save Keyboard")
                             .on_press(Message::SaveKeyboard(None))
                             .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
@@ -982,6 +1028,20 @@ impl Application for NuhxBoard {
                 capitalization,
             ]
             .into()
+        } else if Some(window) == self.keyboard_properties_window_id {
+            column![
+                row![
+                    text("Width: "),
+                    number_input(self.config.width, f32::MAX, Message::SetWidth)
+                ]
+                .align_items(iced::Alignment::Center),
+                row![
+                    text("Height: "),
+                    number_input(self.config.height, f32::MAX, Message::SetHeight)
+                ]
+                .align_items(iced::Alignment::Center)
+            ]
+            .into()
         } else {
             unreachable!()
         }
@@ -997,10 +1057,8 @@ impl Application for NuhxBoard {
                 ..iced::theme::Palette::DARK
             };
             return Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)));
-        } else if Some(window) == self.load_keyboard_window_id {
-            return Theme::Light;
         }
-        Theme::Dark
+        Theme::Light
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
