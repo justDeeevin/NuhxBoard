@@ -2,6 +2,7 @@
 
 mod code_convert;
 mod listener;
+mod logic;
 mod nuhxboard;
 mod types;
 mod ui;
