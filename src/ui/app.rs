@@ -1,10 +1,13 @@
-use crate::{nuhxboard::*, types::stylesheets::*};
+use crate::{
+    nuhxboard::*,
+    types::{settings::*, stylesheets::*},
+};
 use iced::{
     widget::{
-        button, canvas, canvas::Cache, checkbox, column, container, horizontal_space, pick_list,
-        radio, row, text, text_input,
+        button, canvas, checkbox, column, container, horizontal_space, pick_list, radio, row, text,
+        text_input,
     },
-    window, Color, Command, Length, Renderer, Subscription, Theme,
+    window, Length, Renderer, Theme,
 };
 use iced_aw::{number_input, ContextMenu, SelectionList};
 
@@ -157,6 +160,152 @@ impl NuhxBoard {
         .width(iced::Length::Fill)
         .align_x(iced::alignment::Horizontal::Center)
         .align_y(iced::alignment::Vertical::Center)
+        .into()
+    }
+
+    pub fn draw_settings_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
+        let input = column![
+            row![
+                text("Mouse sensitivity: ").size(12),
+                horizontal_space(),
+                number_input(self.settings.mouse_sensitivity, f32::MAX, |v| {
+                    Message::ChangeSetting(Setting::MouseSensitivity(v))
+                })
+                .size(12.0)
+            ]
+            .padding(5)
+            .align_items(iced::Alignment::Center),
+            row![
+                text("Scroll hold time (ms): ").size(12),
+                horizontal_space(),
+                number_input(self.settings.scroll_hold_time, u64::MAX, |v| {
+                    Message::ChangeSetting(Setting::ScrollHoldTime(v))
+                })
+                .size(12.0)
+            ]
+            .padding(5)
+            .align_items(iced::Alignment::Center),
+            checkbox(
+                "Calculate mouse speed from center of screen",
+                self.settings.mouse_from_center
+            )
+            .text_size(12)
+            .size(15)
+            .on_toggle(|_| { Message::ChangeSetting(Setting::CenterMouse) }),
+            row![
+                text("Display to use: ").size(12),
+                pick_list(
+                    self.display_options
+                        .iter()
+                        .map(|d| d.id)
+                        .collect::<Vec<_>>(),
+                    Some(self.settings.display_id),
+                    |v| Message::ChangeSetting(Setting::DisplayId(v))
+                )
+                .text_size(12)
+            ]
+            .padding(5)
+            .align_items(iced::Alignment::Center),
+            text("Show keypresses for at least").size(12),
+            row![
+                number_input(self.settings.min_press_time, u128::MAX, |v| {
+                    Message::ChangeSetting(Setting::MinPressTime(v))
+                })
+                .size(12.0)
+                .width(Length::Shrink),
+                text("ms").size(12)
+            ]
+            .padding(5)
+            .align_items(iced::Alignment::Center),
+        ]
+        .align_items(iced::Alignment::Center);
+
+        let follow_for_sensitive_function =
+            match self.settings.capitalization != Capitalization::Follow {
+                true => Some(|_| Message::ChangeSetting(Setting::FollowForCapsSensitive)),
+                false => None,
+            };
+
+        let follow_for_caps_insensitive_function =
+            match self.settings.capitalization != Capitalization::Follow {
+                true => Some(|_: bool| Message::ChangeSetting(Setting::FollowForCapsInsensitive)),
+                false => None,
+            };
+
+        let capitalization = row![
+            column![
+                radio(
+                    "Follow Caps-Lock and Shift",
+                    Capitalization::Follow,
+                    Some(self.settings.capitalization),
+                    |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                )
+                .text_size(12)
+                .size(15),
+                radio(
+                    "Show all buttons capitalized",
+                    Capitalization::Upper,
+                    Some(self.settings.capitalization),
+                    |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                )
+                .text_size(12)
+                .size(15),
+                radio(
+                    "Show all buttons lowercase",
+                    Capitalization::Lower,
+                    Some(self.settings.capitalization),
+                    |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
+                )
+                .text_size(12)
+                .size(15),
+            ],
+            horizontal_space(),
+            column![
+                text("Still follow shift for").size(12),
+                checkbox(
+                    "Caps Lock insensitive keys",
+                    self.settings.follow_for_caps_insensitive
+                )
+                .text_size(12)
+                .size(15)
+                .on_toggle_maybe(follow_for_caps_insensitive_function),
+                checkbox(
+                    "Caps Lock sensitive keys",
+                    self.settings.follow_for_caps_sensitive
+                )
+                .text_size(12)
+                .size(15)
+                .on_toggle_maybe(follow_for_sensitive_function),
+            ]
+        ];
+
+        column![
+            input,
+            row![
+                text("Window title: ").size(12),
+                text_input("NuhxBoard", self.settings.window_title.as_str())
+                    .size(12)
+                    .on_input(|v| Message::ChangeSetting(Setting::WindowTitle(v)))
+            ]
+            .align_items(iced::Alignment::Center),
+            capitalization,
+        ]
+        .into()
+    }
+
+    pub fn draw_keyboard_properties_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
+        column![
+            row![
+                text("Width: "),
+                number_input(self.config.width, f32::MAX, Message::SetWidth)
+            ]
+            .align_items(iced::Alignment::Center),
+            row![
+                text("Height: "),
+                number_input(self.config.height, f32::MAX, Message::SetHeight)
+            ]
+            .align_items(iced::Alignment::Center)
+        ]
         .into()
     }
 }

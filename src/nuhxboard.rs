@@ -6,13 +6,9 @@ use crate::{
 use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{
-    multi_window::Application,
-    widget::{
-        canvas::Cache, checkbox, column, horizontal_space, pick_list, radio, row, text, text_input,
-    },
-    window, Color, Command, Length, Renderer, Subscription, Theme,
+    multi_window::Application, widget::canvas::Cache, window, Color, Command, Renderer,
+    Subscription, Theme,
 };
-use iced_aw::number_input;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
@@ -763,148 +759,9 @@ impl Application for NuhxBoard {
         } else if self.error_windows.contains_key(&window) {
             self.draw_error_window(&window)
         } else if Some(window) == self.settings_window_id {
-            let input = column![
-                row![
-                    text("Mouse sensitivity: ").size(12),
-                    horizontal_space(),
-                    number_input(self.settings.mouse_sensitivity, f32::MAX, |v| {
-                        Message::ChangeSetting(Setting::MouseSensitivity(v))
-                    })
-                    .size(12.0)
-                ]
-                .padding(5)
-                .align_items(iced::Alignment::Center),
-                row![
-                    text("Scroll hold time (ms): ").size(12),
-                    horizontal_space(),
-                    number_input(self.settings.scroll_hold_time, u64::MAX, |v| {
-                        Message::ChangeSetting(Setting::ScrollHoldTime(v))
-                    })
-                    .size(12.0)
-                ]
-                .padding(5)
-                .align_items(iced::Alignment::Center),
-                checkbox(
-                    "Calculate mouse speed from center of screen",
-                    self.settings.mouse_from_center
-                )
-                .text_size(12)
-                .size(15)
-                .on_toggle(|_| { Message::ChangeSetting(Setting::CenterMouse) }),
-                row![
-                    text("Display to use: ").size(12),
-                    pick_list(
-                        self.display_options
-                            .iter()
-                            .map(|d| d.id)
-                            .collect::<Vec<_>>(),
-                        Some(self.settings.display_id),
-                        |v| Message::ChangeSetting(Setting::DisplayId(v))
-                    )
-                    .text_size(12)
-                ]
-                .padding(5)
-                .align_items(iced::Alignment::Center),
-                text("Show keypresses for at least").size(12),
-                row![
-                    number_input(self.settings.min_press_time, u128::MAX, |v| {
-                        Message::ChangeSetting(Setting::MinPressTime(v))
-                    })
-                    .size(12.0)
-                    .width(Length::Shrink),
-                    text("ms").size(12)
-                ]
-                .padding(5)
-                .align_items(iced::Alignment::Center),
-            ]
-            .align_items(iced::Alignment::Center);
-
-            let follow_for_sensitive_function =
-                match self.settings.capitalization != Capitalization::Follow {
-                    true => Some(|_| Message::ChangeSetting(Setting::FollowForCapsSensitive)),
-                    false => None,
-                };
-
-            let follow_for_caps_insensitive_function = match self.settings.capitalization
-                != Capitalization::Follow
-            {
-                true => Some(|_: bool| Message::ChangeSetting(Setting::FollowForCapsInsensitive)),
-                false => None,
-            };
-
-            let capitalization = row![
-                column![
-                    radio(
-                        "Follow Caps-Lock and Shift",
-                        Capitalization::Follow,
-                        Some(self.settings.capitalization),
-                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
-                    )
-                    .text_size(12)
-                    .size(15),
-                    radio(
-                        "Show all buttons capitalized",
-                        Capitalization::Upper,
-                        Some(self.settings.capitalization),
-                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
-                    )
-                    .text_size(12)
-                    .size(15),
-                    radio(
-                        "Show all buttons lowercase",
-                        Capitalization::Lower,
-                        Some(self.settings.capitalization),
-                        |v| { Message::ChangeSetting(Setting::Capitalization(v)) }
-                    )
-                    .text_size(12)
-                    .size(15),
-                ],
-                horizontal_space(),
-                column![
-                    text("Still follow shift for").size(12),
-                    checkbox(
-                        "Caps Lock insensitive keys",
-                        self.settings.follow_for_caps_insensitive
-                    )
-                    .text_size(12)
-                    .size(15)
-                    .on_toggle_maybe(follow_for_caps_insensitive_function),
-                    checkbox(
-                        "Caps Lock sensitive keys",
-                        self.settings.follow_for_caps_sensitive
-                    )
-                    .text_size(12)
-                    .size(15)
-                    .on_toggle_maybe(follow_for_sensitive_function),
-                ]
-            ];
-
-            column![
-                input,
-                row![
-                    text("Window title: ").size(12),
-                    text_input("NuhxBoard", self.settings.window_title.as_str())
-                        .size(12)
-                        .on_input(|v| Message::ChangeSetting(Setting::WindowTitle(v)))
-                ]
-                .align_items(iced::Alignment::Center),
-                capitalization,
-            ]
-            .into()
+            self.draw_settings_window()
         } else if Some(window) == self.keyboard_properties_window_id {
-            column![
-                row![
-                    text("Width: "),
-                    number_input(self.config.width, f32::MAX, Message::SetWidth)
-                ]
-                .align_items(iced::Alignment::Center),
-                row![
-                    text("Height: "),
-                    number_input(self.config.height, f32::MAX, Message::SetHeight)
-                ]
-                .align_items(iced::Alignment::Center)
-            ]
-            .into()
+            self.draw_keyboard_properties_window()
         } else {
             unreachable!()
         }
