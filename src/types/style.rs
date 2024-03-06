@@ -44,12 +44,18 @@ impl NohRgb {
     };
 }
 
+impl From<NohRgb> for iced::Color {
+    fn from(val: NohRgb) -> Self {
+        iced::Color::from_rgba(val.red / 255.0, val.green / 255.0, val.blue / 255.0, 1.0)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
-    pub loose: KeySubStyle,
+    pub loose: Option<KeySubStyle>,
     #[serde(rename = "Pressed")]
-    pub pressed: KeySubStyle,
+    pub pressed: Option<KeySubStyle>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -115,7 +121,7 @@ impl Default for Style {
             },
             background_image_file_name: None,
             default_key_style: KeyStyle {
-                loose: KeySubStyle {
+                loose: Some(KeySubStyle {
                     background: NohRgb::DEFAULT_GRAY,
                     text: NohRgb::BLACK,
                     outline: NohRgb::BLACK,
@@ -127,8 +133,8 @@ impl Default for Style {
                         style: 0,
                     },
                     background_image_file_name: "".into(),
-                },
-                pressed: KeySubStyle {
+                }),
+                pressed: Some(KeySubStyle {
                     background: NohRgb::WHITE,
                     text: NohRgb::BLACK,
                     outline: NohRgb::BLACK,
@@ -140,7 +146,7 @@ impl Default for Style {
                         style: 0,
                     },
                     background_image_file_name: "".into(),
-                },
+                }),
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,

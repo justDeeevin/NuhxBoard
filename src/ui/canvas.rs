@@ -48,8 +48,14 @@ macro_rules! draw_key {
         }
 
         let current_style = match pressed {
-            true => &style.pressed,
-            false => &style.loose,
+            true => style
+                .pressed
+                .as_ref()
+                .unwrap_or($self.style.default_key_style.pressed.as_ref().unwrap()),
+            false => style
+                .loose
+                .as_ref()
+                .unwrap_or($self.style.default_key_style.loose.as_ref().unwrap()),
         };
 
         $frame.fill(
@@ -95,8 +101,32 @@ macro_rules! draw_key {
             ..Default::default()
         });
 
-        if $state.hovered_element == Some($index) {
+        if $state.hovered_element == Some($index) && $state.held_element.is_none() {
             $frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+        } else if $state.held_element == Some($index) {
+            $frame.fill(
+                &key,
+                Color {
+                    a: 0.5,
+                    ..style
+                        .pressed
+                        .as_ref()
+                        .unwrap_or($self.style.default_key_style.pressed.as_ref().unwrap())
+                        .background
+                        .clone()
+                        .into()
+                },
+            );
+        }
+        if $state.selected_element == Some($index) {
+            $frame.stroke(
+                &key,
+                canvas::Stroke {
+                    style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                    width: 2.0,
+                    ..Default::default()
+                },
+            );
         }
     };
 }
@@ -104,6 +134,7 @@ macro_rules! draw_key {
 #[derive(Default)]
 pub struct CanvasState {
     hovered_element: Option<usize>,
+    held_element: Option<usize>,
     selected_element: Option<usize>,
     interaction: Interaction,
     previous_cursor_position: Coord,
@@ -197,10 +228,10 @@ impl canvas::Program<Message> for NuhxBoard {
                             }
                         }
                         Interaction::Dragging => {
-                            if state.selected_element.is_some() {
+                            if state.held_element.is_some() {
                                 let delta = cursor_position_geo - state.previous_cursor_position;
 
-                                match &self.config.elements[state.selected_element.unwrap()] {
+                                match &self.config.elements[state.held_element.unwrap()] {
                                     BoardElement::MouseSpeedIndicator(def) => {
                                         let new_location = SerializablePoint {
                                             x: def.location.x + delta.x as f32,
@@ -211,7 +242,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                         return (
                                             Status::Captured,
                                             Some(Message::UpdateElement {
-                                                index: state.selected_element.unwrap(),
+                                                index: state.held_element.unwrap(),
                                                 new_element: BoardElement::MouseSpeedIndicator(
                                                     MouseSpeedIndicatorDefinition {
                                                         id: def.id,
@@ -224,7 +255,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                     }
                                     _ => {
                                         let mut boundaries = match &self.config.elements
-                                            [state.selected_element.unwrap()]
+                                            [state.held_element.unwrap()]
                                         {
                                             BoardElement::KeyboardKey(def) => {
                                                 def.boundaries.clone()
@@ -242,7 +273,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                         }
 
                                         let mut text_position = match &self.config.elements
-                                            [state.selected_element.unwrap()]
+                                            [state.held_element.unwrap()]
                                         {
                                             BoardElement::KeyboardKey(def) => {
                                                 def.text_position.clone()
@@ -260,7 +291,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                         text_position.y += delta.y as f32;
 
                                         let new_element = match &self.config.elements
-                                            [state.selected_element.unwrap()]
+                                            [state.held_element.unwrap()]
                                         {
                                             BoardElement::KeyboardKey(def) => {
                                                 BoardElement::KeyboardKey(KeyboardKeyDefinition {
@@ -298,7 +329,7 @@ impl canvas::Program<Message> for NuhxBoard {
                                         return (
                                             Status::Captured,
                                             Some(Message::UpdateElement {
-                                                index: state.selected_element.unwrap(),
+                                                index: state.held_element.unwrap(),
                                                 new_element,
                                             }),
                                         );
@@ -310,12 +341,17 @@ impl canvas::Program<Message> for NuhxBoard {
                     state.previous_cursor_position = cursor_position_geo;
                 }
                 mouse::Event::ButtonPressed(mouse::Button::Left) => {
-                    state.selected_element = state.hovered_element;
+                    state.held_element = state.hovered_element;
                     state.interaction = Interaction::Dragging;
+                    if state.hovered_element.is_none() && state.selected_element.is_some() {
+                        state.selected_element = None;
+                    }
                     return (Status::Captured, None);
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
                     state.interaction = Interaction::None;
+                    state.held_element = None;
+                    state.selected_element = state.hovered_element;
                     return (Status::Ignored, None);
                 }
                 _ => {}
@@ -481,22 +517,31 @@ impl canvas::Program<Message> for NuhxBoard {
                             &outer,
                             canvas::Stroke {
                                 width: style.outline_width,
-                                line_cap: canvas::LineCap::Round,
                                 style: canvas::Style::Solid(Color::from_rgb(
                                     style.inner_color.red / 255.0,
                                     style.inner_color.green / 255.0,
                                     style.inner_color.blue / 255.0,
                                 )),
-                                line_dash: canvas::LineDash {
-                                    segments: &[],
-                                    offset: 0,
-                                },
-                                line_join: canvas::LineJoin::Round,
+                                ..Default::default()
                             },
                         );
 
-                        if state.hovered_element == Some(index) {
+                        if state.hovered_element == Some(index) && state.held_element.is_none() {
                             frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+                        } else if state.held_element == Some(index) {
+                            frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
+                        }
+                        if state.selected_element == Some(index) {
+                            frame.stroke(
+                                &outer,
+                                canvas::Stroke {
+                                    width: 2.0,
+                                    style: canvas::Style::Solid(Color::from_rgba(
+                                        1.0, 0.0, 1.0, 1.0,
+                                    )),
+                                    ..Default::default()
+                                },
+                            );
                         }
 
                         let ball_gradient = colorgrad::CustomGradient::new()
