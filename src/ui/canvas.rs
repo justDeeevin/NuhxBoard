@@ -68,7 +68,7 @@ macro_rules! draw_key {
                 current_style.text.green / 255.0,
                 current_style.text.blue / 255.0,
             ),
-            size: iced::Pixels(style.loose.font.size),
+            size: iced::Pixels(current_style.font.size as f32),
             font: iced::Font {
                 family: iced::font::Family::Name(
                     // Leak is required because Name requires static lifetime
