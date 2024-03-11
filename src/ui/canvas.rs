@@ -138,9 +138,10 @@ pub struct CanvasState {
     selected_element: Option<usize>,
     interaction: Interaction,
     previous_cursor_position: Coord,
+    delta_accumulator: Coord,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub enum Interaction {
     #[default]
     None,
@@ -231,6 +232,8 @@ impl canvas::Program<Message> for NuhxBoard {
                             if state.held_element.is_some() {
                                 let delta = cursor_position_geo - state.previous_cursor_position;
                                 state.previous_cursor_position = cursor_position_geo;
+                                state.delta_accumulator.x += delta.x;
+                                state.delta_accumulator.y += delta.y;
                                 return (
                                     Status::Captured,
                                     Some(Message::MoveElement {
@@ -245,6 +248,9 @@ impl canvas::Program<Message> for NuhxBoard {
                 }
                 mouse::Event::ButtonPressed(mouse::Button::Left) => {
                     state.held_element = state.hovered_element;
+                    if state.hovered_element.is_some() {
+                        state.delta_accumulator = Coord::default();
+                    }
                     state.interaction = Interaction::Dragging;
                     if state.hovered_element.is_none() && state.selected_element.is_some() {
                         state.selected_element = None;
@@ -252,10 +258,21 @@ impl canvas::Program<Message> for NuhxBoard {
                     return (Status::Captured, None);
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
+                    let message = if state.delta_accumulator != Coord::default() {
+                        state.held_element.map(|index| {
+                            Message::PushChange(Change::MoveElement {
+                                index,
+                                delta: state.delta_accumulator,
+                            })
+                        })
+                    } else {
+                        None
+                    };
+
                     state.interaction = Interaction::None;
                     state.held_element = None;
                     state.selected_element = state.hovered_element;
-                    return (Status::Ignored, None);
+                    return (Status::Ignored, message);
                 }
                 _ => {}
             }

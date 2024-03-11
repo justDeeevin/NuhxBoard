@@ -5,8 +5,7 @@ use crate::{
 use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{
-    multi_window::Application, widget::canvas::Cache, window, Color, Command, Renderer,
-    Subscription, Theme,
+    advanced::graphics::core::SmolStr, multi_window::Application, widget::canvas::Cache, window, Color, Command, Renderer, Subscription, Theme
 };
 use std::sync::Arc;
 use std::{
@@ -46,6 +45,8 @@ pub struct NuhxBoard {
     pub display_options: Vec<DisplayInfo>,
     pub edit_mode: bool,
     pub keyboard_properties_window_id: Option<window::Id>,
+    pub edit_history: Vec<Change>,
+    pub history_depth: usize,
 }
 
 #[derive(Default)]
@@ -93,6 +94,17 @@ pub enum Message {
     SetHeight(f32),
     SetWidth(f32),
     OpenKeyboardProperties,
+    PushChange(Change),
+    Undo,
+    Redo
+}
+
+#[derive(Debug, Clone)]
+pub enum Change {
+    MoveElement{
+        index: usize,
+        delta: geo::Coord,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -219,6 +231,8 @@ impl Application for NuhxBoard {
                 display_options: DisplayInfo::all().unwrap(),
                 edit_mode: false,
                 keyboard_properties_window_id: None,
+                edit_history: vec![],
+                history_depth: 0,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -668,6 +682,33 @@ impl Application for NuhxBoard {
                 self.keyboard_properties_window_id = Some(id);
                 return command;
             }
+            Message::PushChange(change) => {
+                if self.history_depth > 0 {
+                    self.edit_history.truncate(self.edit_history.len() - self.history_depth);
+                    self.history_depth = 0;
+                }
+                self.edit_history.push(change);
+            }
+            Message::Undo => {
+                if self.history_depth < self.edit_history.len() {
+                    self.history_depth += 1;
+                    match self.edit_history[self.edit_history.len() - self.history_depth] {
+                        Change::MoveElement { index, delta } => {
+                            self.config.elements[index].translate(-delta);
+                        }
+                    }
+                }
+            }
+            Message::Redo => {
+                if self.history_depth > 0 {
+                    self.history_depth -= 1;
+                    match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
+                        Change::MoveElement { index, delta } => {
+                            self.config.elements[index].translate(delta);
+                        }
+                    }
+                }
+            }
         }
         self.canvas.clear();
         Command::none()
@@ -710,6 +751,19 @@ impl Application for NuhxBoard {
                 iced::Event::Window(id, window::Event::Closed) => Some(Message::WindowClosed(id)),
                 iced::Event::Window(window::Id::MAIN, window::Event::CloseRequested) => {
                     Some(Message::Quitting)
+                }
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { key, location: _, modifiers, text: _ }) => {
+                    if modifiers.command() {
+                        if key == iced::keyboard::Key::Character(SmolStr::new("z")) {
+                            Some(Message::Undo)
+                        } else if key == iced::keyboard::Key::Character(SmolStr::new("Z")) {
+                            Some(Message::Redo)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
                 }
                 _ => None,
             }),
