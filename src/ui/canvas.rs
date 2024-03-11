@@ -230,111 +230,14 @@ impl canvas::Program<Message> for NuhxBoard {
                         Interaction::Dragging => {
                             if state.held_element.is_some() {
                                 let delta = cursor_position_geo - state.previous_cursor_position;
-
-                                match &self.config.elements[state.held_element.unwrap()] {
-                                    BoardElement::MouseSpeedIndicator(def) => {
-                                        let new_location = SerializablePoint {
-                                            x: def.location.x + delta.x as f32,
-                                            y: def.location.y + delta.y as f32,
-                                        };
-
-                                        state.previous_cursor_position = cursor_position_geo;
-                                        return (
-                                            Status::Captured,
-                                            Some(Message::UpdateElement {
-                                                index: state.held_element.unwrap(),
-                                                new_element: BoardElement::MouseSpeedIndicator(
-                                                    MouseSpeedIndicatorDefinition {
-                                                        id: def.id,
-                                                        location: new_location,
-                                                        radius: def.radius,
-                                                    },
-                                                ),
-                                            }),
-                                        );
-                                    }
-                                    _ => {
-                                        let mut boundaries = match &self.config.elements
-                                            [state.held_element.unwrap()]
-                                        {
-                                            BoardElement::KeyboardKey(def) => {
-                                                def.boundaries.clone()
-                                            }
-                                            BoardElement::MouseKey(def) => def.boundaries.clone(),
-                                            BoardElement::MouseScroll(def) => {
-                                                def.boundaries.clone()
-                                            }
-                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
-                                        };
-
-                                        for boundary in &mut boundaries {
-                                            boundary.x += delta.x as f32;
-                                            boundary.y += delta.y as f32;
-                                        }
-
-                                        let mut text_position = match &self.config.elements
-                                            [state.held_element.unwrap()]
-                                        {
-                                            BoardElement::KeyboardKey(def) => {
-                                                def.text_position.clone()
-                                            }
-                                            BoardElement::MouseKey(def) => {
-                                                def.text_position.clone()
-                                            }
-                                            BoardElement::MouseScroll(def) => {
-                                                def.text_position.clone()
-                                            }
-                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
-                                        };
-
-                                        text_position.x += delta.x as f32;
-                                        text_position.y += delta.y as f32;
-
-                                        let new_element = match &self.config.elements
-                                            [state.held_element.unwrap()]
-                                        {
-                                            BoardElement::KeyboardKey(def) => {
-                                                BoardElement::KeyboardKey(KeyboardKeyDefinition {
-                                                    id: def.id,
-                                                    boundaries,
-                                                    text_position,
-                                                    keycodes: def.keycodes.clone(),
-                                                    text: def.text.clone(),
-                                                    shift_text: def.shift_text.clone(),
-                                                    change_on_caps: def.change_on_caps,
-                                                })
-                                            }
-                                            BoardElement::MouseKey(def) => {
-                                                BoardElement::MouseKey(MouseKeyDefinition {
-                                                    id: def.id,
-                                                    boundaries,
-                                                    text_position,
-                                                    keycodes: def.keycodes.clone(),
-                                                    text: def.text.clone(),
-                                                })
-                                            }
-                                            BoardElement::MouseScroll(def) => {
-                                                BoardElement::MouseScroll(MouseScrollDefinition {
-                                                    id: def.id,
-                                                    boundaries,
-                                                    text_position,
-                                                    keycodes: def.keycodes.clone(),
-                                                    text: def.text.clone(),
-                                                })
-                                            }
-                                            BoardElement::MouseSpeedIndicator(_) => unreachable!(),
-                                        };
-
-                                        state.previous_cursor_position = cursor_position_geo;
-                                        return (
-                                            Status::Captured,
-                                            Some(Message::UpdateElement {
-                                                index: state.held_element.unwrap(),
-                                                new_element,
-                                            }),
-                                        );
-                                    }
-                                }
+                                state.previous_cursor_position = cursor_position_geo;
+                                return (
+                                    Status::Captured,
+                                    Some(Message::MoveElement {
+                                        index: state.held_element.unwrap(),
+                                        delta,
+                                    }),
+                                );
                             }
                         }
                     }

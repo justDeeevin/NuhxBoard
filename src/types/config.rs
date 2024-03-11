@@ -22,6 +22,35 @@ pub enum BoardElement {
     MouseSpeedIndicator(MouseSpeedIndicatorDefinition),
 }
 
+impl BoardElement {
+    pub fn translate(&mut self, delta: geo::Coord) {
+        match self {
+            BoardElement::MouseSpeedIndicator(key) => {
+                key.location += delta;
+            }
+            _ => {
+                let boundaries = match self {
+                    BoardElement::KeyboardKey(key) => &mut key.boundaries,
+                    BoardElement::MouseKey(key) => &mut key.boundaries,
+                    BoardElement::MouseScroll(key) => &mut key.boundaries,
+                    _ => return,
+                };
+                for boundary in boundaries {
+                    *boundary += delta;
+                }
+                let text_position = match self {
+                    BoardElement::KeyboardKey(key) => &mut key.text_position,
+                    BoardElement::MouseKey(key) => &mut key.text_position,
+                    BoardElement::MouseScroll(key) => &mut key.text_position,
+                    _ => return,
+                };
+
+                *text_position += delta;
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeyboardKeyDefinition {
     #[serde(rename = "Id")]
@@ -98,5 +127,12 @@ impl From<SerializablePoint> for geo::Coord {
             x: value.x as f64,
             y: value.y as f64,
         }
+    }
+}
+
+impl std::ops::AddAssign<geo::Coord> for SerializablePoint {
+    fn add_assign(&mut self, rhs: geo::Coord) {
+        self.x += rhs.x as f32;
+        self.y += rhs.y as f32;
     }
 }

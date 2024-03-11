@@ -84,9 +84,9 @@ pub enum Message {
     ChangeSetting(Setting),
     ClearPressedKeys,
     ToggleEditMode,
-    UpdateElement {
+    MoveElement {
         index: usize,
-        new_element: BoardElement,
+        delta: geo::Coord,
     },
     SaveKeyboard(Option<std::path::PathBuf>),
     SaveStyle(Option<std::path::PathBuf>),
@@ -617,8 +617,8 @@ impl Application for NuhxBoard {
             Message::ToggleEditMode => {
                 self.edit_mode = !self.edit_mode;
             }
-            Message::UpdateElement { index, new_element } => {
-                self.config.elements[index] = new_element;
+            Message::MoveElement { index, delta } => {
+                self.config.elements[index].translate(delta);
             }
             Message::SaveKeyboard(file) => {
                 let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
