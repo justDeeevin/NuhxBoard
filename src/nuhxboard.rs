@@ -474,7 +474,7 @@ impl Application for NuhxBoard {
                     return Command::none();
                 }
                 let mut path = self.keyboards_path.clone();
-                self.settings.category = category.clone();
+                self.settings.category = category;
 
                 if !self.startup {
                     self.keyboard = None;
