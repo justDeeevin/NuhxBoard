@@ -101,7 +101,10 @@ macro_rules! draw_key {
             ..Default::default()
         });
 
-        if $state.hovered_element == Some($index) && $state.held_element.is_none() {
+        if $state.hovered_element == Some($index)
+            && $state.held_element.is_none()
+            && $state.selected_element.is_none()
+        {
             $frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
         } else if $state.held_element == Some($index) {
             $frame.fill(
@@ -231,7 +234,9 @@ macro_rules! draw_speed_indicator {
                                 },
                             );
 
-                            if $state.hovered_element == Some($index) && $state.held_element.is_none()
+                            // TODO: Still highlight when an element is selected. I dislike this
+                            // behavior of NohBoard.
+                            if $state.hovered_element == Some($index) && $state.held_element.is_none() && $state.selected_element.is_none()
                             {
                                 $frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
                             } else if $state.held_element == Some($index) {
@@ -419,18 +424,21 @@ impl canvas::Program<Message> for NuhxBoard {
                     state.previous_cursor_position = cursor_position_geo;
                 }
                 mouse::Event::ButtonPressed(mouse::Button::Left) => {
-                    state.held_element = state.hovered_element;
-                    if state.hovered_element.is_some() {
-                        state.delta_accumulator = Coord::default();
-                    }
                     state.interaction = Interaction::Dragging;
-                    if state.hovered_element.is_none() && state.selected_element.is_some() {
+
+                    if state.selected_element.is_none() {
+                        state.held_element = state.hovered_element;
+                    } else {
+                        state.held_element = state.selected_element;
                         state.selected_element = None;
                     }
+
                     return (Status::Captured, None);
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
                     let message = if state.delta_accumulator != Coord::default() {
+                        state.delta_accumulator = Coord::default();
+                        state.selected_element = state.held_element;
                         state.held_element.map(|index| {
                             Message::PushChange(Change::MoveElement {
                                 index,
@@ -438,12 +446,13 @@ impl canvas::Program<Message> for NuhxBoard {
                             })
                         })
                     } else {
+                        state.selected_element = state.hovered_element;
                         None
                     };
 
-                    state.interaction = Interaction::None;
                     state.held_element = None;
-                    state.selected_element = state.hovered_element;
+
+                    state.interaction = Interaction::None;
                     return (Status::Ignored, message);
                 }
                 _ => {}
@@ -531,7 +540,7 @@ impl canvas::Program<Message> for NuhxBoard {
             let highlighted_element = if state.selected_element.is_some() {
                 state.selected_element
             } else {
-                state.hovered_element
+                state.held_element
             };
             if let Some(hilighted_index) = highlighted_element {
                 match &self.config.elements[hilighted_index] {
