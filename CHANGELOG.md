@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.0](https://github.com/justdeeevin/nuhxboard/compare/v0.5.2...HEAD) - Unreleased
+
+### Added
+
+#### Edit mode!
+
+There's a new toggle for edit mode in the global context menu. You can graphically manipulate every part of a keyboard _and_ its style. No more typing away at a JSON file.
+
+#### Other additions
+
+- Nix support. [#7](https://github.com/justdeeevin/nuhxboard/pull/7)
+
+### Fixed
+
+- The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commits/6594a7553115938b6de4f15411f5c930939bce74)
+
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
 #### We're back on [crates.io](https://crates.io/crates/nuhxboard)!
