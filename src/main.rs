@@ -81,7 +81,7 @@ fn main() -> Result<()> {
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { settings };
 
-    let settings = iced::Settings {
+    let window_settings = iced::Settings {
         window: window::Settings {
             size: DEFAULT_WINDOW_SIZE,
             resizable: false,
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
         flags,
         ..iced::Settings::default()
     };
-    NuhxBoard::run(settings)?;
+    NuhxBoard::run(window_settings)?;
 
     Ok(())
 }
