@@ -192,7 +192,7 @@ impl Application for NuhxBoard {
             .unwrap()
             .join(".local/share/NuhxBoard/keyboards");
         let config = Config {
-            version: 2,
+            version: None,
             width: DEFAULT_WINDOW_SIZE.width,
             height: DEFAULT_WINDOW_SIZE.height,
             elements: vec![],

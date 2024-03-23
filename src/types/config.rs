@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Config {
     #[serde(rename = "Version")]
-    pub version: u8,
+    pub version: Option<u8>,
     #[serde(rename = "Width")]
     pub width: f32,
     #[serde(rename = "Height")]
