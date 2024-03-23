@@ -17,21 +17,26 @@
 
 ## Goals
 
-[Nohboard](https://github.com/ThoNohT/NohBoard) is great! But it's only for Windows. The only alternative is [Tiyenti's KBDisplay](https://github.com/Tiyenti/kbdisplay), which is really great, but limited in functionality. My primary goal with this project is to replicate the functionality of NohBoard in a Linux-compatible manner. More specifically, I want to be able to feed in any NohBoard config file and have near-identical output to NohBoard.
+[Nohboard](https://github.com/ThoNohT/NohBoard) is great! But it's only for Windows. The only alternative is [Tiyenti's KBDisplay](https://github.com/Tiyenti/kbdisplay), which is really great, but limited in functionality. My primary goal with this project is to replicate the functionality of NohBoard in a cross-compatible manner. More specifically, I want to be able to feed in any NohBoard config file and have near-identical output to NohBoard.
 
 I may add functionality where I think it would fit, but I want to prioritize interoperability with NohBoard. Call it just another incentive for gamers to switch to Linux.
 
 ## Usage
 
-Just right-click anywhere in the window, and pick which keyboard you want to use!
-
-See [NohBoard's documentation](https://github.com/ThoNohT/NohBoard/wiki/How-To-Use) for more info on usage. NuhxBoard can't do everything that NohBoard can, but everything it does, NohBoard does too.
+As per the above stated goal, your likely best source of info will be [NohBoard's documentation](https://github.com/ThoNohT/NohBoard/wiki/How-To-Use). The directory structure in `keyboards` is the same. `keyboards` itself lives in `~/.local/share/NuhxBoard/`. Nonetheless, there is a work-in-progress NuhxBoard GitHub wiki.
 
 ## Installation
 
-NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall).
-If you use Linux and either install without binstall or build from source, you will need the `libxi-dev` and `lib-xtst` packages installed.
-You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). Once you've installed it, you'll have to run it from the command line using the `--install` to add it to your start menu and create the necessary program files.
+NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [`cargo-binstall`](https://crates.io/crates/cargo-binstall). You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest).
+
+NuhxBoard will detect if any app files are missing and replace them automatically. This includes
+
+- The main settings  
+  If the `NuhxBoard.json` file containing app settings and saved state doesn't exist, it'll be populated with defaults.
+- Installed keyboards  
+  If the `keyboards` directory is empty or doesn't exist, then nuhxboard will download a pack of example keyboards to use.
+- Optionally, desktop entries  
+  On windows, if there isn't a listing in the start menu, or on Linux, if there isn't a desktop entry in the proper place, NuhxBoard will create one. This behavior can be disabled in case you want to make your own desktop entry.
 
 ## Demo
 
