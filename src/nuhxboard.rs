@@ -477,7 +477,7 @@ impl Application for NuhxBoard {
                 self.keyboard_category_options = fs::read_dir(path)
                     .unwrap()
                     .map(|r| r.unwrap())
-                    .filter(|entry| entry.file_type().unwrap().is_dir())
+                    .filter(|entry| entry.file_type().unwrap().is_dir() && entry.file_name() != "global")
                     .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                     .collect::<Vec<_>>();
 
