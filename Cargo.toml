@@ -42,6 +42,7 @@ serde_json = "1.0.111"
 reqwest = { version = "0.11.24", features = ["blocking"] }
 display-info = "0.4.8"
 geo = "0.28.0"
+zip = "0.6.6"
 
 [target.'cfg(windows)'.dependencies]
 mslnk = "0.1.8"
