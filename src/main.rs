@@ -18,23 +18,14 @@ fn main() -> Result<()> {
 
     let icon_image = image::load_from_memory(IMAGE)?;
 
-    let settings_path = home::home_dir()
-        .unwrap()
-        .join(".local/share/NuhxBoard/NuhxBoard.json");
+    let nuhxboard_path = home::home_dir().unwrap().join(".local/share/NuhxBoard");
 
-    if !settings_path.exists() {
+    if !nuhxboard_path.exists() {
         std::fs::create_dir_all(
             home::home_dir()
                 .unwrap()
                 .join(".local/share/NuhxBoard/keyboards/global"),
         )?;
-        let mut settings = File::create(
-            home::home_dir()
-                .unwrap()
-                .join(".local/share/NuhxBoard/NuhxBoard.json"),
-        )?;
-
-        settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
         match std::env::consts::OS {
             #[cfg(target_os = "linux")]
             "linux" => {
@@ -63,18 +54,15 @@ fn main() -> Result<()> {
                 let sl = mslnk::ShellLink::new(target)?;
                 sl.create_lnk(lnk)?;
             }
-            "macos" => {
-                eprintln!("Sorry, the install command isn't implemented for MacOS yet.");
-                std::process::exit(1);
-            }
-            _ => {
-                eprintln!("Sorry, the install command isn't implemented for your OS yet. If there isn't a GitHub issue open for your OS, open one!");
-                std::process::exit(1);
-            }
+            _ => {}
         }
     }
+    if !nuhxboard_path.join("NuhxBoard.json").exists() {
+        let mut settings = File::create(nuhxboard_path.join("NuhxBoard.json"))?;
+        settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
+    }
 
-    let settings_file = File::open(settings_path)?;
+    let settings_file = File::open(nuhxboard_path)?;
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
 
