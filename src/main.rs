@@ -29,15 +29,16 @@ fn main() -> Result<()> {
 
     match std::env::consts::OS {
         "linux" => {
-            let apps_path = home::home_dir().unwrap().join(".local/share/applications");
+            let desktop_entry_path = home::home_dir()
+                .unwrap()
+                .join(".local/share/applications/nuhxboard.desktop");
 
-            if !apps_path.join("nuhxboard.desktop").exists() {
+            if !desktop_entry_path.exists() {
                 let res = reqwest::blocking::get(
                     "https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop",
                 )?;
                 let desktop_entry = res.bytes()?;
-                File::create(apps_path.clone().join("applications/nuhxboard.desktop"))?
-                    .write_all(&desktop_entry)?;
+                File::create(desktop_entry_path)?.write_all(&desktop_entry)?;
 
                 File::create(nuhxboard_path.join("NuhxBoard.png"))?.write_all(IMAGE)?;
             }
