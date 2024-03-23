@@ -10,14 +10,14 @@
 
 ## Contents
 
-1. [Goals](#goals)
-2. [Usage](#usage)  
+- [Goals](#goals)
+- [Usage](#usage)
   - [Keyboard Layouts](#keyboard-layouts)
     - [Top-Level Properties](#top-level-properties)
     - [Elements](#elements)
       - [KeyboardKeys](#keyboardkeys)
-3. [Installation](#installation)
-4. [Demo](#demo)
+- [Installation](#installation)
+- [Demo](#demo)
 
 ## Goals
 
