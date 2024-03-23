@@ -26,25 +26,31 @@ fn main() -> Result<()> {
                 .unwrap()
                 .join(".local/share/NuhxBoard/keyboards/global"),
         )?;
-        match std::env::consts::OS {
-            #[cfg(target_os = "linux")]
-            "linux" => {
-                let mut path = home::home_dir().unwrap();
-                path.push(".local/share/");
+    }
 
-                let res = reqwest::blocking::get("https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop")?;
+    match std::env::consts::OS {
+        "linux" => {
+            let apps_path = home::home_dir().unwrap().join(".local/share/applications");
+
+            if !apps_path.join("nuhxboard.desktop").exists() {
+                let res = reqwest::blocking::get(
+                    "https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop",
+                )?;
                 let desktop_entry = res.bytes()?;
-                File::create(path.clone().join("applications/nuhxboard.desktop"))?
+                File::create(apps_path.clone().join("applications/nuhxboard.desktop"))?
                     .write_all(&desktop_entry)?;
 
-                File::create(path.join("NuhxBoard/NuhxBoard.png"))?.write_all(IMAGE)?;
+                File::create(nuhxboard_path.join("NuhxBoard.png"))?.write_all(IMAGE)?;
             }
-            #[cfg(target_os = "windows")]
-            "windows" => {
-                let mut lnk_path = home::home_dir().unwrap();
-                lnk_path
-                    .push("AppData/Roaming/Microsoft/Windows/Start Menu/Programs/NuhxBoard.lnk");
+        }
+        // cfg necessary b/c lnk uses windows-only code
+        #[cfg(target_os = "windows")]
+        "windows" => {
+            let lnk_path = home::home_dir()
+                .unwrap()
+                .join("AppData/Roaming/Microsoft/Windows/Start Menu/Programs/NuhxBoard.lnk");
 
+            if !lnk_path.exists() {
                 let lnk = lnk_path.to_str().unwrap();
 
                 let target_path = std::env::current_exe()?;
@@ -54,8 +60,8 @@ fn main() -> Result<()> {
                 let sl = mslnk::ShellLink::new(target)?;
                 sl.create_lnk(lnk)?;
             }
-            _ => {}
         }
+        _ => {}
     }
     if !nuhxboard_path.join("NuhxBoard.json").exists() {
         let mut settings = File::create(nuhxboard_path.join("NuhxBoard.json"))?;
