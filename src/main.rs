@@ -79,6 +79,8 @@ fn main() -> Result<()> {
             "https://raw.githubusercontent.com/justdeeevin/nuhxboard/main/keyboards.zip",
         )?;
 
+        // I know `create_file_new` exists, but it pushes the MSRV to 1.77. Might not be a concern?
+        // IDK. No harm in being safe.
         let mut keyboards_file = File::options()
             .read(true)
             .write(true)
