@@ -116,7 +116,7 @@ fn main() -> Result<()> {
             {
                 use std::os::unix::fs::PermissionsExt;
 
-                if let Some(mode) = keyboards_file.unix_mode() {
+                if let Some(mode) = file.unix_mode() {
                     fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
                 }
             }
