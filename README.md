@@ -11,7 +11,7 @@
 ## Contents
 
 1. [Goals](#goals)
-2. [Usage](#usage)
+2. [Usage](#usage)  
   - [Keyboard Layouts](#keyboard-layouts)
     - [Top-Level Properties](#top-level-properties)
     - [Elements](#elements)
