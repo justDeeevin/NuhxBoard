@@ -36,12 +36,10 @@ iced_aw = { version = "0.8.0", features = [
   "selection_list",
   "number_input",
 ] }
-inquire = "0.6.2"
 rdev = "0.5.3"
 serde = { version = "1.0.195", features = ["serde_derive"] }
 serde_json = "1.0.111"
 reqwest = { version = "0.11.24", features = ["blocking"] }
-derivative = "2.2.0"
 display-info = "0.4.8"
 geo = "0.28.0"
 
