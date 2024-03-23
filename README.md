@@ -12,6 +12,10 @@
 
 1. [Goals](#goals)
 2. [Usage](#usage)
+  - [Keyboard Layouts](#keyboard-layouts)
+    - [Top-Level Properties](#top-level-properties)
+    - [Elements](#elements)
+      - [KeyboardKeys](#keyboardkeys)
 3. [Installation](#installation)
 4. [Demo](#demo)
 
