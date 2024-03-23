@@ -21,11 +21,7 @@ fn main() -> Result<()> {
     let nuhxboard_path = home::home_dir().unwrap().join(".local/share/NuhxBoard");
 
     if !nuhxboard_path.exists() {
-        std::fs::create_dir_all(
-            home::home_dir()
-                .unwrap()
-                .join(".local/share/NuhxBoard/keyboards/global"),
-        )?;
+        std::fs::create_dir_all(nuhxboard_path.clone())?;
     }
 
     match std::env::consts::OS {
