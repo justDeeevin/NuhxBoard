@@ -46,5 +46,5 @@ As previously stated, keyboard layouts define key positions, shapes, and behavio
 
 [source, rust]
 ----
-include::src/types/config.rs[lines=4..23]
+include::./src/types/config.rs[lines=4..23]
 ----
