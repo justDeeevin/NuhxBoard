@@ -24,3 +24,5 @@ I may add functionality where I think it would fit, but I want to prioritize int
 NuhxBoard is made with customizability in mind. Every part of its appearance and behavior is configurable. At its core, NuhxBoard is an app that loads keyboard layouts and styles. A keyboard layout defines the positions, shapes, and behaviors of keys. It also defines the dimensions of the window. A style defines colors, fonts, and (in a future release) images for keys.
 
 Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
+
+=== test
