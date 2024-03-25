@@ -1,5 +1,6 @@
 :toc:
 :toc-placement!:
+
 :repo-files: https://github.com/justDeeevin/NuhxBoard/raw/main
 :shields: https://img.shields.io
 
@@ -25,4 +26,25 @@ NuhxBoard is made with customizability in mind. Every part of its appearance and
 
 Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
 
-=== test
+Keyboards are located in `~/.local/share/NuhxBoard/keyboards`. Here's the general structure of that directory:
+
+* keyboards/
+** [CATEGORY NAME]/
+*** [KEYBOARD NAME]/
+**** keyboard.json
+**** [STYLE NAME].style
+*** global/
+**** [STYLE NAME].style
+
+This folder will be populated on first run with some example keyboards and categories. You can inspect it yourself to get a good idea of how this looks in practice.
+
+To load a keyboard and style, right-click anywhere in NuhxBoard to open the global context menu and click on "Load Keyboard". This will open a new window. The drop-down list labeled "Categories" allows you to select a category. When a category has been selected, the keyboards available in that category will appear in a list on the left side of the vertical line. When you click on one of these options, your selection of keyboard layout will be loaded, and that keyboard layout's available styles will appear in a list on the right side of the vertical line. When you click on one of these options, your selection of style will be loaded. You can change you selection of keyboard layout and style at any time through this interface.
+
+=== Keyboard Layouts
+
+As previously stated, keyboard layouts define key positions, shapes, and behaviors, as well as window dimensions. Keyboard layouts are defined by a JSON file, `keyboard.json`, in their corresponding named directory. Here's what the type definition for a keyboard layout looks like in rust:
+
+[source, rust]
+----
+include::src/types/config.rs[lines=4..23]
+----
