@@ -1,3 +1,26 @@
-:repo: https://github.com/justDeeevin/NuhxBoard/raw/main
+:repo-files: https://github.com/justDeeevin/NuhxBoard/raw/main
+:shields: https://img.shields.io
 
-= image:{repo}/NuhxBoard.png[The NuhxBoard logo] NuhxBoard
+= image:{repo-files}/NuhxBoard.png[The NuhxBoard logo, 34] NuhxBoard
+
+image:{shields}/crates/v/nuhxboard[Crates.io version]
+image:{shields}/crates/l/nuhxboard[Crates.io license]
+image:{shields}/crates/d/nuhxboard[Crates.io downloads]
+
+image:https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg[The Iced logo, 130, link=https://github.com/iced-rs/iced]
+
+:toc:
+:toc-placement!:
+toc::[]
+
+== Goals
+
+https://github.com/ThoNohT/NohBoard[Nohboard] is great! But it's only for Windows. The only alternative is https://github.com/Tiyenti/kbdisplay[Tiyenti's KBDisplay], which is quite nice, but limited in functionality. My primary goal with this project is to replicate the functionality of NohBoard in a cross-compatible manner. More specifically, I want to be able to feed in any NohBoard config file and have near-identical output to NohBoard.
+
+I may add functionality where I think it would fit, but I want to prioritize interoperability with NohBoard. Call it just another incentive for gamers to switch to Linux.
+
+== Usage
+
+NuhxBoard is made with customizability in mind. Every part of its appearance and behavior is configurable. At its core, NuhxBoard is an app that loads keyboard layouts and styles. A keyboard layout defines the positions, shapes, and behaviors of keys. It also defines the dimensions of the window. A style defines colors, fonts, and (in a future release) images for keys.
+
+Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
