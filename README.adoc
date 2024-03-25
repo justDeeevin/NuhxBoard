@@ -1,3 +1,5 @@
+:toc:
+:toc-placement!:
 :repo-files: https://github.com/justDeeevin/NuhxBoard/raw/main
 :shields: https://img.shields.io
 
@@ -9,8 +11,6 @@ image:{shields}/crates/d/nuhxboard[Crates.io downloads]
 
 image:https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg[The Iced logo, 130, link=https://github.com/iced-rs/iced]
 
-:toc:
-:toc-placement!:
 toc::[]
 
 == Goals
