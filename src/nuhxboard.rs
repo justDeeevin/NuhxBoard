@@ -97,8 +97,8 @@ pub enum Message {
     Listener(listener::Event),
     ReleaseScroll(u32),
     LoadStyle(usize),
-    OpenLoadKeyboardWindow,
-    OpenSettingsWindow,
+    OpenLoadKeyboard,
+    OpenSettings,
     WindowClosed(window::Id),
     ChangeKeyboardCategory(String),
     LoadKeyboard(usize),
@@ -448,7 +448,7 @@ impl Application for NuhxBoard {
                     }
                 }
             }
-            Message::OpenSettingsWindow => {
+            Message::OpenSettings => {
                 let (id, command) = window::spawn(window::Settings {
                     resizable: false,
                     size: iced::Size {
@@ -460,7 +460,7 @@ impl Application for NuhxBoard {
                 self.settings_window_id = Some(id);
                 return command;
             }
-            Message::OpenLoadKeyboardWindow => {
+            Message::OpenLoadKeyboard => {
                 let path = self.keyboards_path.clone();
                 let (id, command) = window::spawn::<Message>(window::Settings {
                     resizable: false,

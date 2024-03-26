@@ -41,12 +41,12 @@ impl NuhxBoard {
         let context_menu = ContextMenu::new(canvas, || {
             let load_keyboard_window_message = match self.load_keyboard_window_id {
                 Some(_) => None,
-                None => Some(Message::OpenLoadKeyboardWindow),
+                None => Some(Message::OpenLoadKeyboard),
             };
 
             let settings_window_message = match self.settings_window_id {
                 Some(_) => None,
-                None => Some(Message::OpenSettingsWindow),
+                None => Some(Message::OpenSettings),
             };
 
             let toggle_button_label = match self.edit_mode {
