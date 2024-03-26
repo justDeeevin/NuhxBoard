@@ -339,6 +339,12 @@ FontFamily:: The name of the font to use. This is the name of the font as it app
 Size:: The size of the font in pixels.
 Style:: A bitfield representing the style of the font. From least to most significant, the first bit is bold, the second italic, the third underline, and the fourth strikethrough. These effects can be combined. As an example, if I wanted bold and italicized text, I would set style to `3`, which is `0011` in binary.
 
+---
+
+=== Caveats
+
+On Windows and Linux under Wayland, NuhxBoard can't capture input while focused. This can't be fixed right now, but a future release of the UI library will allow it to be. On Linux under Walyand, this is actually a symptom of a larger issue. Wayland provides no method of globally listening to input events. NuhxBoard still works most of the time because of XWayland, but when a Wayland-native app (such as NuhxBoard itself) has focus, NuhxBoard stops working. This shouldn't be a real dealbreaker for a while, though, since Wayland-native apps are still relavively few and far between, especially with games.
+
 == Installation
 
 NuhxBoard is currently only on https://crates.io/crates/nuhxboard[crates.io]. It can also be installed with https://crates.io/crates/cargo-binstall[Cargo Binstall]. You can also install NuhxBoard using the option matching your platform on the https://github.com/thepyrotf2/nuhxboard/releases/latest[latest release page].
