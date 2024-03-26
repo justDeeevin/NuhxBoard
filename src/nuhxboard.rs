@@ -159,21 +159,6 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
     height: 200.0,
 };
 
-const LOAD_KEYBOARD_WINDOW_SIZE: iced::Size = iced::Size {
-    width: 300.0,
-    height: 250.0,
-};
-
-const ERROR_WINDOW_SIZE: iced::Size = iced::Size {
-    width: 400.0,
-    height: 150.0,
-};
-
-const KEYBOARD_PROPERTIES_WINDOW_SIZE: iced::Size = iced::Size {
-    width: 200.0,
-    height: 100.0,
-};
-
 async fn noop() {}
 
 impl Application for NuhxBoard {
@@ -441,7 +426,10 @@ impl Application for NuhxBoard {
                 let path = self.keyboards_path.clone();
                 let (id, command) = window::spawn::<Message>(window::Settings {
                     resizable: false,
-                    size: LOAD_KEYBOARD_WINDOW_SIZE,
+                    size: iced::Size {
+                        width: 300.0,
+                        height: 250.0,
+                    },
                     ..Default::default()
                 });
                 self.load_keyboard_window_id = Some(id);
@@ -665,7 +653,10 @@ impl Application for NuhxBoard {
             }
             Message::OpenKeyboardProperties => {
                 let (id, command) = window::spawn(window::Settings {
-                    size: KEYBOARD_PROPERTIES_WINDOW_SIZE,
+                    size: iced::Size {
+                        width: 200.0,
+                        height: 100.0,
+                    },
                     resizable: false,
                     ..Default::default()
                 });
@@ -764,7 +755,10 @@ impl Application for NuhxBoard {
 impl NuhxBoard {
     pub fn error<T>(&mut self, error: Error) -> iced::Command<T> {
         let (id, command) = window::spawn(window::Settings {
-            size: ERROR_WINDOW_SIZE,
+            size: iced::Size {
+                width: 400.0,
+                height: 150.0,
+            },
             resizable: false,
             ..Default::default()
         });
