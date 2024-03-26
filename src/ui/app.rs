@@ -139,24 +139,30 @@ impl NuhxBoard {
                 Message::ChangeKeyboardCategory,
             ),
             row![
-                SelectionList::new_with(
-                    self.keyboard_options.clone().leak(),
-                    |i, _| Message::LoadKeyboard(i),
-                    12.0,
-                    5.0,
-                    <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
-                    self.keyboard,
-                    iced::Font::default(),
-                ),
-                SelectionList::new_with(
-                    self.style_options.clone().leak(),
-                    |i, _| Message::LoadStyle(i),
-                    12.0,
-                    5.0,
-                    <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
-                    self.style_choice,
-                    iced::Font::default(),
-                ),
+                column![
+                    text("Keyboard Layout:"),
+                    SelectionList::new_with(
+                        self.keyboard_options.clone().leak(),
+                        |i, _| Message::LoadKeyboard(i),
+                        12.0,
+                        5.0,
+                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        self.keyboard,
+                        iced::Font::default(),
+                    )
+                ],
+                column![
+                    text("Keyboard Style:"),
+                    SelectionList::new_with(
+                        self.style_options.clone().leak(),
+                        |i, _| Message::LoadStyle(i),
+                        12.0,
+                        5.0,
+                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        self.style_choice,
+                        iced::Font::default(),
+                    )
+                ],
             ]
         ]
         .into()
