@@ -92,13 +92,18 @@ impl NuhxBoard {
                 ]);
             }
 
-            menu.push(
+            menu.append(&mut vec![
                 button("Clear Pressed Keys")
                     .on_press(Message::ClearPressedKeys)
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
-            );
+                button("Exit")
+                    .on_press(Message::Quitting)
+                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                    .into(),
+            ]);
             container(column(menu))
                 .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
                 .into()
