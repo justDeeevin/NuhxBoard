@@ -437,14 +437,15 @@ impl canvas::Program<Message> for NuhxBoard {
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
                     let message = if state.delta_accumulator != Coord::default() {
-                        state.delta_accumulator = Coord::default();
-                        state.selected_element = state.held_element;
-                        state.held_element.map(|index| {
+                        let out = state.held_element.map(|index| {
                             Message::PushChange(Change::MoveElement {
                                 index,
                                 delta: state.delta_accumulator,
                             })
-                        })
+                        });
+                        state.delta_accumulator = Coord::default();
+                        state.selected_element = state.held_element;
+                        out
                     } else {
                         state.selected_element = state.hovered_element;
                         None
