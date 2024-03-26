@@ -16,21 +16,21 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 #### Other additions
 
 - Nix support. [#7](https://github.com/justdeeevin/nuhxboard/pull/7)
-- Some example keyboards are downloaded if none are present. [e7bc762](https://github.com/justdeeevin/nuhxboard/commits/e7bc7623d35056860e2005927a31eb115346a0a0)
-- Support for _window_ background images (not keys yet). [11fcdde](https://github.com/justdeeevin/nuhxboard/commits/11fcdded31b17fadfae1dfb79f21803d3d7da9fa)
-- Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commits/f1c04a61dff29c7406cd297261292a60f80ad74d)
+- Some example keyboards are downloaded if none are present. [e7bc762](https://github.com/justdeeevin/nuhxboard/commit/e7bc7623d35056860e2005927a31eb115346a0a0)
+- Support for _window_ background images (not keys yet). [11fcdde](https://github.com/justdeeevin/nuhxboard/commit/11fcdded31b17fadfae1dfb79f21803d3d7da9fa)
+- Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commit/f1c04a61dff29c7406cd297261292a60f80ad74d)
 
 ### Fixed
 
-- The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commits/6594a7553115938b6de4f15411f5c930939bce74)
-- Holding keys for an extended time period causing them to never being released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commits/bb12d9960a3d6bf003662af6445794d4f8472a23)
-- Font size not changing with key pressed/loose state. [6726d1c](https://github.com/justdeeevin/nuhxboard/commits/6726d1cb5c86770177ae62bf5902bfc6ad98c2cd)
+- The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commit/6594a7553115938b6de4f15411f5c930939bce74)
+- Holding keys for an extended time period causing them to never being released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commit/bb12d9960a3d6bf003662af6445794d4f8472a23)
+- Font size not changing with key pressed/loose state. [6726d1c](https://github.com/justdeeevin/nuhxboard/commit/6726d1cb5c86770177ae62bf5902bfc6ad98c2cd)
 
 ### Changed
 
-- Desktop entry creation can be disabled. [5ac9afc](https://github.com/justdeeevin/nuhxboard/commits/5ac9afc324523390058da44e849040d3ecdba732)
-- Primary display is marked as such in list of displays in settings menu. [f2e0a00](https://github.com/justdeeevin/nuhxboard/commits/f2e0a00d6fd93f47f6cd9111f8452e2e2d344fec)
-- `Version` property of keyboard layout is now optional. [79a3162](https://github.com/justdeeevin/nuhxboard/commits/79a3162acdf7de5606f48b6aa7535f39d321cb06)
+- Desktop entry creation can be disabled. [5ac9afc](https://github.com/justdeeevin/nuhxboard/commit/5ac9afc324523390058da44e849040d3ecdba732)
+- Primary display is marked as such in list of displays in settings menu. [f2e0a00](https://github.com/justdeeevin/nuhxboard/commit/f2e0a00d6fd93f47f6cd9111f8452e2e2d344fec)
+- `Version` property of keyboard layout is now optional. [79a3162](https://github.com/justdeeevin/nuhxboard/commit/79a3162acdf7de5606f48b6aa7535f39d321cb06)
 
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
@@ -40,18 +40,18 @@ As of [iced_aw#209](https://github.com/iced-rs/iced_aw/pull/209), `iced_aw` is o
 
 ### Added
 
-- Support for global styles. [1ee37b9](https://github.com/justdeeevin/nuhxboard/commits/1ee37b973497ce78d4371c17a6d6053c0dd0f055)
-- Creation of global styles folder to install behavior. [321c8b9](https://github.com/justdeeevin/nuhxboard/commits/321c8b9175c0f42ac86a0cdf77d86485ee6c4787)
+- Support for global styles. [1ee37b9](https://github.com/justdeeevin/nuhxboard/commit/1ee37b973497ce78d4371c17a6d6053c0dd0f055)
+- Creation of global styles folder to install behavior. [321c8b9](https://github.com/justdeeevin/nuhxboard/commit/321c8b9175c0f42ac86a0cdf77d86485ee6c4787)
 
 ## [v0.5.2](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-21
 
 ### Added
 
-- Button to clear the pressed keys list in case of emergencies. [ef7bd95](https://github.com/justdeeevin/commits/ef7bd95608701274f3c1125e7f292de8df6f1eb9)
+- Button to clear the pressed keys list in case of emergencies. [ef7bd95](https://github.com/justdeeevin/commit/ef7bd95608701274f3c1125e7f292de8df6f1eb9)
 
 ### Fixed
 
-- Certain characters not rendering. [dfa8f08](https://githb.com/justdeeevin/commits/dfa8f08d577b4296bc0f8a478bcbc4349c5ed8f8)
+- Certain characters not rendering. [dfa8f08](https://githb.com/justdeeevin/commit/dfa8f08d577b4296bc0f8a478bcbc4349c5ed8f8)
 
 ## [v0.5.1](https://github.com/justdeeevin/nuhxboard/releases/v0.5.1) - 2024-2-20
 
@@ -61,7 +61,7 @@ As of [iced_aw#209](https://github.com/iced-rs/iced_aw/pull/209), `iced_aw` is o
 
 ### Fixed
 
-- Crash where a key release was received with no preceding key press. [d5cc1aa](https://github.com/justdeeevin/nuhxboard/commits/d5cc1aa31924f9087a7d7e6b60254253cf0b5c81)
+- Crash where a key release was received with no preceding key press. [d5cc1aa](https://github.com/justdeeevin/nuhxboard/commit/d5cc1aa31924f9087a7d7e6b60254253cf0b5c81)
 
 ## [v0.5.0](https://github.com/justDeeevin/NuhxBoard/releases/v0.5.0) - 2024-2-19
 
