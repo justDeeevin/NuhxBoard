@@ -317,6 +317,8 @@ The name of the image file to use as the background of the key.
 
 ---
 
+IMPORTANT: This is a test
+
 ==== MouseSpeedIndicatorStyle
 
 InnerColor:: The color of the filled inner circle.
