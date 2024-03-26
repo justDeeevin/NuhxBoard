@@ -83,11 +83,10 @@ in
       wrapProgram $out/bin/${name} --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}"
     '';
 
-    # meta = with lib; { #TODO change these
-    #   description = "IRC application";
-    #   homepage = "https://github.com/squidowl/halloy";
-    #   changelog = "https://github.com/squidowl/halloy/blob/${version}/CHANGELOG.md";
-    #   license = licenses.gpl3Only;
-    #   maintainers = with maintainers; [ fab ];
-    # };
+    meta = with lib; {
+      description = "Keyboard visualizer";
+      homepage = "https://github.com/justDeeevin/NuhxBoard";
+      changelog = "https://github.com/justDeeevin/NuhxBoard/blob/${version}/CHANGELOG.md";
+      license = licenses.gpl3Only;
+    };
   }
