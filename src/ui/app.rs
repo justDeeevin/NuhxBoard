@@ -303,6 +303,13 @@ impl NuhxBoard {
         ];
 
         column![
+            checkbox(
+                "Automatically create a desktop entry if none exists",
+                self.settings.auto_desktop_entry
+            )
+            .text_size(12)
+            .size(15)
+            .on_toggle(|_| Message::ChangeSetting(Setting::AutoDesktopEntry)),
             input,
             row![
                 text("Window title: ").size(12),
@@ -313,6 +320,7 @@ impl NuhxBoard {
             .align_items(iced::Alignment::Center),
             capitalization,
         ]
+        .align_items(iced::Alignment::Center)
         .into()
     }
 
