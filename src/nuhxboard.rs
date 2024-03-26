@@ -430,7 +430,7 @@ impl Application for NuhxBoard {
                     resizable: false,
                     size: iced::Size {
                         width: 420.0,
-                        height: 255.0,
+                        height: 300.0,
                     },
                     ..Default::default()
                 });

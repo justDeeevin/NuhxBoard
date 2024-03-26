@@ -317,6 +317,7 @@ impl NuhxBoard {
         ];
 
         column![
+            text(format!("NuhxBoard v{}", env!("CARGO_PKG_VERSION"))).size(20),
             checkbox(
                 "Automatically create a desktop entry if none exists",
                 self.settings.auto_desktop_entry
