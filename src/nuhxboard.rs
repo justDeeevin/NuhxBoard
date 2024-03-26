@@ -18,10 +18,10 @@ pub struct NuhxBoard {
     pub config: Config,
     pub style: Style,
     pub canvas: Cache,
-    /// `[keycode: (press_time, releases_queued)]`
-    pub pressed_keys: HashMap<u32, (Instant, u32)>,
-    /// `[keycode: (press_time, releases_queued)]`
-    pub pressed_mouse_buttons: HashMap<u32, (Instant, u32)>,
+    /// `[keycode: press_time]`
+    pub pressed_keys: HashMap<u32, Instant>,
+    /// `[keycode: press_time]`
+    pub pressed_mouse_buttons: HashMap<u32, Instant>,
     /// `[axis: releases_queued]`
     pub pressed_scroll_buttons: HashMap<u32, u32>,
     /// `(x, y)`
@@ -272,13 +272,7 @@ impl Application for NuhxBoard {
                     }
                     self.true_caps = !self.true_caps;
                     let key = keycode_convert(key).unwrap();
-                    self.pressed_keys
-                        .entry(key)
-                        .and_modify(|(time, count)| {
-                            *time = Instant::now();
-                            *count += 1;
-                        })
-                        .or_insert((Instant::now(), 1));
+                    self.pressed_keys.insert(key, Instant::now());
                 }
                 rdev::EventType::KeyRelease(key) => {
                     if keycode_convert(key).is_err() {
@@ -292,7 +286,6 @@ impl Application for NuhxBoard {
                         .pressed_keys
                         .get(&key_num)
                         .unwrap()
-                        .0
                         .elapsed()
                         .as_millis()
                         < self.settings.min_press_time
@@ -304,7 +297,6 @@ impl Application for NuhxBoard {
                                         .pressed_keys
                                         .get(&key_num)
                                         .unwrap()
-                                        .0
                                         .elapsed()
                                         .as_millis())
                                 .try_into()
@@ -313,14 +305,7 @@ impl Application for NuhxBoard {
                             move |_| Message::key_release(key),
                         );
                     }
-                    match &mut self.pressed_keys.get_mut(&key_num).unwrap().1 {
-                        1 => {
-                            self.pressed_keys.remove(&key_num);
-                        }
-                        n => {
-                            *n -= 1;
-                        }
-                    }
+                    self.pressed_keys.remove(&key_num);
                 }
                 rdev::EventType::ButtonPress(button) => {
                     if mouse_button_code_convert(button).is_err() {
@@ -332,29 +317,23 @@ impl Application for NuhxBoard {
                     }
 
                     let button = mouse_button_code_convert(button).unwrap();
-                    self.pressed_mouse_buttons
-                        .entry(button)
-                        .and_modify(|(time, count)| {
-                            *time = Instant::now();
-                            *count += 1;
-                        })
-                        .or_insert((Instant::now(), 1));
+                    self.pressed_mouse_buttons.insert(button, Instant::now());
                 }
                 rdev::EventType::ButtonRelease(button) => {
                     if mouse_button_code_convert(button).is_err() {
                         return self.error(Error::UnknownButton(button));
                     }
-
                     if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
                         return Command::none();
                     }
-
                     let button_num = mouse_button_code_convert(button).unwrap();
+                    if !self.pressed_mouse_buttons.contains_key(&button_num) {
+                        return Command::none();
+                    }
                     if self
                         .pressed_mouse_buttons
                         .get(&button_num)
                         .unwrap()
-                        .0
                         .elapsed()
                         .as_millis()
                         < self.settings.min_press_time
@@ -366,7 +345,6 @@ impl Application for NuhxBoard {
                                         .pressed_mouse_buttons
                                         .get(&button_num)
                                         .unwrap()
-                                        .0
                                         .elapsed()
                                         .as_millis())
                                 .try_into()
@@ -374,16 +352,8 @@ impl Application for NuhxBoard {
                             )),
                             move |_| Message::button_release(button),
                         );
-                    } else {
-                        match &mut self.pressed_mouse_buttons.get_mut(&button_num).unwrap().1 {
-                            1 => {
-                                self.pressed_mouse_buttons.remove(&button_num);
-                            }
-                            n => {
-                                *n -= 1;
-                            }
-                        }
                     }
+                    self.pressed_mouse_buttons.remove(&button_num);
                 }
                 rdev::EventType::Wheel { delta_x, delta_y } => {
                     let button;
