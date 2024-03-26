@@ -6,12 +6,12 @@ use crate::{
 };
 use iced::{
     widget::{
-        button, canvas, checkbox, column, container, horizontal_space, pick_list, radio, row, text,
-        text_input,
+        button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
+        row, text, text_input,
     },
     window, Length, Renderer, Theme,
 };
-use iced_aw::{number_input, ContextMenu, SelectionList};
+use iced_aw::{native::FloatingElement, number_input, ContextMenu, SelectionList};
 use serde::{Deserialize, Serialize};
 
 const CONTEXT_MENU_WIDTH: f32 = 160.0;
@@ -38,7 +38,7 @@ impl NuhxBoard {
             .height(Length::Fill)
             .width(Length::Fill);
 
-        ContextMenu::new(canvas, || {
+        let context_menu = ContextMenu::new(canvas, || {
             let load_keyboard_window_message = match self.load_keyboard_window_id {
                 Some(_) => None,
                 None => Some(Message::OpenLoadKeyboardWindow),
@@ -102,8 +102,17 @@ impl NuhxBoard {
             container(column(menu))
                 .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
                 .into()
-        })
-        .into()
+        });
+        if self.style.background_image_file_name.is_some() {
+            let image_path = self.keyboards_path.parent().unwrap().join("background.png");
+            FloatingElement::new(
+                image(image_path).height(Length::Fill).width(Length::Fill),
+                context_menu,
+            )
+            .into()
+        } else {
+            context_menu.into()
+        }
     }
 
     pub fn draw_load_keyboard_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {

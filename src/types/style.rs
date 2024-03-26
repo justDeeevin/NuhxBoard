@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 pub struct Style {
     #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
-    // TODO: Implement background image
     #[serde(rename = "BackgroundImageFileName")]
     pub background_image_file_name: Option<String>,
     #[serde(rename = "DefaultKeyStyle")]

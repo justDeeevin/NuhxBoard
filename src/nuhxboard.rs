@@ -7,6 +7,7 @@ use display_info::DisplayInfo;
 use iced::{
     advanced::graphics::core::SmolStr, multi_window::Application, widget::canvas::Cache, window, Color, Command, Renderer, Subscription, Theme
 };
+use image::io::Reader;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
@@ -521,6 +522,21 @@ impl Application for NuhxBoard {
                     Ok(style) => style,
                     Err(e) => return self.error(Error::StyleParse(e)),
                 };
+
+                if let Some(name) = &self.style.background_image_file_name {
+                    let path = self.keyboards_path.join(&self.settings.category).join("images").join(name);
+                    if !name.is_empty() && path.exists() {
+                        Reader::open(path).unwrap().decode().unwrap().resize_exact(
+                             self.config.width as u32,
+                            self.config.height as u32,
+                            image::imageops::FilterType::Nearest,
+                        ).save(self.keyboards_path.parent().unwrap().join("background.png")).unwrap();
+                    } else {
+                        let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+                    }
+                } else {
+                    let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+                }
             }
             Message::WindowClosed(id) => {
                 if Some(id) == self.load_keyboard_window_id {
