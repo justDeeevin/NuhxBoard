@@ -16,11 +16,19 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 #### Other additions
 
 - Nix support. [#7](https://github.com/justdeeevin/nuhxboard/pull/7)
+- Some example keyboards are downloaded if none are present. [e7bc762](https://github.com/justdeeevin/nuhxboard/commits/e7bc7623d35056860e2005927a31eb115346a0a0)
 
 ### Fixed
 
 - The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commits/6594a7553115938b6de4f15411f5c930939bce74)
 - Holding keys for an extended time period causing them to never being released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commits/bb12d9960a3d6bf003662af6445794d4f8472a23)
+- Font size not changing with key pressed/loose state. [6726d1c](https://github.com/justdeeevin/nuhxboard/commits/6726d1cb5c86770177ae62bf5902bfc6ad98c2cd)
+
+### Changed
+
+- Desktop entry creation can be disabled. [5ac9afc](https://github.com/justdeeevin/nuhxboard/commits/5ac9afc324523390058da44e849040d3ecdba732)
+- Primary display is marked as such in list of displays in settings menu. [f2e0a00](https://github.com/justdeeevin/nuhxboard/commits/f2e0a00d6fd93f47f6cd9111f8452e2e2d344fec)
+- `Version` property of keyboard layout is now optional. [79a3162](https://github.com/justdeeevin/nuhxboard/commits/79a3162acdf7de5606f48b6aa7535f39d321cb06)
 
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
