@@ -20,6 +20,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - Support for _window_ background images (not keys yet). [11fcdde](https://github.com/justdeeevin/nuhxboard/commit/11fcdded31b17fadfae1dfb79f21803d3d7da9fa)
 - Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commit/f1c04a61dff29c7406cd297261292a60f80ad74d)
 - Version info in settings menu. [c46943d](https://github.com/justdeeevin/nuhxboard/commit/c46943d0d1c25499b3382aca8d29a7e5b74c2e4f)
+- Labels for the layout and style picklists in the load keyboard menu. [2805261](https://github.com/justdeeevin/nuhxboard/commit/28052612b8a0a120e8f0f5c47b372d69922e108d)
 
 ### Fixed
 
