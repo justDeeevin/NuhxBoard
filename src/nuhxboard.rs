@@ -54,6 +54,7 @@ pub struct NuhxBoard {
     pub save_style_as_window_id: Option<window::Id>,
     pub save_style_as_name: String,
     pub save_style_as_global: bool,
+    pub update_text_position: bool,
 }
 
 #[derive(Default)]
@@ -122,7 +123,8 @@ pub enum Message {
     ChangeSaveKeyboardAsCategory(String),
     ChangeSaveKeyboardAsName(String),
     ChangeSaveStyleAsName(String),
-    ToggleSaveStyleAsGlobal
+    ToggleSaveStyleAsGlobal,
+    ToggleUpdateTextPosition,
 }
 
 #[derive(Debug, Clone)]
@@ -251,6 +253,7 @@ impl Application for NuhxBoard {
                 save_style_as_window_id: None,
                 save_style_as_name: "".into(),
                 save_style_as_global: false,
+                update_text_position: false,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -645,7 +648,7 @@ impl Application for NuhxBoard {
                 self.edit_mode = !self.edit_mode;
             }
             Message::MoveElement { index, delta } => {
-                self.config.elements[index].translate(delta);
+                self.config.elements[index].translate(delta, self.update_text_position);
             }
             Message::SaveKeyboard(file) => {
                 let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
@@ -711,7 +714,7 @@ impl Application for NuhxBoard {
                     self.history_depth += 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth] {
                         Change::MoveElement { index, delta } => {
-                            self.config.elements[index].translate(-delta);
+                            self.config.elements[index].translate(-delta, self.update_text_position);
                         }
                     }
                 }
@@ -721,7 +724,7 @@ impl Application for NuhxBoard {
                     self.history_depth -= 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
                         Change::MoveElement { index, delta } => {
-                            self.config.elements[index].translate(delta);
+                            self.config.elements[index].translate(delta, self.update_text_position);
                         }
                     }
                 }
@@ -765,6 +768,9 @@ impl Application for NuhxBoard {
             }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
+            }
+            Message::ToggleUpdateTextPosition => {
+                self.update_text_position = !self.update_text_position;
             }
         }
         self.canvas.clear();

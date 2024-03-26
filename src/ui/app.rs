@@ -74,6 +74,12 @@ impl NuhxBoard {
 
             if self.edit_mode {
                 menu.append(&mut vec![
+                    checkbox("Update Text Position", self.update_text_position)
+                        .on_toggle(|_| Message::ToggleUpdateTextPosition)
+                        .style(iced::theme::Checkbox::Custom(Box::new(
+                            ContextMenuCheckBox {},
+                        )))
+                        .into(),
                     button("Keyboard Properties")
                         .on_press(Message::OpenKeyboardProperties)
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))

@@ -23,7 +23,7 @@ pub enum BoardElement {
 }
 
 impl BoardElement {
-    pub fn translate(&mut self, delta: geo::Coord) {
+    pub fn translate(&mut self, delta: geo::Coord, move_text: bool) {
         match self {
             BoardElement::MouseSpeedIndicator(key) => {
                 key.location += delta;
@@ -38,14 +38,16 @@ impl BoardElement {
                 for boundary in boundaries {
                     *boundary += delta;
                 }
-                let text_position = match self {
-                    BoardElement::KeyboardKey(key) => &mut key.text_position,
-                    BoardElement::MouseKey(key) => &mut key.text_position,
-                    BoardElement::MouseScroll(key) => &mut key.text_position,
-                    _ => return,
-                };
+                if move_text {
+                    let text_position = match self {
+                        BoardElement::KeyboardKey(key) => &mut key.text_position,
+                        BoardElement::MouseKey(key) => &mut key.text_position,
+                        BoardElement::MouseScroll(key) => &mut key.text_position,
+                        _ => return,
+                    };
 
-                *text_position += delta;
+                    *text_position += delta;
+                }
             }
         }
     }
