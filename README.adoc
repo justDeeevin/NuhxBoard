@@ -50,7 +50,7 @@ Keyboards are located in `~/.local/share/NuhxBoard/keyboards`. Here's the genera
 
 This folder will be populated on first run with some example keyboards and categories. You can inspect it yourself to get a good idea of how this looks in practice.
 
-To load a keyboard and style, right-click anywhere in NuhxBoard to open the global context menu and click on "Load Keyboard". This will open a new window. The drop-down list labeled "Categories" allows you to select a category. When a category has been selected, the keyboards available in that category will appear in a list on the left side of the vertical line. When you click on one of these options, your selection of keyboard layout will be loaded, and that keyboard layout's available styles will appear in a list on the right side of the vertical line. When you click on one of these options, your selection of style will be loaded. You can change you selection of keyboard layout and style at any time through this interface.
+To load a keyboard and style, right-click anywhere in NuhxBoard to open the global context menu and click on "Load Keyboard". This will open a new window. The drop-down list labeled "Categories" allows you to select a category. When a category has been selected, the keyboards available in that category will appear in a list on the left side of the vertical line. When you click on one of these options, your selection of keyboard layout will be loaded, and that keyboard layout's available styles will appear in a list on the right side of the vertical line. When you click on one of these options, your selection of style will be loaded. You can change your selection of keyboard layout and style at any time through this interface.
 
 === Keyboard Layouts
 
@@ -168,7 +168,7 @@ These properties are shared by KeyboardKeys, MouseKeys, and MouseScrolls.
 Id:: Each element has a unique Id. Style files can apply styles to specific keys by referring to their Id.
 Boundaries:: Elements' shapes are defined by an array of points, their vertices. When no image is specified for an element, it is drawn by connecting lines between each point in the order they appear in the list (including closing the shape by connecting the last vertex to the first), then filling the polygon formed. Even if an element has an image specified, the boundaries are used for the graphical layout editor to know when your cursor is hovering over an element.
 TextPosition:: The point where the top-left corner of the element's text is to be. Technically, this can be anywhere in the window.
-KeyCodes:: An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! In a future release, there will be a tool in the element properties menu of the graphical layout editor that will help to figure out which key corresponds to which keycode. For the time being, you chan check xref:KEYCODES.adoc[this document] for conversion.
+KeyCodes:: An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! In a future release, there will be a tool in the element properties menu of the graphical layout editor that will help to figure out which key corresponds to which keycode. For the time being, you can check xref:KEYCODES.adoc[this document] for conversion.
 Text:: The text to display on the key.
 
 ---
@@ -294,7 +294,7 @@ pub enum ElementStyleUnion {
 
 All images are stored in the `images` directory in the *category*. Images are refferred to by name, *including the file extension*.
 
-All colors are represented as an object with three properties: Red, Green, and Blue. Each is an integer between 0 and 255.
+All colors are represented as an object with three properties: `Red`, `Green`, and `Blue`. Each is an integer between 0 and 255.
 
 BackgroundColor:: The color of the background. Will be overriden by a background image if one is specified.
 BackgroundImageFileName:: The name of the image file to use as the background. This is optional.
