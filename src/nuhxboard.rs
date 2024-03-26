@@ -262,8 +262,8 @@ impl Application for NuhxBoard {
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
-                    if let Err(bad_key) = keycode_convert(key) {
-                        return self.error(Error::UnknownKey(bad_key));
+                    if keycode_convert(key).is_err() {
+                        return self.error(Error::UnknownKey(key));
                     }
                     if key == rdev::Key::CapsLock
                         && self.settings.capitalization == Capitalization::Follow
@@ -281,8 +281,8 @@ impl Application for NuhxBoard {
                         .or_insert((Instant::now(), 1));
                 }
                 rdev::EventType::KeyRelease(key) => {
-                    if let Err(bad_key) = keycode_convert(key) {
-                        return self.error(Error::UnknownKey(bad_key));
+                    if keycode_convert(key).is_err() {
+                        return self.error(Error::UnknownKey(key));
                     }
                     let key_num = keycode_convert(key).unwrap();
                     if !self.pressed_keys.contains_key(&key_num) {
@@ -323,8 +323,8 @@ impl Application for NuhxBoard {
                     }
                 }
                 rdev::EventType::ButtonPress(button) => {
-                    if let Err(bad_button) = mouse_button_code_convert(button) {
-                        return self.error(Error::UnknownButton(bad_button));
+                    if mouse_button_code_convert(button).is_err() {
+                        return self.error(Error::UnknownButton(button));
                     }
 
                     if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
@@ -341,8 +341,8 @@ impl Application for NuhxBoard {
                         .or_insert((Instant::now(), 1));
                 }
                 rdev::EventType::ButtonRelease(button) => {
-                    if let Err(bad_button) = mouse_button_code_convert(button) {
-                        return self.error(Error::UnknownButton(bad_button));
+                    if mouse_button_code_convert(button).is_err() {
+                        return self.error(Error::UnknownButton(button));
                     }
 
                     if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
