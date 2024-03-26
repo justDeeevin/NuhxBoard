@@ -1,6 +1,6 @@
 use crate::{
     logic::{code_convert::*, listener},
-    types::{config::*, settings::*, style::*},
+    types::{config::*, settings::*, style::*}, ui::app::DisplayChoice,
 };
 use async_std::task::sleep;
 use display_info::DisplayInfo;
@@ -112,7 +112,7 @@ pub enum Setting {
     MouseSensitivity(f32),
     ScrollHoldTime(u64),
     CenterMouse,
-    DisplayId(u32),
+    DisplayChoice(DisplayChoice),
     MinPressTime(u128),
     WindowTitle(String),
     Capitalization(Capitalization),
@@ -392,7 +392,7 @@ impl Application for NuhxBoard {
                     let mut center = (0.0, 0.0);
 
                     for display in &self.display_options {
-                        if display.id == self.settings.display_id {
+                        if display.id == self.settings.display_choice.id {
                             center = (
                                 display.x as f32 + (display.width as f32 / 2.0),
                                 display.height as f32 / 2.0,
@@ -562,8 +562,8 @@ impl Application for NuhxBoard {
                 Setting::CenterMouse => {
                     self.settings.mouse_from_center = !self.settings.mouse_from_center;
                 }
-                Setting::DisplayId(id) => {
-                    self.settings.display_id = id;
+                Setting::DisplayChoice(choice) => {
+                    self.settings.display_choice = choice;
                 }
                 Setting::MinPressTime(time) => {
                     self.settings.min_press_time = time;

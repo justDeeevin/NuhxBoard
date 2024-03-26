@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     nuhxboard::*,
     types::{settings::*, stylesheets::*},
@@ -10,8 +12,25 @@ use iced::{
     window, Length, Renderer, Theme,
 };
 use iced_aw::{number_input, ContextMenu, SelectionList};
+use serde::{Deserialize, Serialize};
 
 const CONTEXT_MENU_WIDTH: f32 = 160.0;
+
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
+pub struct DisplayChoice {
+    pub id: u32,
+    pub primary: bool,
+}
+
+impl Display for DisplayChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.primary {
+            write!(f, "{} (primary)", self.id)
+        } else {
+            write!(f, "{}", self.id)
+        }
+    }
+}
 
 impl NuhxBoard {
     pub fn draw_main_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
@@ -164,6 +183,15 @@ impl NuhxBoard {
     }
 
     pub fn draw_settings_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
+        let display_choices = self
+            .display_options
+            .iter()
+            .map(|display| DisplayChoice {
+                id: display.id,
+                primary: display.is_primary,
+            })
+            .collect::<Vec<_>>();
+
         let input = column![
             row![
                 text("Mouse sensitivity: ").size(12),
@@ -194,14 +222,9 @@ impl NuhxBoard {
             .on_toggle(|_| { Message::ChangeSetting(Setting::CenterMouse) }),
             row![
                 text("Display to use: ").size(12),
-                pick_list(
-                    self.display_options
-                        .iter()
-                        .map(|d| d.id)
-                        .collect::<Vec<_>>(),
-                    Some(self.settings.display_id),
-                    |v| Message::ChangeSetting(Setting::DisplayId(v))
-                )
+                pick_list(display_choices, Some(&self.settings.display_choice), |v| {
+                    Message::ChangeSetting(Setting::DisplayChoice(v))
+                })
                 .text_size(12)
             ]
             .padding(5)

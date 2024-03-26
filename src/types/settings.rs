@@ -1,5 +1,7 @@
 use display_info::DisplayInfo;
 
+use crate::ui::app::DisplayChoice;
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub capitalization: Capitalization,
@@ -13,7 +15,8 @@ pub struct Settings {
     pub min_press_time: u128,
     pub scroll_hold_time: u64,
     pub window_title: String,
-    pub display_id: u32,
+    pub display_choice: DisplayChoice,
+    pub auto_desktop_entry: bool,
 }
 
 impl Default for Settings {
@@ -40,7 +43,11 @@ impl Default for Settings {
             min_press_time: 0,
             scroll_hold_time: 100,
             window_title: "NuhxBoard".into(),
-            display_id,
+            display_choice: DisplayChoice {
+                id: display_id,
+                primary: true,
+            },
+            auto_desktop_entry: true,
         }
     }
 }
