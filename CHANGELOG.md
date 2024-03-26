@@ -20,6 +20,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 ### Fixed
 
 - The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commits/6594a7553115938b6de4f15411f5c930939bce74)
+- Holding keys for an extended time period causing them to never being released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commits/bb12d9960a3d6bf003662af6445794d4f8472a23)
 
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
