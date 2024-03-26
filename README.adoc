@@ -4,6 +4,14 @@
 
 :source-highlighter: highlight.js
 
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
 :repo-files: https://github.com/justDeeevin/NuhxBoard/raw/main
 :shields: https://img.shields.io
 
@@ -316,8 +324,6 @@ This is unimplemented.
 The name of the image file to use as the background of the key.
 
 ---
-
-IMPORTANT: This is a test
 
 ==== MouseSpeedIndicatorStyle
 
