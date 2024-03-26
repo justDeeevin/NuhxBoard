@@ -2,6 +2,8 @@
 :toc-placement!:
 :toclevels: 4
 
+:source-highlighter: highlight.js
+
 :repo-files: https://github.com/justDeeevin/NuhxBoard/raw/main
 :shields: https://img.shields.io
 
@@ -31,6 +33,7 @@ Keyboards are located in `~/.local/share/NuhxBoard/keyboards`. Here's the genera
 
 * keyboards/
 ** [CATEGORY NAME]/
+*** images/
 *** [KEYBOARD NAME]/
 **** keyboard.json
 **** [STYLE NAME].style
@@ -135,15 +138,14 @@ pub struct SerializablePoint {
 
 If you can make sense of that, then good for you! Otherwise, here's an actual explanation of how a keyboard layout is defined.
 
----
-
 ==== Top-Level Properties
+
+All points are represented as an object with an `X` and `Y` property.
 
 Version:: No actual meaning. Kept for parity with NohBoard layout files.
 Width:: Width of the window in pixels.
 Height:: Height of the window in pixels.
 Elements:: Array of elements in the layout.
-
 
 ==== Elements
 
@@ -176,13 +178,158 @@ ChangeOnCaps:: Whether or not to follow the state of caps lock (generally, this 
 
 MouseSpeedIndicators are drawn differently, behave differently, and thus are defined differently. They have IDs, but none of the other shared properties.
 
-MouseSpeedIndicators are made up of a filled inner circle and an unfilled outer circle. There is a triangle extending to a point along the outer ring. The direction of the triangle indicates the direction of the velocity of the mouse, and the closness of the triangle's end to the outer ring indicates the magnitude.
+MouseSpeedIndicators are made up of a filled inner circle and an unfilled outer ring. There is a triangle extending to a point along the outer ring. The direction of the triangle indicates the direction of the velocity of the mouse, and the closness of the triangle's end to the outer ring indicates the magnitude.
 
 image:media/mousespeedindicator.png[MouseSpeedIndicator example]
 
 
 Location:: The center of the circle
 Radius:: The radius of the outer ring. The inner ring is 20% of this radius.
+
+---
+
+=== Styles
+
+Styles describe colors, fonts, and (in a later release) images with which to display a keyboard layout. Proper styling is crucial to making a good keyboard layout.
+
+Again, here's the type definition in rust:
+
+[source, rust]
+----
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Style {
+    #[serde(rename = "BackgroundColor")]
+    pub background_color: NohRgb,
+    #[serde(rename = "BackgroundImageFileName")]
+    pub background_image_file_name: Option<String>,
+    #[serde(rename = "DefaultKeyStyle")]
+    pub default_key_style: KeyStyle,
+    #[serde(rename = "DefaultMouseSpeedIndicatorStyle")]
+    pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
+    #[serde(rename = "ElementStyles")]
+    pub element_styles: Vec<ElementStyle>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NohRgb {
+    #[serde(rename = "Red")]
+    pub red: f32,
+    #[serde(rename = "Green")]
+    pub green: f32,
+    #[serde(rename = "Blue")]
+    pub blue: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct KeyStyle {
+    #[serde(rename = "Loose")]
+    pub loose: Option<KeySubStyle>,
+    #[serde(rename = "Pressed")]
+    pub pressed: Option<KeySubStyle>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct KeySubStyle {
+    #[serde(rename = "Background")]
+    pub background: NohRgb,
+    #[serde(rename = "Text")]
+    pub text: NohRgb,
+    #[serde(rename = "Outline")]
+    pub outline: NohRgb,
+    #[serde(rename = "ShowOutline")]
+    pub show_outline: bool,
+    #[serde(rename = "OutlineWidth")]
+    pub outline_width: u32,
+    #[serde(rename = "Font")]
+    pub font: Font,
+    #[serde(rename = "BackgroundImageFileName")]
+    pub background_image_file_name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Font {
+    #[serde(rename = "FontFamily")]
+    pub font_family: String,
+    #[serde(rename = "Size")]
+    pub size: f32,
+    #[serde(rename = "Style")]
+    pub style: u8,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MouseSpeedIndicatorStyle {
+    #[serde(rename = "InnerColor")]
+    pub inner_color: NohRgb,
+    #[serde(rename = "OuterColor")]
+    pub outer_color: NohRgb,
+    #[serde(rename = "OutlineWidth")]
+    pub outline_width: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ElementStyle {
+    #[serde(rename = "Key")]
+    pub key: u32,
+    #[serde(rename = "Value")]
+    pub value: ElementStyleUnion,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "__type")]
+pub enum ElementStyleUnion {
+    KeyStyle(KeyStyle),
+    MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
+}
+----
+
+==== Top-Level Properties
+
+All images are stored in the `images` directory in the *category*. Images are refferred to by name, *including the file extension*.
+
+All colors are represented as an object with three properties: Red, Green, and Blue. Each is an integer between 0 and 255.
+
+BackgroundColor:: The color of the background. Will be overriden by a background image if one is specified.
+BackgroundImageFileName:: The name of the image file to use as the background. This is optional.
+DefaultKeyStyle:: The default style to use for all "keys" (every element besides MouseSpeedIndicators). This _must be spicified_.
+DefaultMouseSpeedIndicatorStyle:: The default style to use for all MouseSpeedIndicators. This _must be specified_.
+ElementStyles:: An array of ElementStyle objects. Each ElementStyle object has a `Key` property, which is the Id of the element to which the style should be applied, and a `Value` property, which is either a KeyStyle or a MouseSpeedIndicatorStyle. Again, each item indicates its type with the `__type` property.
+
+---
+
+==== KeyStyle
+
+KeyStyles just list which style to use for when a key is `Pressed` or `Loose` (not pressed). The actual style is defined in the KeySubStyle object, with these properties:
+
+Background:: The color of the key.
+Text:: The color of the text on the key.
+Outline:: The color of the outline around the key.
+ShowOutline:: Whether or not to draw an outline around the key.
+OutlineWidth:: The width of the outline in pixels.
+Font:: The font to use for the text on the key. See <<Fonts>> for more information.
+BackgroundImageFileName::
++
+[IMPORTANT]
+====
+This is unimplemented.
+====
++
+The name of the image file to use as the background of the key.
+
+---
+
+==== MouseSpeedIndicatorStyle
+
+InnerColor:: The color of the filled inner circle.
+OuterColor:: The color of the outer ring.
+OutlineWidth:: The width of the outer ring.
+
+---
+
+==== Fonts
+
+FontFamily:: The name of the font to use. This is the name of the font as it appears in the system's font list.
+Size:: The size of the font in pixels.
+Style:: A bitfield representing the style of the font. From least to most significant, the first bit is bold, the second italic, the third underline, and the fourth strikethrough. These effects can be combined. As an example, if I wanted bold and italicized text, I would set style to `3`, which is `0011` in binary.
 
 == Installation
 
