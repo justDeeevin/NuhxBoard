@@ -481,7 +481,7 @@ impl Application for NuhxBoard {
                 if self.startup {
                     self.startup = false;
                     let keyboard = self.keyboard.unwrap();
-                    return Command::perform(noop(), move |_| Message::LoadKeyboard(keyboard));
+                    return self.update(Message::LoadKeyboard(keyboard));
                 }
             }
             Message::LoadKeyboard(keyboard) => {
