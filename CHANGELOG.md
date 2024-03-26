@@ -51,7 +51,7 @@ As of [iced_aw#209](https://github.com/iced-rs/iced_aw/pull/209), `iced_aw` is o
 
 ### Fixed
 
-- Certain characters not rendering. [dfa8f08](https://githb.com/justdeeevin/commit/dfa8f08d577b4296bc0f8a478bcbc4349c5ed8f8)
+- Certain characters not rendering. [dfa8f08](https://github.com/justdeeevin/commit/dfa8f08d577b4296bc0f8a478bcbc4349c5ed8f8)
 
 ## [v0.5.1](https://github.com/justdeeevin/nuhxboard/releases/v0.5.1) - 2024-2-20
 
