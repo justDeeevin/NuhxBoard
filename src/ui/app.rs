@@ -84,8 +84,18 @@ impl NuhxBoard {
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                         .into(),
+                    button("Save Keyboard As...")
+                        .on_press(Message::OpenSaveKeyboardAs)
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                        .into(),
                     button("Save Style")
                         .on_press(Message::SaveStyle(None))
+                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                        .into(),
+                    button("Save Style As...")
+                        .on_press(Message::OpenSaveStyleAs)
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                         .into(),
@@ -351,6 +361,61 @@ impl NuhxBoard {
                 number_input(self.config.height, f32::MAX, Message::SetHeight)
             ]
             .align_items(iced::Alignment::Center)
+        ]
+        .into()
+    }
+
+    pub fn draw_save_keyboard_as_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
+        column![
+            row![
+                text("Category: "),
+                text_input(
+                    self.settings.category.as_str(),
+                    &self.save_keyboard_as_category,
+                )
+                .on_input(Message::ChangeSaveKeyboardAsCategory)
+            ],
+            row![
+                text("Name: "),
+                text_input(
+                    &self.keyboard_options[self.keyboard.unwrap()],
+                    &self.save_keyboard_as_name,
+                )
+                .on_input(Message::ChangeSaveKeyboardAsName)
+            ],
+            button("Save").on_press(Message::SaveKeyboard(Some(
+                self.keyboards_path
+                    .join(&self.save_keyboard_as_category)
+                    .join(&self.save_keyboard_as_name)
+                    .join("keyboard.json")
+            ))),
+        ]
+        .into()
+    }
+
+    pub fn draw_save_style_as_window(&self) -> iced::Element<'_, Message, Theme, Renderer> {
+        column![
+            row![
+                text("Name: "),
+                text_input(
+                    &self.style_options[self.style_choice.unwrap()].name(),
+                    &self.save_style_as_name,
+                )
+                .on_input(Message::ChangeSaveStyleAsName)
+            ],
+            checkbox("Save as global", self.save_style_as_global)
+                .on_toggle(|_| Message::ToggleSaveStyleAsGlobal),
+            button("Save").on_press(Message::SaveStyle(Some(match self.save_style_as_global {
+                true => self
+                    .keyboards_path
+                    .join("global")
+                    .join(format!("{}.style", &self.save_style_as_name)),
+                false => self
+                    .keyboards_path
+                    .join(&self.settings.category)
+                    .join(&self.keyboard_options[self.keyboard.unwrap()])
+                    .join(format!("{}.style", &self.save_style_as_name)),
+            }))),
         ]
         .into()
     }

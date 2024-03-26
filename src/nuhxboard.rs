@@ -48,6 +48,12 @@ pub struct NuhxBoard {
     pub keyboard_properties_window_id: Option<window::Id>,
     pub edit_history: Vec<Change>,
     pub history_depth: usize,
+    pub save_keyboard_as_window_id: Option<window::Id>,
+    pub save_keyboard_as_category: String,
+    pub save_keyboard_as_name: String,
+    pub save_style_as_window_id: Option<window::Id>,
+    pub save_style_as_name: String,
+    pub save_style_as_global: bool,
 }
 
 #[derive(Default)]
@@ -60,6 +66,19 @@ pub enum StyleChoice {
     Default,
     Global(String),
     Custom(String),
+}
+
+impl StyleChoice {
+    pub fn is_global(&self) -> bool {
+        matches!(self, StyleChoice::Global(_))
+    }
+
+    pub fn name(&self) -> String {
+        match self {
+            Self::Global(name) => name.clone(),
+            _ => self.to_string(),
+        }
+    }
 }
 
 impl std::fmt::Display for StyleChoice {
@@ -97,7 +116,13 @@ pub enum Message {
     OpenKeyboardProperties,
     PushChange(Change),
     Undo,
-    Redo
+    Redo,
+    OpenSaveKeyboardAs,
+    OpenSaveStyleAs,
+    ChangeSaveKeyboardAsCategory(String),
+    ChangeSaveKeyboardAsName(String),
+    ChangeSaveStyleAsName(String),
+    ToggleSaveStyleAsGlobal
 }
 
 #[derive(Debug, Clone)]
@@ -220,6 +245,12 @@ impl Application for NuhxBoard {
                 keyboard_properties_window_id: None,
                 edit_history: vec![],
                 history_depth: 0,
+                save_keyboard_as_window_id: None,
+                save_keyboard_as_category: "".into(),
+                save_keyboard_as_name: "".into(),
+                save_style_as_window_id: None,
+                save_style_as_name: "".into(),
+                save_style_as_global: false,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -240,6 +271,10 @@ impl Application for NuhxBoard {
             "Settings".to_owned()
         } else if Some(window) == self.keyboard_properties_window_id {
             "Keyboard Properties".to_owned()
+        } else if Some(window) == self.save_keyboard_as_window_id {
+            "Save Keyboard As".to_owned()
+        } else if Some(window) == self.save_style_as_window_id {
+            "Save Style As".to_owned()
         } else {
             unreachable!()
         }
@@ -618,6 +653,7 @@ impl Application for NuhxBoard {
                     self.settings.category,
                     self.keyboard_options[self.keyboard.unwrap()]
                 )));
+                fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.config).unwrap();
             }
@@ -690,6 +726,46 @@ impl Application for NuhxBoard {
                     }
                 }
             }
+            Message::OpenSaveKeyboardAs => {
+                let (id, command) = window::spawn(window::Settings {
+                    size: iced::Size {
+                        width: 400.0,
+                        height: 100.0,
+                    },
+                    resizable: false,
+                    ..Default::default()
+                });
+                self.save_keyboard_as_window_id = Some(id);
+                self.save_keyboard_as_category.clone_from(&self.settings.category);
+                self.save_keyboard_as_name.clone_from(&self.keyboard_options[self.keyboard.unwrap()]);
+                return command;
+            }
+            Message::OpenSaveStyleAs => {
+                let (id, command) = window::spawn(window::Settings {
+                    size: iced::Size {
+                        width: 400.0,
+                        height: 100.0,
+                    },
+                    resizable: false,
+                    ..Default::default()
+                });
+                self.save_style_as_window_id = Some(id);
+                self.save_style_as_name = self.style_options[self.style_choice.unwrap()].name();
+                self.save_style_as_global = self.style_options[self.style_choice.unwrap()].is_global();
+                return command;
+            }
+            Message::ChangeSaveKeyboardAsCategory(category) => {
+                self.save_keyboard_as_category = category;
+            }
+            Message::ChangeSaveKeyboardAsName(name) => {
+                self.save_keyboard_as_name = name;
+            }
+            Message::ChangeSaveStyleAsName(name) => {
+                self.save_style_as_name = name;
+            }
+            Message::ToggleSaveStyleAsGlobal => {
+                self.save_style_as_global = !self.save_style_as_global;
+            }
         }
         self.canvas.clear();
         Command::none()
@@ -706,6 +782,10 @@ impl Application for NuhxBoard {
             self.draw_settings_window()
         } else if Some(window) == self.keyboard_properties_window_id {
             self.draw_keyboard_properties_window()
+        } else if Some(window) == self.save_keyboard_as_window_id {
+            self.draw_save_keyboard_as_window()
+        } else if Some(window) == self.save_style_as_window_id {
+            self.draw_save_style_as_window()
         } else {
             unreachable!()
         }
