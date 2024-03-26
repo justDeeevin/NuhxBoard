@@ -341,7 +341,21 @@ Style:: A bitfield representing the style of the font. From least to most signif
 
 ---
 
-=== Caveats
+=== Settings
+
+In the global context menu, there is a "Settings" button, which opens a window with the following options:
+
+Automatically create a desktop entry if none exists::
+Mouse sensitivity:: The sensitivity of the MouseSpeedIndicator.
+Scroll hold time (ms):: Time in milliseconts to highlight a mouse scroll key when a scroll is detected.
+Calculate mouse speed from center of screen:: Some games recenter the mouse every frame. If you find that you're looking around ingame but the MouseSpeedIndicator is behaving strangely, try turning this option on.
+Display to use:: The ID of the display to use for the above option. The primary monitor is marked as such, but if you have many monitors, you'll probably have to use trial and error to determine which is which.
+Show keypresses for at least _ ms:: If you press and immediately release a key, it will stay highlighted for this many milliseconds. If you hold a key down, it will stay highlighted for this many milliseconds after its release. 
+Window title::
+Follow Caps-Lock and Shift:: These three radio buttons allow you to fine-tune capitalization behavior. With the last two options selected, caps lock will be ignored everywhere, and instead all keys will either be capitalized or lowercase depending upon your selection. The two checkboxes to the right allow you to still follow shift for certain keys. Think of this as allowing you to force caps lock to be either on or off for all keys. For instance, when NuhxBoard is configured to show all buttons capitalized but still follow shift for all keys, when shift is held, all keys will be lowercase, similar to if shift were held while caps lock was followed and enabled.
+//
+
+== Caveats
 
 On Windows and Linux under Wayland, NuhxBoard can't capture input while focused. This can't be fixed right now, but a future release of the UI library will allow it to be. On Linux under Walyand, this is actually a symptom of a larger issue. Wayland provides no method of globally listening to input events. NuhxBoard still works most of the time because of XWayland, but when a Wayland-native app (such as NuhxBoard itself) has focus, NuhxBoard stops working. This shouldn't be a real dealbreaker for a while, though, since Wayland-native apps are still relavively few and far between, especially with games.
 
