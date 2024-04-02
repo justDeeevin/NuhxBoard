@@ -39,37 +39,31 @@ impl NuhxBoard {
             .width(Length::Fill);
 
         let context_menu = ContextMenu::new(canvas, || {
-            let load_keyboard_window_message = match self.load_keyboard_window_id {
-                Some(_) => None,
-                None => Some(Message::OpenLoadKeyboard),
-            };
-
-            let settings_window_message = match self.settings_window_id {
-                Some(_) => None,
-                None => Some(Message::OpenSettings),
-            };
-
-            let toggle_button_label = match self.edit_mode {
-                true => "Stop Editing",
-                false => "Start Editing",
-            };
-
             let mut menu = vec![
                 button("Settings")
-                    .on_press_maybe(settings_window_message.clone())
+                    .on_press_maybe(match self.settings_window_id {
+                        Some(_) => None,
+                        None => Some(Message::OpenSettings),
+                    })
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
                 button("Load Keyboard")
-                    .on_press_maybe(load_keyboard_window_message.clone())
+                    .on_press_maybe(match self.load_keyboard_window_id {
+                        Some(_) => None,
+                        None => Some(Message::OpenLoadKeyboard),
+                    })
                     .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                     .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
-                button(toggle_button_label)
-                    .on_press(Message::ToggleEditMode)
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                    .into(),
+                button(match self.edit_mode {
+                    true => "Stop Editing",
+                    false => "Start Editing",
+                })
+                .on_press(Message::ToggleEditMode)
+                .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+                .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                .into(),
             ];
 
             if self.edit_mode {
@@ -81,7 +75,10 @@ impl NuhxBoard {
                         )))
                         .into(),
                     button("Keyboard Properties")
-                        .on_press(Message::OpenKeyboardProperties)
+                        .on_press_maybe(match self.keyboard_properties_window_id {
+                            Some(_) => None,
+                            None => Some(Message::OpenKeyboardProperties),
+                        })
                         .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
                         .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                         .into(),
