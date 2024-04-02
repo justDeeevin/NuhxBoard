@@ -441,6 +441,7 @@ impl canvas::Program<Message> for NuhxBoard {
                             Message::PushChange(Change::MoveElement {
                                 index,
                                 delta: state.delta_accumulator,
+                                move_text: self.update_text_position,
                             })
                         });
                         state.delta_accumulator = Coord::default();

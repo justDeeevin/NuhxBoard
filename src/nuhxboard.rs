@@ -132,6 +132,7 @@ pub enum Change {
     MoveElement{
         index: usize,
         delta: geo::Coord,
+        move_text: bool,
     },
 }
 
@@ -710,21 +711,23 @@ impl Application for NuhxBoard {
                 self.edit_history.push(change);
             }
             Message::Undo => {
+                println!("Undo");
                 if self.history_depth < self.edit_history.len() {
                     self.history_depth += 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth] {
-                        Change::MoveElement { index, delta } => {
-                            self.config.elements[index].translate(-delta, self.update_text_position);
+                        Change::MoveElement { index, delta, move_text } => {
+                            self.config.elements[index].translate(-delta, move_text);
                         }
                     }
                 }
             }
             Message::Redo => {
+                println!("Redo");
                 if self.history_depth > 0 {
                     self.history_depth -= 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
-                        Change::MoveElement { index, delta } => {
-                            self.config.elements[index].translate(delta, self.update_text_position);
+                        Change::MoveElement { index, delta, move_text} => {
+                            self.config.elements[index].translate(delta, move_text);
                         }
                     }
                 }
@@ -822,9 +825,11 @@ impl Application for NuhxBoard {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { key, location: _, modifiers, text: _ }) => {
                     if modifiers.command() {
                         if key == iced::keyboard::Key::Character(SmolStr::new("z")) {
-                            Some(Message::Undo)
-                        } else if key == iced::keyboard::Key::Character(SmolStr::new("Z")) {
-                            Some(Message::Redo)
+                            if modifiers.shift() {
+                                Some(Message::Redo)
+                            } else {
+                                Some(Message::Undo)
+                            }
                         } else {
                             None
                         }
