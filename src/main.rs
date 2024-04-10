@@ -50,6 +50,7 @@ fn main() -> Result<()> {
             .read(true)
             .write(true)
             .truncate(true)
+            .create(true)
             .open(nuhxboard_path.join("keyboards.zip"))?;
 
         keyboards_file.write_all(&res.bytes()?)?;
