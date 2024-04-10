@@ -90,6 +90,10 @@ fn main() -> Result<()> {
         fs::remove_file(nuhxboard_path.join("keyboards.zip"))?;
     }
 
+    if !nuhxboard_path.join("keyboards/global").exists() {
+        fs::create_dir_all(nuhxboard_path.join("keyboards/global"))?;
+    }
+
     let settings_file = File::open(nuhxboard_path.join("NuhxBoard.json"))?;
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
