@@ -3,7 +3,7 @@ use iced::{window, Command};
 use std::fs::{self, File};
 
 impl NuhxBoard {
-    pub fn load_keyboard<T>(&mut self, keyboard: usize) -> Command<T> {
+    pub fn load_keyboard(&mut self, keyboard: usize) -> Command<Message> {
         self.settings.keyboard = keyboard;
 
         self.keyboard = Some(keyboard);

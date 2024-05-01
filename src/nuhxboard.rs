@@ -844,7 +844,6 @@ impl Application for NuhxBoard {
 }
 
 impl NuhxBoard {
-    pub fn error<T>(&mut self, error: Error) -> iced::Command<T> {
         let (id, command) = window::spawn(window::Settings {
             size: iced::Size {
                 width: 400.0,
@@ -853,6 +852,7 @@ impl NuhxBoard {
             resizable: false,
             ..Default::default()
         });
+    pub fn error(&mut self, error: Error) -> iced::Command<Message> {
         self.error_windows.insert(id, error);
         command
     }
