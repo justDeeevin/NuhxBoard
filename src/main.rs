@@ -7,12 +7,25 @@ mod ui;
 
 use color_eyre::eyre::Result;
 use iced::{multi_window::Application, window};
+use iced_multi_window::multi_window;
 use nuhxboard::*;
 use std::{
     fs::{self, File},
     io::{self, prelude::*},
 };
 use types::settings::Settings;
+use ui::app::*;
+
+multi_window! {
+    NuhxBoard,
+    Main,
+    SettingsWindow,
+    LoadKeyboard,
+    ErrorPopup,
+    KeyboardProperties,
+    SaveKeyboardAs,
+    SaveStyleAs
+}
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 

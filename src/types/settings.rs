@@ -2,7 +2,7 @@ use display_info::DisplayInfo;
 
 use crate::ui::app::DisplayChoice;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Settings {
     pub capitalization: Capitalization,
     pub follow_for_caps_sensitive: bool,
