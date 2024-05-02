@@ -17,6 +17,7 @@ pub struct Settings {
     pub window_title: String,
     pub display_choice: DisplayChoice,
     pub auto_desktop_entry: bool,
+    pub update_text_position: bool,
 }
 
 impl Default for Settings {
@@ -48,6 +49,7 @@ impl Default for Settings {
                 primary: true,
             },
             auto_desktop_entry: true,
+            update_text_position: true,
         }
     }
 }

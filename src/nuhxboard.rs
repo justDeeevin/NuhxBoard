@@ -54,7 +54,6 @@ pub struct NuhxBoard {
     pub save_keyboard_as_name: String,
     pub save_style_as_name: String,
     pub save_style_as_global: bool,
-    pub update_text_position: bool,
 }
 
 #[derive(Default)]
@@ -243,7 +242,6 @@ impl Application for NuhxBoard {
                 save_keyboard_as_name: "".into(),
                 save_style_as_name: "".into(),
                 save_style_as_global: false,
-                update_text_position: false,
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -578,7 +576,7 @@ impl Application for NuhxBoard {
                 self.edit_mode = !self.edit_mode;
             }
             Message::MoveElement { index, delta } => {
-                self.config.elements[index].translate(delta, self.update_text_position);
+                self.config.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveKeyboard(file) => {
                 let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
@@ -669,7 +667,7 @@ impl Application for NuhxBoard {
                 self.save_style_as_global = !self.save_style_as_global;
             }
             Message::ToggleUpdateTextPosition => {
-                self.update_text_position = !self.update_text_position;
+                self.settings.update_text_position = !self.settings.update_text_position;
             }
             Message::Open(window) => {
                 match window {

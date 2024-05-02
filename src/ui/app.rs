@@ -82,7 +82,7 @@ impl Window<NuhxBoard> for Main {
 
             if app.edit_mode {
                 menu.append(&mut vec![
-                    checkbox("Update Text Position", app.update_text_position)
+                    checkbox("Update Text Position", app.settings.update_text_position)
                         .on_toggle(|_| Message::ToggleUpdateTextPosition)
                         .style(iced::theme::Checkbox::Custom(Box::new(
                             ContextMenuCheckBox {},
