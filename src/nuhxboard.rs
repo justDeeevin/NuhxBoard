@@ -629,7 +629,6 @@ impl Application for NuhxBoard {
                 self.edit_history.push(change);
             }
             Message::Undo => {
-                println!("Undo");
                 if self.history_depth < self.edit_history.len() {
                     self.history_depth += 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth] {
@@ -644,7 +643,6 @@ impl Application for NuhxBoard {
                 }
             }
             Message::Redo => {
-                println!("Redo");
                 if self.history_depth > 0 {
                     self.history_depth -= 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
