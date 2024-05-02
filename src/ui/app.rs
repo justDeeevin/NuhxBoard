@@ -5,16 +5,19 @@ use crate::{
 use iced::{
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
-        row, text, text_input,
+        row, text, text_input, Button,
     },
     window, Color, Length, Renderer, Theme,
 };
-use iced_aw::{native::FloatingElement, number_input, ContextMenu, SelectionList};
+use iced_aw::{
+    native::{FloatingElement, InnerBounds},
+    number_input,
+    quad::Quad,
+    ContextMenu, SelectionList,
+};
 use iced_multi_window::{window, Window};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, sync::Arc};
-
-const CONTEXT_MENU_WIDTH: f32 = 160.0;
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct DisplayChoice {
@@ -29,6 +32,22 @@ impl Display for DisplayChoice {
         } else {
             write!(f, "{}", self.id)
         }
+    }
+}
+
+fn context_menu_button(label: &str) -> Button<Message> {
+    let text = text(label).size(12);
+    button(text)
+        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+        .width(Length::Fill)
+}
+
+fn seperator() -> Quad {
+    Quad {
+        quad_color: iced::Background::Color(Color::from_rgb8(204, 204, 204)),
+        height: Length::Fixed(5.0),
+        inner_bounds: InnerBounds::Ratio(0.95, 0.2),
+        ..Default::default()
     }
 }
 
@@ -54,29 +73,24 @@ impl Window<NuhxBoard> for Main {
 
         let context_menu = ContextMenu::new(canvas, || {
             let mut menu = vec![
-                button("Settings")
+                context_menu_button("Settings")
                     .on_press_maybe(
                         (!app.windows.any_of(window!(SettingsWindow)))
                             .then_some(Message::Open(window!(SettingsWindow))),
                     )
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
-                button("Load Keyboard")
+                context_menu_button("Load Keyboard")
                     .on_press_maybe(
                         (!app.windows.any_of(window!(LoadKeyboard)))
                             .then_some(Message::Open(window!(LoadKeyboard))),
                     )
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
-                button(match app.edit_mode {
+                seperator().into(),
+                context_menu_button(match app.edit_mode {
                     true => "Stop Editing",
                     false => "Start Editing",
                 })
                 .on_press(Message::ToggleEditMode)
-                .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                 .into(),
             ];
 
@@ -87,52 +101,43 @@ impl Window<NuhxBoard> for Main {
                         .style(iced::theme::Checkbox::Custom(Box::new(
                             ContextMenuCheckBox {},
                         )))
+                        .text_size(12)
+                        .size(15)
                         .into(),
-                    button("Keyboard Properties")
+                    seperator().into(),
+                    context_menu_button("Keyboard Properties")
                         .on_press_maybe(
                             (!app.windows.any_of(window!(KeyboardProperties)))
                                 .then_some(Message::Open(window!(KeyboardProperties))),
                         )
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                        .into(),
-                    button("Save Keyboard")
-                        .on_press(Message::SaveKeyboard(None))
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                        .into(),
-                    button("Save Keyboard As...")
-                        .on_press(Message::Open(window!(SaveKeyboardAs)))
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                        .into(),
-                    button("Save Style")
-                        .on_press(Message::SaveStyle(None))
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
-                        .into(),
-                    button("Save Style As...")
-                        .on_press(Message::Open(window!(SaveStyleAs)))
-                        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                        .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                         .into(),
                 ]);
             }
 
             menu.append(&mut vec![
-                button("Clear Pressed Keys")
-                    .on_press(Message::ClearPressedKeys)
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
+                seperator().into(),
+                context_menu_button("Save Definition")
+                    .on_press(Message::SaveKeyboard(None))
                     .into(),
-                button("Exit")
+                context_menu_button("Save Definition As...")
+                    .on_press(Message::Open(window!(SaveKeyboardAs)))
+                    .into(),
+                context_menu_button("Save Style")
+                    .on_press(Message::SaveStyle(None))
+                    .into(),
+                context_menu_button("Save Style As...")
+                    .on_press(Message::Open(window!(SaveStyleAs)))
+                    .into(),
+                context_menu_button("Clear Pressed Keys")
+                    .on_press(Message::ClearPressedKeys)
+                    .into(),
+                context_menu_button("Exit")
                     .on_press(Message::ClosingMain)
-                    .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
-                    .width(Length::Fixed(CONTEXT_MENU_WIDTH))
                     .into(),
             ]);
             container(column(menu))
                 .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
+                .width(Length::Fixed(150.0))
                 .into()
         });
         if app.style.background_image_file_name.is_some() {

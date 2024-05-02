@@ -1915,7 +1915,6 @@ dependencies = [
 [[package]]
 name = "iced-multi-window"
 version = "1.0.0"
-source = "git+https://github.com/justdeeevin/iced-multi-window#fa5a62c4ef284da52ba861fb1db9410100735d50"
 dependencies = [
  "iced",
  "iced-multi-window-macros",
@@ -1923,8 +1922,7 @@ dependencies = [
 
 [[package]]
 name = "iced-multi-window-macros"
-version = "0.1.0"
-source = "git+https://github.com/justdeeevin/iced-multi-window#fa5a62c4ef284da52ba861fb1db9410100735d50"
+version = "1.0.0"
 dependencies = [
  "quote",
  "syn 2.0.59",
