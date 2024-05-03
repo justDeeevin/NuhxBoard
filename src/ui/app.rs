@@ -5,7 +5,7 @@ use crate::{
 use iced::{
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
-        row, text, text_input, Button, Scrollable
+        row, text, text_input, Button, Scrollable,
     },
     window, Color, Length, Renderer, Theme,
 };

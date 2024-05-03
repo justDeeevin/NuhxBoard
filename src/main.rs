@@ -24,7 +24,7 @@ multi_window! {
     ErrorPopup,
     KeyboardProperties,
     SaveKeyboardAs,
-    SaveStyleAs
+    SaveStyleAs,
 }
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
