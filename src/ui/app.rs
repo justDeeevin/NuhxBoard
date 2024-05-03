@@ -5,7 +5,7 @@ use crate::{
 use iced::{
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
-        row, text, text_input, Button,
+        row, text, text_input, Button, Scrollable
     },
     window, Color, Length, Renderer, Theme,
 };
@@ -135,7 +135,7 @@ impl Window<NuhxBoard> for Main {
                     .on_press(Message::ClosingMain)
                     .into(),
             ]);
-            container(column(menu))
+            container(Scrollable::new(column(menu)))
                 .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
                 .width(Length::Fixed(150.0))
                 .into()
