@@ -8,7 +8,7 @@ use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{
     advanced::graphics::core::SmolStr, multi_window::Application, widget::canvas::Cache, window,
-    Command, Renderer, Subscription, Theme,
+    Color, Command, Renderer, Subscription, Theme,
 };
 use iced_multi_window::{window, WindowManager};
 use image::io::Reader;
@@ -54,6 +54,12 @@ pub struct NuhxBoard {
     pub save_keyboard_as_name: String,
     pub save_style_as_name: String,
     pub save_style_as_global: bool,
+    pub color_pickers: ColorPickers,
+}
+
+#[derive(Debug, Default)]
+pub struct ColorPickers {
+    pub keyboard_background: bool,
 }
 
 #[derive(Default)]
@@ -117,6 +123,13 @@ pub enum Message {
     ChangeSaveStyleAsName(String),
     ToggleSaveStyleAsGlobal,
     ToggleUpdateTextPosition,
+    ChangeStyle(Color),
+    ColorPicker(ColorPicker),
+}
+
+#[derive(Debug, Clone)]
+pub enum ColorPicker {
+    KeyboardBackground,
 }
 
 #[derive(Debug, Clone)]
@@ -242,6 +255,7 @@ impl Application for NuhxBoard {
                 save_keyboard_as_name: "".into(),
                 save_style_as_name: "".into(),
                 save_style_as_global: false,
+                color_pickers: ColorPickers::default(),
             },
             Command::batch([
                 Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
@@ -702,6 +716,16 @@ impl Application for NuhxBoard {
             Message::Closed(window) => {
                 self.windows.closed(window);
             }
+            Message::ChangeStyle(color) => {
+                self.style.background_color = color.into();
+                self.color_pickers.keyboard_background = false;
+            }
+            Message::ColorPicker(picker) => match picker {
+                ColorPicker::KeyboardBackground => {
+                    self.color_pickers.keyboard_background =
+                        !self.color_pickers.keyboard_background;
+                }
+            },
         }
         self.canvas.clear();
         Command::none()

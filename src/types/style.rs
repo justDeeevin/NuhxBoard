@@ -50,6 +50,16 @@ impl From<NohRgb> for iced::Color {
     }
 }
 
+impl From<iced::Color> for NohRgb {
+    fn from(val: iced::Color) -> Self {
+        NohRgb {
+            red: val.r * 255.0,
+            green: val.g * 255.0,
+            blue: val.b * 255.0,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]

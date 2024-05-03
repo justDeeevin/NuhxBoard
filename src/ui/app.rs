@@ -3,13 +3,15 @@ use crate::{
     types::{settings::*, stylesheets::*},
 };
 use iced::{
+    font::Weight,
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
         row, text, text_input, Button, Scrollable,
     },
-    window, Color, Length, Renderer, Theme,
+    window, Color, Font, Length, Renderer, Theme,
 };
 use iced_aw::{
+    color_picker,
     native::{FloatingElement, InnerBounds},
     number_input,
     quad::Quad,
@@ -111,6 +113,14 @@ impl Window<NuhxBoard> for Main {
                                 .then_some(Message::Open(window!(KeyboardProperties))),
                         )
                         .into(),
+                    context_menu_button("Element Properties").into(),
+                    context_menu_button("Keyboard Style")
+                        .on_press_maybe(
+                            (!app.windows.any_of(window!(KeyboardStyle)))
+                                .then_some(Message::Open(window!(KeyboardStyle))),
+                        )
+                        .into(),
+                    context_menu_button("Element Style").into(),
                 ]);
             }
 
@@ -611,6 +621,64 @@ impl Window<NuhxBoard> for SaveStyleAs {
     }
 
     fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+        Theme::Light
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeyboardStyle;
+
+impl Window<NuhxBoard> for KeyboardStyle {
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            ..Default::default()
+        }
+    }
+
+    fn view<'a>(
+        &'a self,
+        app: &'a NuhxBoard,
+        _id: window::Id,
+    ) -> iced::Element<
+        '_,
+        <NuhxBoard as iced::multi_window::Application>::Message,
+        <NuhxBoard as iced::multi_window::Application>::Theme,
+    > {
+        let keyboard = column![
+            text("Keyboard").font(Font {
+                weight: Weight::Bold,
+                ..Default::default()
+            }),
+            row![
+                color_picker(
+                    app.color_pickers.keyboard_background,
+                    app.style.background_color.clone().into(),
+                    button("")
+                        .width(Length::Fixed(15.0))
+                        .height(Length::Fixed(15.0))
+                        .style(iced::theme::Button::Custom(Box::new(ColorPickerBox {
+                            color: app.style.background_color.clone().into()
+                        })))
+                        .on_press(Message::ColorPicker(ColorPicker::KeyboardBackground)),
+                    Message::ColorPicker(ColorPicker::KeyboardBackground),
+                    Message::ChangeStyle
+                ),
+                text("Background Color")
+            ]
+        ];
+
+        row![keyboard].into()
+    }
+
+    fn title<'a>(&'a self, _app: &'a NuhxBoard, _id: window::Id) -> String {
+        "Keyboard Style".to_string()
+    }
+
+    fn theme<'a>(
+        &'a self,
+        _app: &'a NuhxBoard,
+        _id: window::Id,
+    ) -> <NuhxBoard as iced::multi_window::Application>::Theme {
         Theme::Light
     }
 }

@@ -37,6 +37,7 @@ iced_aw = { version = "0.8.0", features = [
   "selection_list",
   "number_input",
   "quad",
+  "color_picker",
 ] }
 rdev = "0.5.3"
 serde = { version = "1.0.195", features = ["serde_derive"] }
