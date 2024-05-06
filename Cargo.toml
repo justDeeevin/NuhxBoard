@@ -32,8 +32,7 @@ iced = { version = "0.12.1", features = [
   "multi-window",
 ] }
 image = { version = "0.24.8", features = ["ico"] }
-# iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
-iced-multi-window = {path = "../iced-multi-window/"}
+iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
 iced_aw = { version = "0.8.0", features = [
   "selection_list",
   "number_input",
