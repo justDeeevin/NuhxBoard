@@ -63,7 +63,6 @@ impl Window<NuhxBoard> for Main {
     fn view<'a>(
         &'a self,
         app: &'a NuhxBoard,
-        _id: window::Id,
     ) -> iced::Element<
         '_,
         <NuhxBoard as iced::multi_window::Application>::Message,
@@ -77,14 +76,14 @@ impl Window<NuhxBoard> for Main {
             let mut menu = vec![
                 context_menu_button("Settings")
                     .on_press_maybe(
-                        (!app.windows.any_of(window!(SettingsWindow)))
-                            .then_some(Message::Open(window!(SettingsWindow))),
+                        (!app.windows.any_of(window!(SettingsWindow {})))
+                            .then_some(Message::Open(window!(SettingsWindow {}))),
                     )
                     .into(),
                 context_menu_button("Load Keyboard")
                     .on_press_maybe(
-                        (!app.windows.any_of(window!(LoadKeyboard)))
-                            .then_some(Message::Open(window!(LoadKeyboard))),
+                        (!app.windows.any_of(window!(LoadKeyboard {})))
+                            .then_some(Message::Open(window!(LoadKeyboard {}))),
                     )
                     .into(),
                 seperator().into(),
@@ -109,15 +108,15 @@ impl Window<NuhxBoard> for Main {
                     seperator().into(),
                     context_menu_button("Keyboard Properties")
                         .on_press_maybe(
-                            (!app.windows.any_of(window!(KeyboardProperties)))
-                                .then_some(Message::Open(window!(KeyboardProperties))),
+                            (!app.windows.any_of(window!(KeyboardProperties {})))
+                                .then_some(Message::Open(window!(KeyboardProperties {}))),
                         )
                         .into(),
                     context_menu_button("Element Properties").into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
-                            (!app.windows.any_of(window!(KeyboardStyle)))
-                                .then_some(Message::Open(window!(KeyboardStyle))),
+                            (!app.windows.any_of(window!(KeyboardStyle {})))
+                                .then_some(Message::Open(window!(KeyboardStyle {}))),
                         )
                         .into(),
                     context_menu_button("Element Style").into(),
@@ -130,13 +129,13 @@ impl Window<NuhxBoard> for Main {
                     .on_press(Message::SaveKeyboard(None))
                     .into(),
                 context_menu_button("Save Definition As...")
-                    .on_press(Message::Open(window!(SaveKeyboardAs)))
+                    .on_press(Message::Open(window!(SaveDefinitionAs {})))
                     .into(),
                 context_menu_button("Save Style")
                     .on_press(Message::SaveStyle(None))
                     .into(),
                 context_menu_button("Save Style As...")
-                    .on_press(Message::Open(window!(SaveStyleAs)))
+                    .on_press(Message::Open(window!(SaveStyleAs {})))
                     .into(),
                 context_menu_button("Clear Pressed Keys")
                     .on_press(Message::ClearPressedKeys)
@@ -162,11 +161,7 @@ impl Window<NuhxBoard> for Main {
         }
     }
 
-    fn theme(
-        &self,
-        app: &NuhxBoard,
-        _id: window::Id,
-    ) -> <NuhxBoard as iced::multi_window::Application>::Theme {
+    fn theme(&self, app: &NuhxBoard) -> <NuhxBoard as iced::multi_window::Application>::Theme {
         let red = app.style.background_color.red / 255.0;
         let green = app.style.background_color.green / 255.0;
         let blue = app.style.background_color.blue / 255.0;
@@ -177,7 +172,7 @@ impl Window<NuhxBoard> for Main {
         Theme::Custom(Arc::new(iced::theme::Custom::new("Custom".into(), palette)))
     }
 
-    fn title(&self, app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, app: &NuhxBoard) -> String {
         app.settings.window_title.clone()
     }
 }
@@ -199,7 +194,6 @@ impl Window<NuhxBoard> for SettingsWindow {
     fn view<'a>(
         &'a self,
         app: &'a NuhxBoard,
-        _id: window::Id,
     ) -> iced::Element<
         '_,
         <NuhxBoard as iced::multi_window::Application>::Message,
@@ -347,15 +341,11 @@ impl Window<NuhxBoard> for SettingsWindow {
         .into()
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, _app: &NuhxBoard) -> String {
         "Settings".to_string()
     }
 
-    fn theme(
-        &self,
-        _app: &NuhxBoard,
-        _id: window::Id,
-    ) -> <NuhxBoard as iced::multi_window::Application>::Theme {
+    fn theme(&self, _app: &NuhxBoard) -> <NuhxBoard as iced::multi_window::Application>::Theme {
         Theme::Light
     }
 }
@@ -374,7 +364,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
         }
     }
 
-    fn view(&self, app: &NuhxBoard, _id: window::Id) -> iced::Element<'_, Message, Theme> {
+    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
         column![
             text("Category:"),
             pick_list(
@@ -412,17 +402,19 @@ impl Window<NuhxBoard> for LoadKeyboard {
         .into()
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, _app: &NuhxBoard) -> String {
         "Load Keyboard".to_string()
     }
 
-    fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ErrorPopup;
+pub struct ErrorPopup {
+    pub error: Error,
+}
 impl Window<NuhxBoard> for ErrorPopup {
     fn settings(&self) -> window::Settings {
         window::Settings {
@@ -435,16 +427,16 @@ impl Window<NuhxBoard> for ErrorPopup {
         }
     }
 
-    fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, _app: &NuhxBoard) -> String {
         "Error".to_string()
     }
 
-    fn view(&self, app: &NuhxBoard, id: window::Id) -> iced::Element<'_, Message, Theme> {
-        let error = app.error_windows.get(&id).unwrap();
+    fn view(&self, _app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+        let error = &self.error;
         let kind = match error {
             Error::ConfigOpen(_) => "Keyboard file could not be opened.",
             Error::ConfigParse(_) => "Keyboard file could not be parsed.",
@@ -454,22 +446,10 @@ impl Window<NuhxBoard> for ErrorPopup {
             Error::UnknownButton(_) => "Unknown Mouse Button.",
         };
         let info = match error {
-            Error::ConfigParse(e) => {
-                if e.is_eof() {
-                    format!("Unexpected EOF (End of file) at line {}", e.line())
-                } else {
-                    format!("{}", e)
-                }
-            }
-            Error::ConfigOpen(e) => format!("{}", e),
-            Error::StyleParse(e) => {
-                if e.is_eof() {
-                    format!("Unexpeted EOF (End of file) at line {}", e.line())
-                } else {
-                    format!("{}", e)
-                }
-            }
-            Error::StyleOpen(e) => format!("{}", e),
+            Error::ConfigParse(e) => e.clone(),
+            Error::ConfigOpen(e) => e.clone(),
+            Error::StyleParse(e) => e.clone(),
+            Error::StyleOpen(e) => e.clone(),
             Error::UnknownKey(key) => format!("Key: {:?}", key),
             Error::UnknownButton(button) => format!("Button: {:?}", button),
         };
@@ -499,7 +479,7 @@ impl Window<NuhxBoard> for KeyboardProperties {
         }
     }
 
-    fn view(&self, app: &NuhxBoard, _id: window::Id) -> iced::Element<'_, Message, Theme> {
+    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
         column![
             row![
                 text("Width: "),
@@ -515,29 +495,27 @@ impl Window<NuhxBoard> for KeyboardProperties {
         .into()
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, _app: &NuhxBoard) -> String {
         "Keyboard Properties".to_string()
     }
 
-    fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-    fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
 pub struct SaveDefinitionAs;
 impl Window<NuhxBoard> for SaveDefinitionAs {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
-        "Save Keyboard As".to_string()
     fn title(&self, _app: &NuhxBoard) -> String {
         "Save Definition As".to_string()
     }
 
-    fn view(&self, app: &NuhxBoard, _id: window::Id) -> iced::Element<'_, Message, Theme> {
+    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
         column![
             row![
                 text("Category: "),
@@ -591,7 +569,7 @@ impl Window<NuhxBoard> for SaveStyleAs {
         }
     }
 
-    fn view(&self, app: &NuhxBoard, _id: window::Id) -> iced::Element<'_, Message, Theme> {
+    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
         column![
             row![
                 text("Name: "),
@@ -618,11 +596,11 @@ impl Window<NuhxBoard> for SaveStyleAs {
         .into()
     }
 
-    fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
+    fn title(&self, _app: &NuhxBoard) -> String {
         "Save Style As".to_string()
     }
 
-    fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 }
@@ -640,7 +618,6 @@ impl Window<NuhxBoard> for KeyboardStyle {
     fn view<'a>(
         &'a self,
         app: &'a NuhxBoard,
-        _id: window::Id,
     ) -> iced::Element<
         '_,
         <NuhxBoard as iced::multi_window::Application>::Message,
@@ -672,14 +649,13 @@ impl Window<NuhxBoard> for KeyboardStyle {
         row![keyboard].into()
     }
 
-    fn title<'a>(&'a self, _app: &'a NuhxBoard, _id: window::Id) -> String {
+    fn title<'a>(&'a self, _app: &'a NuhxBoard) -> String {
         "Keyboard Style".to_string()
     }
 
     fn theme<'a>(
         &'a self,
         _app: &'a NuhxBoard,
-        _id: window::Id,
     ) -> <NuhxBoard as iced::multi_window::Application>::Theme {
         Theme::Light
     }

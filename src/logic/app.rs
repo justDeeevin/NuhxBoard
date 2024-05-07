@@ -16,13 +16,19 @@ impl NuhxBoard {
         let config_file = match File::open(path) {
             Ok(file) => file,
             Err(e) => {
-                return self.error(Error::ConfigOpen(e));
+                return self.error(Error::ConfigOpen(e.to_string()));
             }
         };
 
         self.config = match serde_json::from_reader(config_file) {
             Ok(config) => config,
-            Err(e) => return self.error(Error::ConfigParse(e)),
+            Err(e) => {
+                return self.error(Error::ConfigParse(if e.is_eof() {
+                    format!("Unexpected EOF (End of file) at line {}", e.line())
+                } else {
+                    e.to_string()
+                }))
+            }
         };
 
         let mut path = self.keyboards_path.clone();

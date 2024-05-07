@@ -39,7 +39,6 @@ pub struct NuhxBoard {
     pub true_caps: bool,
     pub keyboard: Option<usize>,
     pub style_choice: Option<usize>,
-    pub error_windows: HashMap<window::Id, Error>,
     pub keyboard_options: Vec<String>,
     pub keyboard_category_options: Vec<String>,
     pub style_options: Vec<StyleChoice>,
@@ -177,12 +176,12 @@ impl Message {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    ConfigOpen(std::io::Error),
-    ConfigParse(serde_json::Error),
-    StyleOpen(std::io::Error),
-    StyleParse(serde_json::Error),
+    ConfigOpen(String),
+    ConfigParse(String),
+    StyleOpen(String),
+    StyleParse(String),
     UnknownKey(rdev::Key),
     UnknownButton(rdev::Button),
 }
@@ -222,7 +221,7 @@ impl Application for NuhxBoard {
 
         (
             Self {
-                windows: WindowManager::new(window!(Main)),
+                windows: WindowManager::new(window!(Main {})),
                 config,
                 style: Style::default(),
                 canvas: Cache::default(),
@@ -240,7 +239,6 @@ impl Application for NuhxBoard {
                 previous_mouse_time: std::time::SystemTime::now(),
                 keyboard: Some(flags.settings.keyboard),
                 style_choice: Some(flags.settings.style),
-                error_windows: HashMap::new(),
                 keyboard_options: vec![],
                 keyboard_category_options: vec![],
                 style_options: vec![],
@@ -490,12 +488,18 @@ impl Application for NuhxBoard {
                 let style_file = match File::open(path) {
                     Ok(f) => f,
                     Err(e) => {
-                        return self.error(Error::StyleOpen(e));
+                        return self.error(Error::StyleOpen(e.to_string()));
                     }
                 };
                 self.style = match serde_json::from_reader(style_file) {
                     Ok(style) => style,
-                    Err(e) => return self.error(Error::StyleParse(e)),
+                    Err(e) => {
+                        return self.error(Error::StyleParse(if e.is_eof() {
+                            format!("Unexpeted EOF (End of file) at line {}", e.line())
+                        } else {
+                            e.to_string()
+                        }))
+                    }
                 };
 
                 if let Some(name) = &self.style.background_image_file_name {
@@ -685,7 +689,7 @@ impl Application for NuhxBoard {
             }
             Message::Open(window) => {
                 match window {
-                    window!(LoadKeyboard) => {
+                    window!(LoadKeyboard {}) => {
                         let path = self.keyboards_path.clone();
 
                         self.keyboard_category_options = fs::read_dir(path)
@@ -697,13 +701,13 @@ impl Application for NuhxBoard {
                             .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                             .collect::<Vec<_>>();
                     }
-                    window!(SaveKeyboardAs) => {
+                    window!(SaveDefinitionAs {}) => {
                         self.save_keyboard_as_category
                             .clone_from(&self.settings.category);
                         self.save_keyboard_as_name
                             .clone_from(&self.keyboard_options[self.keyboard.unwrap()]);
                     }
-                    window!(SaveStyleAs) => {
+                    window!(SaveStyleAs {}) => {
                         self.save_style_as_name =
                             self.style_options[self.style_choice.unwrap()].name();
                         self.save_style_as_global =
@@ -775,8 +779,7 @@ impl Application for NuhxBoard {
 
 impl NuhxBoard {
     pub fn error(&mut self, error: Error) -> iced::Command<Message> {
-        let (id, command) = self.windows.spawn(window!(ErrorPopup));
-        self.error_windows.insert(id, error);
+        let (_, command) = self.windows.spawn(window!(ErrorPopup { error }));
         command
     }
 }
