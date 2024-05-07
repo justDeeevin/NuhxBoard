@@ -23,7 +23,7 @@ multi_window! {
     LoadKeyboard,
     ErrorPopup,
     KeyboardProperties,
-    SaveKeyboardAs,
+    SaveDefinitionAs,
     SaveStyleAs,
     KeyboardStyle,
 }

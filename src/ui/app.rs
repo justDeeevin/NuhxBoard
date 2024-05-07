@@ -525,14 +525,16 @@ impl Window<NuhxBoard> for KeyboardProperties {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SaveKeyboardAs;
-impl Window<NuhxBoard> for SaveKeyboardAs {
     fn theme(&self, _app: &NuhxBoard, _id: window::Id) -> Theme {
+pub struct SaveDefinitionAs;
+impl Window<NuhxBoard> for SaveDefinitionAs {
         Theme::Light
     }
 
     fn title(&self, _app: &NuhxBoard, _id: window::Id) -> String {
         "Save Keyboard As".to_string()
+    fn title(&self, _app: &NuhxBoard) -> String {
+        "Save Definition As".to_string()
     }
 
     fn view(&self, app: &NuhxBoard, _id: window::Id) -> iced::Element<'_, Message, Theme> {
