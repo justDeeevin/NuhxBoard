@@ -21,6 +21,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commit/f1c04a61dff29c7406cd297261292a60f80ad74d)
 - Version info in settings menu. [c46943d](https://github.com/justdeeevin/nuhxboard/commit/c46943d0d1c25499b3382aca8d29a7e5b74c2e4f)
 - Labels for the layout and style picklists in the load keyboard menu. [2805261](https://github.com/justdeeevin/nuhxboard/commit/28052612b8a0a120e8f0f5c47b372d69922e108d)
+- The context menu is now scrollable in case the window is too small for it to fully display. [880650a](https://github.com/justdeeevin/nuhxboard/commit/880650afe3e5881f67a97531adbd8e8707ace0ad)
 
 ### Fixed
 
@@ -33,6 +34,8 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - Desktop entry creation can be disabled. [5ac9afc](https://github.com/justdeeevin/nuhxboard/commit/5ac9afc324523390058da44e849040d3ecdba732)
 - Primary display is marked as such in list of displays in settings menu. [f2e0a00](https://github.com/justdeeevin/nuhxboard/commit/f2e0a00d6fd93f47f6cd9111f8452e2e2d344fec)
 - `Version` property of keyboard layout is now optional. [79a3162](https://github.com/justdeeevin/nuhxboard/commit/79a3162acdf7de5606f48b6aa7535f39d321cb06)
+- Global default style's mouse speed indicator's outer color now matches NohBoard's (white). [fda0006](https://github.com/justdeeevin/nuhxboard/commit/fda000645e15ff3cc2ac7e6f894c821c9b1b1e7a)
+- Mouse speed indicator's sensitivity is closer to NohBoard's. [1fde6e6](https://github.com/justdeeevin/nuhxboard/commit/1fde6e6cb385aa77930eda06268e5a8127c7bb05)
 
 ## [v0.5.3](https://github.com/justdeeevin/nuhxboard/releases/v0.5.2) - 2024-2-27
 
