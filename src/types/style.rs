@@ -1,3 +1,4 @@
+use iced::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -160,7 +161,7 @@ impl Default for Style {
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
-                outer_color: NohRgb::DEFAULT_GRAY,
+                outer_color: Color::WHITE.into(),
                 outline_width: 1.0,
             },
             element_styles: vec![],
