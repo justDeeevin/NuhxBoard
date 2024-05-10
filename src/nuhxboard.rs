@@ -468,39 +468,40 @@ impl Application for NuhxBoard {
 
                 if self.style_options[style] == StyleChoice::Default {
                     self.style = Style::default();
-                    return Command::none();
+                } else {
+                    let path = self
+                        .keyboards_path
+                        .clone()
+                        .join(match &self.style_options[style] {
+                            StyleChoice::Default => unreachable!(),
+                            StyleChoice::Global(style_name) => {
+                                format!("global/{}.style", style_name)
+                            }
+                            StyleChoice::Custom(style_name) => format!(
+                                "{}/{}/{}.style",
+                                self.settings.category,
+                                self.keyboard_options[self.keyboard.unwrap()],
+                                style_name
+                            ),
+                        });
+
+                    let style_file = match File::open(path) {
+                        Ok(f) => f,
+                        Err(e) => {
+                            return self.error(Error::StyleOpen(e.to_string()));
+                        }
+                    };
+                    self.style = match serde_json::from_reader(style_file) {
+                        Ok(style) => style,
+                        Err(e) => {
+                            return self.error(Error::StyleParse(if e.is_eof() {
+                                format!("Unexpeted EOF (End of file) at line {}", e.line())
+                            } else {
+                                e.to_string()
+                            }))
+                        }
+                    };
                 }
-
-                let path = self
-                    .keyboards_path
-                    .clone()
-                    .join(match &self.style_options[style] {
-                        StyleChoice::Default => unreachable!(),
-                        StyleChoice::Global(style_name) => format!("global/{}.style", style_name),
-                        StyleChoice::Custom(style_name) => format!(
-                            "{}/{}/{}.style",
-                            self.settings.category,
-                            self.keyboard_options[self.keyboard.unwrap()],
-                            style_name
-                        ),
-                    });
-
-                let style_file = match File::open(path) {
-                    Ok(f) => f,
-                    Err(e) => {
-                        return self.error(Error::StyleOpen(e.to_string()));
-                    }
-                };
-                self.style = match serde_json::from_reader(style_file) {
-                    Ok(style) => style,
-                    Err(e) => {
-                        return self.error(Error::StyleParse(if e.is_eof() {
-                            format!("Unexpeted EOF (End of file) at line {}", e.line())
-                        } else {
-                            e.to_string()
-                        }))
-                    }
-                };
 
                 if let Some(name) = &self.style.background_image_file_name {
                     let path = self
