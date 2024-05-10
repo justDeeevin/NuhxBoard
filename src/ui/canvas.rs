@@ -144,7 +144,7 @@ macro_rules! draw_speed_indicator {
                                 $self.mouse_velocity.1.atan2($self.mouse_velocity.0),
                             );
                             let squashed_magnitude =
-                                ($self.settings.mouse_sensitivity * 0.000001 * polar_velocity.0)
+                                ($self.settings.mouse_sensitivity * 0.000005 * polar_velocity.0)
                                     .tanh();
                             let ball = Path::circle(
                                 iced::Point {
