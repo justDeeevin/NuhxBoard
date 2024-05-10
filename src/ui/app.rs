@@ -151,7 +151,11 @@ impl Window<NuhxBoard> for Main {
         });
         if app.style.background_image_file_name.is_some() {
             let image_path = app.keyboards_path.parent().unwrap().join("background.png");
-            FloatingElement::new(image(image_path), context_menu).into()
+            FloatingElement::new(
+                image(image_path).height(Length::Fill).width(Length::Fill),
+                context_menu,
+            )
+            .into()
         } else {
             context_menu.into()
         }
