@@ -1,37 +1,27 @@
 {
   lib,
-  stdenv,
-  darwin,
-  fetchFromGitHub,
   copyDesktopItems,
   makeDesktopItem,
-  libGL,
   makeWrapper,
-  libxkbcommon,
-  openssl,
   pkg-config,
   rustPlatform,
-  vulkan-loader,
-  wayland,
-  xorg,
+  runtimeLibs,
+  buildLibs,
 }: let
-  runtimeLibs = [
-    libGL
-    libxkbcommon
-    vulkan-loader
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXi
-    xorg.libXrandr
-  ];
+  package = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
 in
   rustPlatform.buildRustPackage rec {
-    name = "nuhxboard";
-    version = "0.5.3";
+    name = package.name;
+    version = package.version;
 
     src = lib.cleanSource ./.;
 
-    cargoHash = "sha256-cjaiCSQ83C/YOSLARoBdO1t/D9dRWT/3tShVTv2KAME=";
+    cargoLock = {
+      lockFile = ./Cargo.lock;
+      outputHashes = {
+        "iced-multi-window-2.0.0" = "sha256-AiVxvxg6nGpnKUsHRgT5qKgPKRYkdee3Nnc/1wL69hU=";
+      };
+    };
 
     nativeBuildInputs = [
       copyDesktopItems
@@ -39,42 +29,18 @@ in
       makeWrapper
     ];
 
-    buildInputs =
-      [
-        libxkbcommon
-        openssl
-        vulkan-loader
-        xorg.libX11
-        xorg.libXcursor
-        xorg.libXi
-        xorg.libXrandr
-        xorg.libXtst
-      ]
-      ++ lib.optionals stdenv.isDarwin [
-        darwin.apple_sdk.frameworks.AppKit
-        darwin.apple_sdk.frameworks.CoreFoundation
-        darwin.apple_sdk.frameworks.CoreGraphics
-        darwin.apple_sdk.frameworks.Foundation
-        darwin.apple_sdk.frameworks.Metal
-        darwin.apple_sdk.frameworks.QuartzCore
-        darwin.apple_sdk.frameworks.Security
-      ]
-      ++ lib.optionals stdenv.isLinux [
-        wayland
-      ];
+    buildInputs = buildLibs;
 
     desktopItems = [
       (makeDesktopItem {
         name = "NuhxBoard";
-        desktopName = "NuhxBoard";
-        comment = "A cross-platform alternative to NohBoard";
+        desktopName = name;
+        comment = package.description;
         icon = "NuhxBoard.png";
-        exec = name;
+        exec = package.name;
         terminal = false;
-        # mimeTypes = [ "x-scheme-handler/irc" "x-scheme-handler/ircs" ];
-        # categories = [ "Keyboard"];
         keywords = ["Keyboard"];
-        startupWMClass = "NuxBoard";
+        startupWMClass = "NuhxBoard";
       })
     ];
 
@@ -83,10 +49,10 @@ in
       wrapProgram $out/bin/${name} --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}"
     '';
 
-    meta = with lib; {
-      description = "Keyboard visualizer";
-      homepage = "https://github.com/justDeeevin/NuhxBoard";
-      changelog = "https://github.com/justDeeevin/NuhxBoard/blob/${version}/CHANGELOG.md";
-      license = licenses.gpl3Only;
+    meta = {
+      description = package.description;
+      homepage = package.repository;
+      changelog = "${package.repository}/blob/${version}/CHANGELOG.md";
+      license = package.license;
     };
   }
