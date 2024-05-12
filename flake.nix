@@ -11,22 +11,19 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       toolchain = fenix.packages.${system}.complete.toolchain;
-      runtimeLibs = with pkgs.pkgs; [
-        libGL
-        libxkbcommon
-        vulkan-loader
-        xorg.libX11
-        xorg.libXcursor
-        xorg.libXi
-        xorg.libXrandr
-        wayland
-      ];
-      buildLibs = with pkgs;
+      libs = with pkgs.pkgs;
         [
+          libGL
+          libxkbcommon
+          vulkan-loader
+          xorg.libX11
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXrandr
+          wayland
           openssl
           xorg.libXtst
         ]
-        ++ runtimeLibs
         ++ lib.optionals stdenv.isDarwin [
           darwin.apple_sdk.frameworks.AppKit
           darwin.apple_sdk.frameworks.CoreFoundation
@@ -40,8 +37,7 @@
       packages.x86_64-linux = rec {
         default = nuxhxboard;
         nuxhxboard = pkgs.callPackage ./package.nix {
-          runtimeLibs = runtimeLibs;
-          buildLibs = buildLibs;
+          libs = libs;
         };
       };
       devShells.x86_64-linux = {
@@ -49,11 +45,10 @@
           # Get dependencies from the main package
           inputsFrom = [
             (pkgs.callPackage ./package.nix {
-              runtimeLibs = runtimeLibs;
-              buildLibs = buildLibs;
+              libs = libs;
             })
           ];
-          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath runtimeLibs}";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";
           # Additional tooling
           packages = [toolchain];
         };

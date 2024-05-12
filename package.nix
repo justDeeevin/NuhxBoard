@@ -5,8 +5,7 @@
   makeWrapper,
   pkg-config,
   rustPlatform,
-  runtimeLibs,
-  buildLibs,
+  libs,
 }: let
   package = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
 in
@@ -29,7 +28,7 @@ in
       makeWrapper
     ];
 
-    buildInputs = buildLibs;
+    buildInputs = libs;
 
     desktopItems = [
       (makeDesktopItem {
@@ -46,7 +45,7 @@ in
 
     postInstall = ''
       install -Dm644 NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
-      wrapProgram $out/bin/${name} --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}"
+      wrapProgram $out/bin/${name} --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath libs}"
     '';
 
     meta = {
