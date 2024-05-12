@@ -2,7 +2,7 @@ use iced::{
     futures::{channel::mpsc, StreamExt},
     subscription, Subscription,
 };
-use rdev::listen;
+use rdev::grab;
 
 enum State {
     Starting,
@@ -27,12 +27,13 @@ pub fn bind() -> Subscription<Event> {
                 State::Starting => {
                     let (tx, rx) = mpsc::unbounded();
                     std::thread::spawn(move || {
-                        listen(move |event| {
-                            if let Err(e) = tx.unbounded_send(event) {
+                        grab(move |event| {
+                            if let Err(e) = tx.unbounded_send(event.clone()) {
                                 if !e.is_disconnected() {
                                     panic!("{}", e);
                                 }
                             }
+                            Some(event)
                         })
                         .unwrap();
                     });

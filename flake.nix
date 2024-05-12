@@ -23,6 +23,7 @@
           wayland
           openssl
           xorg.libXtst
+          libevdev
         ]
         ++ lib.optionals stdenv.isDarwin [
           darwin.apple_sdk.frameworks.AppKit
