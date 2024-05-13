@@ -386,6 +386,9 @@ impl Application for NuhxBoard {
                         Ok(diff) => diff,
                         Err(_) => return Command::none(),
                     };
+                    if time_diff.as_millis() < 10 {
+                        return Command::none();
+                    }
 
                     let mut center = (0.0, 0.0);
 
