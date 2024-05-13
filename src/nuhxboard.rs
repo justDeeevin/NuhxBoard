@@ -200,13 +200,6 @@ impl Application for NuhxBoard {
     type Message = Message;
 
     fn new(flags: Flags) -> (Self, Command<Self::Message>) {
-        #[cfg(target_os = "linux")]
-        {
-            if std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
-                println!("Warning: grabbing input events throuh XWayland. Some windows may consume input events.");
-            }
-        }
-
         let path = home::home_dir()
             .unwrap()
             .join(".local/share/NuhxBoard/keyboards");
