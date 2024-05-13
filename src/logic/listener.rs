@@ -2,7 +2,7 @@ use iced::{
     futures::{channel::mpsc, StreamExt},
     subscription, Subscription,
 };
-use rdev::grab;
+use rdev::{grab, listen};
 
 enum State {
     Starting,
@@ -27,15 +27,29 @@ pub fn bind() -> Subscription<Event> {
                 State::Starting => {
                     let (tx, rx) = mpsc::unbounded();
                     std::thread::spawn(move || {
-                        grab(move |event| {
-                            if let Err(e) = tx.unbounded_send(event.clone()) {
-                                if !e.is_disconnected() {
-                                    panic!("{}", e);
+                        if cfg!(target_os = "linux")
+                            && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
+                        {
+                            println!("Wayland detected, using grab");
+                            grab(move |event| {
+                                if let Err(e) = tx.unbounded_send(event.clone()) {
+                                    if !e.is_disconnected() {
+                                        panic!("{}", e);
+                                    }
                                 }
-                            }
-                            Some(event)
-                        })
-                        .unwrap();
+                                Some(event)
+                            })
+                            .unwrap();
+                        } else {
+                            listen(move |event| {
+                                if let Err(e) = tx.unbounded_send(event.clone()) {
+                                    if !e.is_disconnected() {
+                                        panic!("{}", e);
+                                    }
+                                }
+                            })
+                            .unwrap();
+                        }
                     });
                     (Event::Ready, State::Ready(rx))
                 }
