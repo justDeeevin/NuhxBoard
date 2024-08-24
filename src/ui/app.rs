@@ -11,10 +11,9 @@ use iced::{
     window, Color, Font, Length, Renderer, Theme,
 };
 use iced_aw::{
-    color_picker,
-    native::{FloatingElement, InnerBounds},
-    number_input,
+    color_picker, number_input,
     quad::Quad,
+    widgets::{FloatingElement, InnerBounds},
     ContextMenu, SelectionList,
 };
 use iced_multi_window::{window, Window};
@@ -98,7 +97,7 @@ impl Window<NuhxBoard> for Main {
             if app.edit_mode {
                 menu.append(&mut vec![
                     checkbox("Update Text Position", app.settings.update_text_position)
-                        .on_toggle(|_| Message::ToggleUpdateTextPosition)
+                        .on_toggle(|_| Message::ChangeSetting(Setting::UpdateTextPosition))
                         .style(iced::theme::Checkbox::Custom(Box::new(
                             ContextMenuCheckBox {},
                         )))
@@ -374,7 +373,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
                         12.0,
                         5.0,
                         <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
-                        app.keyboard,
+                        app.keyboard_choice,
                         iced::Font::default(),
                     )
                 ],
@@ -476,12 +475,12 @@ impl Window<NuhxBoard> for KeyboardProperties {
         column![
             row![
                 text("Width: "),
-                number_input(app.config.width, f32::MAX, Message::SetWidth)
+                number_input(app.layout.width, f32::MAX, Message::SetWidth)
             ]
             .align_items(iced::Alignment::Center),
             row![
                 text("Height: "),
-                number_input(app.config.height, f32::MAX, Message::SetHeight)
+                number_input(app.layout.height, f32::MAX, Message::SetHeight)
             ]
             .align_items(iced::Alignment::Center)
         ]
@@ -521,7 +520,7 @@ impl Window<NuhxBoard> for SaveDefinitionAs {
             row![
                 text("Name: "),
                 text_input(
-                    &app.keyboard_options[app.keyboard.unwrap()],
+                    &app.keyboard_options[app.keyboard_choice.unwrap()],
                     &app.save_keyboard_as_name,
                 )
                 .on_input(Message::ChangeSaveKeyboardAsName)
@@ -582,7 +581,7 @@ impl Window<NuhxBoard> for SaveStyleAs {
                 false => app
                     .keyboards_path
                     .join(&app.settings.category)
-                    .join(&app.keyboard_options[app.keyboard.unwrap()])
+                    .join(&app.keyboard_options[app.keyboard_choice.unwrap()])
                     .join(format!("{}.style", &app.save_style_as_name)),
             }))),
         ]
@@ -631,9 +630,9 @@ impl Window<NuhxBoard> for KeyboardStyle {
                         .style(iced::theme::Button::Custom(Box::new(ColorPickerBox {
                             color: app.style.background_color.clone().into()
                         })))
-                        .on_press(Message::ColorPicker(ColorPicker::KeyboardBackground)),
-                    Message::ColorPicker(ColorPicker::KeyboardBackground),
-                    Message::ChangeStyle
+                        .on_press(Message::ToggleColorPicker(ColorPicker::KeyboardBackground)),
+                    Message::ToggleColorPicker(ColorPicker::KeyboardBackground),
+                    Message::ChangeBackground
                 ),
                 text("Background Color")
             ]

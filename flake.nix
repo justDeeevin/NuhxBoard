@@ -52,6 +52,7 @@
             openssl
             wayland
             libxkbcommon
+            libevdev
           ] ++ lib.optionals pkgs.stdenv.isDarwin [
             pkgs.libiconv
           ];
@@ -153,6 +154,8 @@
           packages = with pkgs; [
             cargo-dist
           ];
+
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath commonArgs.buildInputs}";
         };
       });
 }

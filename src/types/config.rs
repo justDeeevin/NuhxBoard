@@ -2,7 +2,7 @@ use iced::Point;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Debug)]
-pub struct Config {
+pub struct Layout {
     #[serde(rename = "Version")]
     pub version: Option<u8>,
     #[serde(rename = "Width")]

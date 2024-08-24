@@ -143,7 +143,7 @@ impl Default for Style {
                         size: 15.0,
                         style: 0,
                     },
-                    background_image_file_name: "".into(),
+                    background_image_file_name: String::new(),
                 }),
                 pressed: Some(KeySubStyle {
                     background: NohRgb::WHITE,
@@ -156,7 +156,7 @@ impl Default for Style {
                         size: 15.0,
                         style: 0,
                     },
-                    background_image_file_name: "".into(),
+                    background_image_file_name: String::new(),
                 }),
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {

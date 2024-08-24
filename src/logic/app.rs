@@ -6,7 +6,7 @@ impl NuhxBoard {
     pub fn load_keyboard(&mut self, keyboard: usize) -> Command<Message> {
         self.settings.keyboard = keyboard;
 
-        self.keyboard = Some(keyboard);
+        self.keyboard_choice = Some(keyboard);
         self.style = Style::default();
 
         let mut path = self.keyboards_path.clone();
@@ -20,7 +20,7 @@ impl NuhxBoard {
             }
         };
 
-        self.config = match serde_json::from_reader(config_file) {
+        self.layout = match serde_json::from_reader(config_file) {
             Ok(config) => config,
             Err(e) => {
                 return self.error(Error::ConfigParse(if e.is_eof() {
@@ -79,8 +79,8 @@ impl NuhxBoard {
         window::resize(
             window::Id::MAIN,
             iced::Size {
-                width: self.config.width,
-                height: self.config.height,
+                width: self.layout.width,
+                height: self.layout.height,
             },
         )
     }

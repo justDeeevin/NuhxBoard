@@ -3,6 +3,7 @@ use crate::{
     nuhxboard::*,
     types::{config::*, settings::*, style::*},
 };
+use colorgrad::Gradient;
 use geo::{Coord, LineString, Polygon, Within};
 use iced::{
     mouse,
@@ -255,24 +256,24 @@ macro_rules! draw_speed_indicator {
                                 );
                             }
 
-                            let ball_gradient = colorgrad::CustomGradient::new()
+                            let ball_gradient = colorgrad::GradientBuilder::new()
                                 .colors(&[
                                     colorgrad::Color::new(
-                                        style.inner_color.red as f64 / 255.0,
-                                        style.inner_color.green as f64 / 255.0,
-                                        style.inner_color.blue as f64 / 255.0,
+                                        style.inner_color.red  / 255.0,
+                                        style.inner_color.green  / 255.0,
+                                        style.inner_color.blue  / 255.0,
                                         1.0,
                                     ),
                                     colorgrad::Color::new(
-                                        style.outer_color.red as f64 / 255.0,
-                                        style.outer_color.green as f64 / 255.0,
-                                        style.outer_color.blue as f64 / 255.0,
+                                        style.outer_color.red  / 255.0,
+                                        style.outer_color.green / 255.0,
+                                        style.outer_color.blue / 255.0,
                                         1.0,
                                     ),
                                 ])
-                                .build()
+                                .build::<colorgrad::LinearGradient>()
                                 .unwrap();
-                            let ball_color = ball_gradient.at(squashed_magnitude as f64);
+                            let ball_color = ball_gradient.at(squashed_magnitude);
                             $frame.fill(
                                 &ball,
                                 Color::from_rgb(
@@ -356,7 +357,7 @@ impl canvas::Program<Message> for NuhxBoard {
                 mouse::Event::CursorMoved { position: _ } => {
                     match state.interaction {
                         Interaction::None => {
-                            for (index, element) in self.config.elements.iter().enumerate() {
+                            for (index, element) in self.layout.elements.iter().enumerate() {
                                 match element {
                                     BoardElement::MouseSpeedIndicator(def) => {
                                         if cursor_position.distance(def.location.clone().into())
@@ -472,7 +473,7 @@ impl canvas::Program<Message> for NuhxBoard {
         _cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
         let canvas = self.canvas.draw(renderer, bounds.size(), |frame| {
-            for (index, element) in self.config.elements.iter().enumerate() {
+            for (index, element) in self.layout.elements.iter().enumerate() {
                 if Some(index) != state.selected_element && Some(index) != state.held_element {
                     match element {
                         BoardElement::KeyboardKey(def) => {
@@ -545,7 +546,7 @@ impl canvas::Program<Message> for NuhxBoard {
                 state.held_element
             };
             if let Some(hilighted_index) = highlighted_element {
-                match &self.config.elements[hilighted_index] {
+                match &self.layout.elements[hilighted_index] {
                     BoardElement::KeyboardKey(def) => {
                         draw_key!(
                             self,

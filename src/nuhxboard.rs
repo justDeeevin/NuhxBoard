@@ -11,7 +11,7 @@ use iced::{
     Color, Command, Renderer, Subscription, Theme,
 };
 use iced_multi_window::{window, WindowManager};
-use image::io::Reader;
+use image::ImageReader;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -21,12 +21,12 @@ use std::{
 #[derive(Debug)]
 pub struct NuhxBoard {
     pub windows: WindowManager<NuhxBoard, WindowUnion>,
-    pub config: Config,
+    pub layout: Layout,
     pub style: Style,
     pub canvas: Cache,
-    /// `[keycode: press_time]`
+    /// `[keycode: time_pressed]`
     pub pressed_keys: HashMap<u32, Instant>,
-    /// `[keycode: press_time]`
+    /// `[keycode: time_pressed]`
     pub pressed_mouse_buttons: HashMap<u32, Instant>,
     /// `[axis: releases_queued]`
     pub pressed_scroll_buttons: HashMap<u32, u32>,
@@ -37,7 +37,7 @@ pub struct NuhxBoard {
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
     pub true_caps: bool,
-    pub keyboard: Option<usize>,
+    pub keyboard_choice: Option<usize>,
     pub style_choice: Option<usize>,
     pub keyboard_options: Vec<String>,
     pub keyboard_category_options: Vec<String>,
@@ -121,9 +121,8 @@ pub enum Message {
     ChangeSaveKeyboardAsName(String),
     ChangeSaveStyleAsName(String),
     ToggleSaveStyleAsGlobal,
-    ToggleUpdateTextPosition,
-    ChangeStyle(Color),
-    ColorPicker(ColorPicker),
+    ChangeBackground(Color),
+    ToggleColorPicker(ColorPicker),
 }
 
 #[derive(Debug, Clone)]
@@ -151,6 +150,7 @@ pub enum Setting {
     Capitalization(Capitalization),
     FollowForCapsSensitive,
     FollowForCapsInsensitive,
+    UpdateTextPosition,
 }
 
 impl Message {
@@ -190,8 +190,6 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
     height: 200.0,
 };
 
-async fn noop() {}
-
 impl Application for NuhxBoard {
     type Flags = Flags;
     type Theme = Theme;
@@ -199,14 +197,14 @@ impl Application for NuhxBoard {
     type Message = Message;
 
     fn new(flags: Flags) -> (Self, Command<Self::Message>) {
-        let path = home::home_dir()
+        let keyboards_path = home::home_dir()
             .unwrap()
             .join(".local/share/NuhxBoard/keyboards");
-        let config = Config {
+        let layout = Layout {
             version: None,
             width: DEFAULT_WINDOW_SIZE.width,
             height: DEFAULT_WINDOW_SIZE.height,
-            elements: vec![],
+            elements: Vec::new(),
         };
 
         let category = flags.settings.category.clone();
@@ -214,7 +212,7 @@ impl Application for NuhxBoard {
         (
             Self {
                 windows: WindowManager::new(window!(Main {})),
-                config,
+                layout,
                 style: Style::default(),
                 canvas: Cache::default(),
                 pressed_keys: HashMap::new(),
@@ -229,27 +227,27 @@ impl Application for NuhxBoard {
                 pressed_scroll_buttons: HashMap::new(),
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
-                keyboard: Some(flags.settings.keyboard),
+                keyboard_choice: Some(flags.settings.keyboard),
                 style_choice: Some(flags.settings.style),
-                keyboard_options: vec![],
-                keyboard_category_options: vec![],
-                style_options: vec![],
-                keyboards_path: path,
+                keyboard_options: Vec::new(),
+                keyboard_category_options: Vec::new(),
+                style_options: Vec::new(),
+                keyboards_path,
                 startup: true,
                 settings: flags.settings,
                 display_options: DisplayInfo::all().unwrap(),
                 edit_mode: false,
-                edit_history: vec![],
+                edit_history: Vec::new(),
                 history_depth: 0,
-                save_keyboard_as_category: "".into(),
-                save_keyboard_as_name: "".into(),
-                save_style_as_name: "".into(),
+                save_keyboard_as_category: String::new(),
+                save_keyboard_as_name: String::new(),
+                save_style_as_name: String::new(),
                 save_style_as_global: false,
                 color_pickers: ColorPickers::default(),
             },
             Command::batch([
-                Command::perform(noop(), move |_| Message::ChangeKeyboardCategory(category)),
-                iced::font::load(iced_aw::graphics::icons::BOOTSTRAP_FONT_BYTES)
+                Command::perform(async {}, move |_| Message::ChangeKeyboardCategory(category)),
+                iced::font::load(iced_aw::core::icons::BOOTSTRAP_FONT_BYTES)
                     .map(|_| Message::none()),
             ]),
         )
@@ -259,23 +257,22 @@ impl Application for NuhxBoard {
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
-                    if keycode_convert(key).is_err() {
+                    dbg!(key);
+                    if key == rdev::Key::CapsLock {
+                        self.true_caps = !self.true_caps;
+                        if self.settings.capitalization == Capitalization::Follow {
+                            self.caps = !self.caps;
+                        }
+                    }
+                    let Ok(key) = keycode_convert(key) else {
                         return self.error(Error::UnknownKey(key));
-                    }
-                    if key == rdev::Key::CapsLock
-                        && self.settings.capitalization == Capitalization::Follow
-                    {
-                        self.caps = !self.caps;
-                    }
-                    self.true_caps = !self.true_caps;
-                    let key = keycode_convert(key).unwrap();
+                    };
                     self.pressed_keys.insert(key, Instant::now());
                 }
                 rdev::EventType::KeyRelease(key) => {
-                    if keycode_convert(key).is_err() {
+                    let Ok(key_num) = keycode_convert(key) else {
                         return self.error(Error::UnknownKey(key));
-                    }
-                    let key_num = keycode_convert(key).unwrap();
+                    };
                     if !self.pressed_keys.contains_key(&key_num) {
                         return Command::none();
                     }
@@ -305,25 +302,22 @@ impl Application for NuhxBoard {
                     self.pressed_keys.remove(&key_num);
                 }
                 rdev::EventType::ButtonPress(button) => {
-                    if mouse_button_code_convert(button).is_err() {
-                        return self.error(Error::UnknownButton(button));
-                    }
-
                     if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
                         return Command::none();
                     }
+                    let Ok(button) = mouse_button_code_convert(button) else {
+                        return self.error(Error::UnknownButton(button));
+                    };
 
-                    let button = mouse_button_code_convert(button).unwrap();
                     self.pressed_mouse_buttons.insert(button, Instant::now());
                 }
                 rdev::EventType::ButtonRelease(button) => {
-                    if mouse_button_code_convert(button).is_err() {
+                    let Ok(button_num) = mouse_button_code_convert(button) else {
                         return self.error(Error::UnknownButton(button));
-                    }
+                    };
                     if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
                         return Command::none();
                     }
-                    let button_num = mouse_button_code_convert(button).unwrap();
                     if !self.pressed_mouse_buttons.contains_key(&button_num) {
                         return Command::none();
                     }
@@ -389,19 +383,20 @@ impl Application for NuhxBoard {
                         return Command::none();
                     }
 
-                    let mut center = (0.0, 0.0);
-
-                    for display in &self.display_options {
-                        if display.id == self.settings.display_choice.id {
-                            center = (
-                                display.x as f32 + (display.width as f32 / 2.0),
-                                display.height as f32 / 2.0,
-                            )
-                        }
-                    }
-
                     let previous_pos = match self.settings.mouse_from_center {
-                        true => (center.0, center.1),
+                        true => {
+                            let mut center = (0.0, 0.0);
+
+                            for display in &self.display_options {
+                                if display.id == self.settings.display_choice.id {
+                                    center = (
+                                        display.x as f32 + (display.width as f32 / 2.0),
+                                        display.height as f32 / 2.0,
+                                    )
+                                }
+                            }
+                            center
+                        }
                         false => self.previous_mouse_position,
                     };
                     let position_diff = (x - previous_pos.0, y - previous_pos.1);
@@ -431,9 +426,9 @@ impl Application for NuhxBoard {
                 self.settings.category = category;
 
                 if !self.startup {
-                    self.keyboard = None;
+                    self.keyboard_choice = None;
                     self.style_choice = None;
-                    self.style_options = vec![];
+                    self.style_options = Vec::new();
                 }
                 self.keyboard_options = {
                     path.push(&self.settings.category);
@@ -449,7 +444,7 @@ impl Application for NuhxBoard {
 
                 if self.startup {
                     self.startup = false;
-                    let keyboard = self.keyboard.unwrap();
+                    let keyboard = self.keyboard_choice.unwrap();
                     return self.update(Message::LoadKeyboard(keyboard));
                 }
             }
@@ -475,7 +470,7 @@ impl Application for NuhxBoard {
                             StyleChoice::Custom(style_name) => format!(
                                 "{}/{}/{}.style",
                                 self.settings.category,
-                                self.keyboard_options[self.keyboard.unwrap()],
+                                self.keyboard_options[self.keyboard_choice.unwrap()],
                                 style_name
                             ),
                         });
@@ -505,13 +500,13 @@ impl Application for NuhxBoard {
                         .join("images")
                         .join(name);
                     if !name.is_empty() && path.exists() {
-                        Reader::open(path)
+                        ImageReader::open(path)
                             .unwrap()
                             .decode()
                             .unwrap()
                             .resize_exact(
-                                self.config.width as u32,
-                                self.config.height as u32,
+                                self.layout.width as u32,
+                                self.layout.height as u32,
                                 image::imageops::FilterType::Nearest,
                             )
                             .save(self.keyboards_path.parent().unwrap().join("background.png"))
@@ -578,6 +573,8 @@ impl Application for NuhxBoard {
                     self.settings.follow_for_caps_insensitive =
                         !self.settings.follow_for_caps_insensitive;
                 }
+                Setting::UpdateTextPosition => {
+                    self.settings.update_text_position = !self.settings.update_text_position;
                 }
             },
             Message::ClearPressedKeys => {
@@ -588,45 +585,45 @@ impl Application for NuhxBoard {
                 self.edit_mode = !self.edit_mode;
             }
             Message::MoveElement { index, delta } => {
-                self.config.elements[index].translate(delta, self.settings.update_text_position);
+                self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveKeyboard(file) => {
                 let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
-                    self.keyboard_options[self.keyboard.unwrap()]
+                    self.keyboard_options[self.keyboard_choice.unwrap()]
                 )));
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
-                serde_json::to_writer_pretty(&mut file, &self.config).unwrap();
+                serde_json::to_writer_pretty(&mut file, &self.layout).unwrap();
             }
             Message::SaveStyle(file) => {
                 let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
-                    self.keyboard_options[self.keyboard.unwrap()],
+                    self.keyboard_options[self.keyboard_choice.unwrap()],
                     self.style_options[self.style_choice.unwrap()]
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
             }
             Message::SetHeight(height) => {
-                self.config.height = height;
+                self.layout.height = height;
                 return window::resize(
                     window::Id::MAIN,
                     iced::Size {
-                        width: self.config.width,
-                        height: self.config.height,
+                        width: self.layout.width,
+                        height: self.layout.height,
                     },
                 );
             }
             Message::SetWidth(width) => {
-                self.config.width = width;
+                self.layout.width = width;
                 return window::resize(
                     window::Id::MAIN,
                     iced::Size {
-                        width: self.config.width,
-                        height: self.config.height,
+                        width: self.layout.width,
+                        height: self.layout.height,
                     },
                 );
             }
@@ -647,7 +644,7 @@ impl Application for NuhxBoard {
                             delta,
                             move_text,
                         } => {
-                            self.config.elements[index].translate(-delta, move_text);
+                            self.layout.elements[index].translate(-delta, move_text);
                         }
                     }
                 }
@@ -661,7 +658,7 @@ impl Application for NuhxBoard {
                             delta,
                             move_text,
                         } => {
-                            self.config.elements[index].translate(delta, move_text);
+                            self.layout.elements[index].translate(delta, move_text);
                         }
                     }
                 }
@@ -677,9 +674,6 @@ impl Application for NuhxBoard {
             }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
-            }
-            Message::ToggleUpdateTextPosition => {
-                self.settings.update_text_position = !self.settings.update_text_position;
             }
             Message::Open(window) => {
                 match window {
@@ -699,7 +693,7 @@ impl Application for NuhxBoard {
                         self.save_keyboard_as_category
                             .clone_from(&self.settings.category);
                         self.save_keyboard_as_name
-                            .clone_from(&self.keyboard_options[self.keyboard.unwrap()]);
+                            .clone_from(&self.keyboard_options[self.keyboard_choice.unwrap()]);
                     }
                     window!(SaveStyleAs {}) => {
                         self.save_style_as_name =
@@ -714,11 +708,11 @@ impl Application for NuhxBoard {
             Message::Closed(window) => {
                 self.windows.closed(window);
             }
-            Message::ChangeStyle(color) => {
+            Message::ChangeBackground(color) => {
                 self.style.background_color = color.into();
                 self.color_pickers.keyboard_background = false;
             }
-            Message::ColorPicker(picker) => match picker {
+            Message::ToggleColorPicker(picker) => match picker {
                 ColorPicker::KeyboardBackground => {
                     self.color_pickers.keyboard_background =
                         !self.color_pickers.keyboard_background;

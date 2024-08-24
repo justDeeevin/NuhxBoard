@@ -19,9 +19,9 @@ license = false
 eula = false
 
 [dependencies]
-image = { version = "0.24.8", features = ["ico"] }
+image = { version = "0.25.2", features = ["ico"] }
 iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
-iced_aw = { version = "0.8.0", features = [
+iced_aw = { version = "0.9.3", features = [
   "selection_list",
   "number_input",
   "quad",
@@ -50,9 +50,6 @@ zip = "2.2.0"
 [features]
 grab = ["rdev/unstable_grab"]
 
-[target.'cfg(windows)'.dependencies]
-mslnk = "0.1.8"
-
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
@@ -67,7 +64,12 @@ ci = "github"
 # The installers to generate for each app
 installers = ["msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+]
 # Which actions to run on pull requests
 pr-run-mode = "plan"
 
