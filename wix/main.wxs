@@ -69,7 +69,7 @@
 
         <Package Id='*'
             Keywords='Installer'
-            Description='A Linux port of NohBoard'
+            Description='A cross-platform alternative to NohBoard'
             Manufacturer='Devin Droddy'
             InstallerVersion='450'
             Languages='1033'

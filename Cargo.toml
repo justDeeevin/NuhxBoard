@@ -9,7 +9,7 @@ repository = "https://github.com/justDeeevin/NuhxBoard"
 keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
 readme = "README.md"
-rust-version = "1.72.0"
+# rust-version = "1.72.0"
 include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md", "NuhxBoard.png"]
 
 [package.metadata.wix]
@@ -19,9 +19,17 @@ license = false
 eula = false
 
 [dependencies]
+image = { version = "0.24.8", features = ["ico"] }
+iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
+iced_aw = { version = "0.8.0", features = [
+  "selection_list",
+  "number_input",
+  "quad",
+  "color_picker",
+] }
 async-std = "1.12.0"
-color-eyre = { version = "0.6.2", default-features = false }
-colorgrad = "0.6.2"
+color-eyre = "0.6.3"
+colorgrad = "0.7.0"
 futures = "0.3.30"
 home = "0.5.9"
 iced = { version = "0.12.1", features = [
@@ -31,21 +39,13 @@ iced = { version = "0.12.1", features = [
   "async-std",
   "multi-window",
 ] }
-image = { version = "0.24.8", features = ["ico"] }
-iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
-iced_aw = { version = "0.8.0", features = [
-  "selection_list",
-  "number_input",
-  "quad",
-  "color_picker",
-] }
-rdev = { version = "0.5.3", features = ["unstable_grab"] }
-serde = { version = "1.0.195", features = ["serde_derive"] }
-serde_json = "1.0.111"
-reqwest = { version = "0.11.24", features = ["blocking"] }
-display-info = "0.4.8"
+rdev = "0.5.3"
+serde = { version = "1.0.209", features = ["derive"] }
+serde_json = "1.0.127"
+reqwest = { version = "0.12.7", features = ["blocking"] }
+display-info = "0.5.1"
 geo = "0.28.0"
-zip = "0.6.6"
+zip = "2.2.0"
 
 [target.'cfg(windows)'.dependencies]
 mslnk = "0.1.8"
@@ -58,19 +58,14 @@ lto = "thin"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.10.0"
+cargo-dist-version = "0.21.0"
 # CI backends to support
-ci = ["github"]
+ci = "github"
 # The installers to generate for each app
 installers = ["msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = [
-  "aarch64-apple-darwin",
-  "x86_64-apple-darwin",
-  "x86_64-unknown-linux-gnu",
-  "x86_64-pc-windows-msvc",
-]
-# Publish jobs to run in CI
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# Which actions to run on pull requests
 pr-run-mode = "plan"
 
 [workspace.metadata.dist.dependencies.apt]

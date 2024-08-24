@@ -1,7 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Type=Application
-Version=0.5.0
-Exec=/home/devin/.cargo/bin/nuhxboard
-Name=NuhxBoard
-Icon=/home/devin/.local/share/NuhxBoard/NuhxBoard.png
