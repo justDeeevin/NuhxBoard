@@ -257,7 +257,6 @@ impl Application for NuhxBoard {
         match message {
             Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
                 rdev::EventType::KeyPress(key) => {
-                    dbg!(key);
                     if key == rdev::Key::CapsLock {
                         self.true_caps = !self.true_caps;
                         if self.settings.capitalization == Capitalization::Follow {
