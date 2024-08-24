@@ -151,7 +151,6 @@ pub enum Setting {
     Capitalization(Capitalization),
     FollowForCapsSensitive,
     FollowForCapsInsensitive,
-    AutoDesktopEntry,
 }
 
 impl Message {
@@ -579,8 +578,6 @@ impl Application for NuhxBoard {
                     self.settings.follow_for_caps_insensitive =
                         !self.settings.follow_for_caps_insensitive;
                 }
-                Setting::AutoDesktopEntry => {
-                    self.settings.auto_desktop_entry = !self.settings.auto_desktop_entry;
                 }
             },
             Message::ClearPressedKeys => {

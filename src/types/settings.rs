@@ -16,7 +16,6 @@ pub struct Settings {
     pub scroll_hold_time: u64,
     pub window_title: String,
     pub display_choice: DisplayChoice,
-    pub auto_desktop_entry: bool,
     pub update_text_position: bool,
 }
 
@@ -48,7 +47,6 @@ impl Default for Settings {
                 id: display_id,
                 primary: true,
             },
-            auto_desktop_entry: true,
             update_text_position: true,
         }
     }

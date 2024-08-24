@@ -112,43 +112,6 @@ fn main() -> Result<()> {
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
 
-    match std::env::consts::OS {
-        "linux" => {
-            let desktop_entry_path = home::home_dir()
-                .unwrap()
-                .join(".local/share/applications/nuhxboard.desktop");
-
-            if !desktop_entry_path.exists() && settings.auto_desktop_entry {
-                let res = reqwest::blocking::get(
-                    "https://raw.githubusercontent.com/justDeeevin/NuhxBoard/main/nuhxboard.desktop",
-                )?;
-                let desktop_entry = res.bytes()?;
-                File::create(desktop_entry_path)?.write_all(&desktop_entry)?;
-
-                File::create(nuhxboard_path.join("NuhxBoard.png"))?.write_all(IMAGE)?;
-            }
-        }
-        // cfg necessary b/c lnk uses windows-only code
-        #[cfg(target_os = "windows")]
-        "windows" => {
-            let lnk_path = home::home_dir()
-                .unwrap()
-                .join("AppData/Roaming/Microsoft/Windows/Start Menu/Programs/NuhxBoard.lnk");
-
-            if !lnk_path.exists() && settings.auto_desktop_entry {
-                let lnk = lnk_path.to_str().unwrap();
-
-                let target_path = std::env::current_exe()?;
-
-                let target = target_path.to_str().unwrap();
-
-                let sl = mslnk::ShellLink::new(target)?;
-                sl.create_lnk(lnk)?;
-            }
-        }
-        _ => {}
-    }
-
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { settings };
 

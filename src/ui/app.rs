@@ -320,13 +320,6 @@ impl Window<NuhxBoard> for SettingsWindow {
 
         column![
             text(format!("NuhxBoard v{}", env!("CARGO_PKG_VERSION"))).size(20),
-            checkbox(
-                "Automatically create a desktop entry if none exists",
-                app.settings.auto_desktop_entry
-            )
-            .text_size(12)
-            .size(15)
-            .on_toggle(|_| Message::ChangeSetting(Setting::AutoDesktopEntry)),
             input,
             row![
                 text("Window title: ").size(12),
