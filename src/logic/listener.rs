@@ -2,7 +2,9 @@ use iced::{
     futures::{channel::mpsc, StreamExt},
     subscription, Subscription,
 };
-use rdev::{grab, listen};
+#[cfg(feature = "grab")]
+use rdev::grab;
+use rdev::listen;
 
 enum State {
     Starting,
@@ -27,6 +29,7 @@ pub fn bind() -> Subscription<Event> {
                 State::Starting => {
                     let (tx, rx) = mpsc::unbounded();
                     std::thread::spawn(move || {
+                        #[cfg(feature = "grab")]
                         if cfg!(target_os = "linux")
                             && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
                         {
@@ -50,6 +53,15 @@ pub fn bind() -> Subscription<Event> {
                             })
                             .unwrap();
                         }
+                        #[cfg(not(feature = "grab"))]
+                        listen(move |event| {
+                            if let Err(e) = tx.unbounded_send(event.clone()) {
+                                if !e.is_disconnected() {
+                                    panic!("{}", e);
+                                }
+                            }
+                        })
+                        .unwrap();
                     });
                     (Event::Ready, State::Ready(rx))
                 }

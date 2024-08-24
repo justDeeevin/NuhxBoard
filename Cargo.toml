@@ -47,6 +47,9 @@ display-info = "0.5.1"
 geo = "0.28.0"
 zip = "2.2.0"
 
+[features]
+grab = ["rdev/unstable_grab"]
+
 [target.'cfg(windows)'.dependencies]
 mslnk = "0.1.8"
 
