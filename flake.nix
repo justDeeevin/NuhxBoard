@@ -31,7 +31,13 @@
         inherit (pkgs) lib;
 
         craneLib = crane.mkLib pkgs;
-        src = craneLib.cleanCargoSource ./.;
+        iconFilter = path: (builtins.match ".*NuhxBoard.png$" path) != null;
+        iconOrCargo = path: type: (iconFilter path) || (craneLib.filterCargoSources path type);
+        src = lib.cleanSourceWith {
+          src = ./.;
+          filter = iconOrCargo;
+          name = "source";
+        };
 
         commonArgs = {
           inherit src;
@@ -70,7 +76,7 @@
             startupWMClass = "NuhxBoard";
           });
 
-          postInstall = "install -Dm644 NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png";
+          postInstall = "install -Dm644 $src/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png";
         };
 
         craneLibLLvmTools = craneLib.overrideToolchain
