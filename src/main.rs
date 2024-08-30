@@ -5,7 +5,6 @@ mod nuhxboard;
 mod types;
 mod ui;
 
-use color_eyre::eyre::Result;
 use iced::{multi_window::Application, window};
 use iced_multi_window::multi_window;
 use nuhxboard::*;
@@ -30,7 +29,7 @@ multi_window! {
 
 static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 
-fn main() -> Result<()> {
+fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
     let icon_image = image::load_from_memory(IMAGE)?;

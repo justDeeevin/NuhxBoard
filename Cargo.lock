@@ -2971,6 +2971,7 @@ dependencies = [
  "color-eyre",
  "colorgrad",
  "display-info",
+ "eyre",
  "futures",
  "geo",
  "home",

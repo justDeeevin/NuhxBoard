@@ -46,6 +46,7 @@ reqwest = { version = "0.12.7", features = ["blocking"] }
 display-info = "0.5.1"
 geo = "0.28.0"
 zip = "2.2.0"
+eyre = "0.6.12"
 
 [features]
 grab = ["rdev/unstable_grab"]
