@@ -37,7 +37,7 @@ fn main() -> eyre::Result<()> {
     let nuhxboard_path = home::home_dir().unwrap().join(".local/share/NuhxBoard");
 
     if !nuhxboard_path.exists() {
-        fs::create_dir_all(nuhxboard_path.clone())?;
+        fs::create_dir_all(&nuhxboard_path)?;
     }
 
     if !nuhxboard_path.join("NuhxBoard.json").exists() {
