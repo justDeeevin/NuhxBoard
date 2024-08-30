@@ -40,19 +40,23 @@ fn main() -> eyre::Result<()> {
         fs::create_dir_all(&nuhxboard_path)?;
     }
 
-    if !nuhxboard_path.join("NuhxBoard.json").exists() {
-        let mut settings = File::create(nuhxboard_path.join("NuhxBoard.json"))?;
+    let settings_path = nuhxboard_path.join("NuhxBoard.json");
+
+    if !settings_path.exists() {
+        let mut settings = File::create(&settings_path)?;
         settings.write_all(serde_json::to_string_pretty(&Settings::default())?.as_bytes())?;
     }
 
-    if !nuhxboard_path.join("keyboards").exists() {
-        fs::create_dir_all(nuhxboard_path.join("keyboards"))?;
-    } else if !nuhxboard_path.join("keyboards").is_dir() {
-        fs::remove_file(nuhxboard_path.join("keyboards"))?;
-        fs::create_dir_all(nuhxboard_path.join("keyboards"))?;
+    let keyboards_path = nuhxboard_path.join("keyboards");
+
+    if !keyboards_path.exists() {
+        fs::create_dir_all(&keyboards_path)?;
+    } else if !keyboards_path.is_dir() {
+        fs::remove_file(&keyboards_path)?;
+        fs::create_dir_all(&keyboards_path)?;
     }
 
-    if fs::read_dir(nuhxboard_path.join("keyboards"))?.count() == 0 {
+    if fs::read_dir(&keyboards_path)?.count() == 0 {
         let res = reqwest::blocking::get(
             "https://raw.githubusercontent.com/justdeeevin/nuhxboard/main/keyboards.zip",
         )?;
@@ -66,7 +70,7 @@ fn main() -> eyre::Result<()> {
         for i in 0..keyboards_archive.len() {
             let mut file = keyboards_archive.by_index(i).unwrap();
             let outpath = match file.enclosed_name() {
-                Some(path) => nuhxboard_path.join("keyboards").join(path),
+                Some(path) => keyboards_path.join(path),
                 None => continue,
             };
 
@@ -96,11 +100,13 @@ fn main() -> eyre::Result<()> {
         fs::remove_file(nuhxboard_path.join("keyboards.zip"))?;
     }
 
-    if !nuhxboard_path.join("keyboards/global").exists() {
-        fs::create_dir_all(nuhxboard_path.join("keyboards/global"))?;
+    let global_path = keyboards_path.join("global");
+
+    if !global_path.exists() {
+        fs::create_dir_all(&global_path)?;
     }
 
-    let settings_file = File::open(nuhxboard_path.join("NuhxBoard.json"))?;
+    let settings_file = File::open(settings_path)?;
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
 
