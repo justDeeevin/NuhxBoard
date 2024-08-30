@@ -49,14 +49,8 @@ macro_rules! draw_key {
         }
 
         let current_style = match pressed {
-            true => style
-                .pressed
-                .as_ref()
-                .unwrap_or($self.style.default_key_style.pressed.as_ref().unwrap()),
-            false => style
-                .loose
-                .as_ref()
-                .unwrap_or($self.style.default_key_style.loose.as_ref().unwrap()),
+            true => &style.pressed,
+            false => &style.loose,
         };
 
         $frame.fill(
@@ -112,13 +106,7 @@ macro_rules! draw_key {
                 &key,
                 Color {
                     a: 0.5,
-                    ..style
-                        .pressed
-                        .as_ref()
-                        .unwrap_or($self.style.default_key_style.pressed.as_ref().unwrap())
-                        .background
-                        .clone()
-                        .into()
+                    ..style.pressed.background.clone().into()
                 },
             );
         }

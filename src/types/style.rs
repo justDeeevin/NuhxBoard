@@ -1,4 +1,3 @@
-use iced::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -64,9 +63,9 @@ impl From<iced::Color> for NohRgb {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
-    pub loose: Option<KeySubStyle>,
+    pub loose: KeySubStyle,
     #[serde(rename = "Pressed")]
-    pub pressed: Option<KeySubStyle>,
+    pub pressed: KeySubStyle,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -84,7 +83,7 @@ pub struct KeySubStyle {
     #[serde(rename = "Font")]
     pub font: Font,
     #[serde(rename = "BackgroundImageFileName")]
-    pub background_image_file_name: String,
+    pub background_image_file_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -132,36 +131,44 @@ impl Default for Style {
             },
             background_image_file_name: None,
             default_key_style: KeyStyle {
-                loose: Some(KeySubStyle {
+                loose: KeySubStyle {
                     background: NohRgb::DEFAULT_GRAY,
                     text: NohRgb::BLACK,
-                    outline: NohRgb::BLACK,
+                    outline: NohRgb {
+                        red: 0.0,
+                        green: 255.0,
+                        blue: 0.0,
+                    },
                     show_outline: false,
-                    outline_width: 0,
+                    outline_width: 1,
                     font: Font {
-                        font_family: "Consolas".into(),
-                        size: 15.0,
+                        font_family: "Courier New".into(),
+                        size: 10.0,
                         style: 0,
                     },
-                    background_image_file_name: String::new(),
-                }),
-                pressed: Some(KeySubStyle {
+                    background_image_file_name: None,
+                },
+                pressed: KeySubStyle {
                     background: NohRgb::WHITE,
                     text: NohRgb::BLACK,
-                    outline: NohRgb::BLACK,
+                    outline: NohRgb {
+                        red: 0.0,
+                        green: 255.0,
+                        blue: 0.0,
+                    },
                     show_outline: false,
-                    outline_width: 0,
+                    outline_width: 1,
                     font: Font {
-                        font_family: "Consolas".into(),
-                        size: 15.0,
+                        font_family: "Courier New".into(),
+                        size: 10.0,
                         style: 0,
                     },
-                    background_image_file_name: String::new(),
-                }),
+                    background_image_file_name: None,
+                },
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
-                outer_color: Color::WHITE.into(),
+                outer_color: NohRgb::WHITE,
                 outline_width: 1.0,
             },
             element_styles: vec![],
