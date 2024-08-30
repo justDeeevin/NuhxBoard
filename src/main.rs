@@ -110,7 +110,6 @@ fn main() -> eyre::Result<()> {
 
     let icon_image = image::load_from_memory(IMAGE)?;
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
-    let flags = Flags { settings };
 
     let window_settings = iced::Settings {
         window: window::Settings {
@@ -120,7 +119,7 @@ fn main() -> eyre::Result<()> {
             exit_on_close_request: false,
             ..window::Settings::default()
         },
-        flags,
+        flags: settings,
         ..iced::Settings::default()
     };
     NuhxBoard::run(window_settings)?;

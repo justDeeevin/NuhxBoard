@@ -61,11 +61,6 @@ pub struct ColorPickers {
     pub keyboard_background: bool,
 }
 
-#[derive(Default)]
-pub struct Flags {
-    pub settings: Settings,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum StyleChoice {
     Default,
@@ -191,12 +186,12 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
 };
 
 impl Application for NuhxBoard {
-    type Flags = Flags;
+    type Flags = Settings;
     type Theme = Theme;
     type Executor = iced::executor::Default;
     type Message = Message;
 
-    fn new(flags: Flags) -> (Self, Command<Self::Message>) {
+    fn new(flags: Settings) -> (Self, Command<Self::Message>) {
         let keyboards_path = home::home_dir()
             .unwrap()
             .join(".local/share/NuhxBoard/keyboards");
@@ -207,7 +202,7 @@ impl Application for NuhxBoard {
             elements: Vec::new(),
         };
 
-        let category = flags.settings.category.clone();
+        let category = flags.category.clone();
 
         (
             Self {
@@ -217,7 +212,7 @@ impl Application for NuhxBoard {
                 canvas: Cache::default(),
                 pressed_keys: HashMap::new(),
                 pressed_mouse_buttons: HashMap::new(),
-                caps: match flags.settings.capitalization {
+                caps: match flags.capitalization {
                     Capitalization::Upper => true,
                     Capitalization::Lower => false,
                     Capitalization::Follow => false,
@@ -227,14 +222,14 @@ impl Application for NuhxBoard {
                 pressed_scroll_buttons: HashMap::new(),
                 previous_mouse_position: (0.0, 0.0),
                 previous_mouse_time: std::time::SystemTime::now(),
-                keyboard_choice: Some(flags.settings.keyboard),
-                style_choice: Some(flags.settings.style),
+                keyboard_choice: Some(flags.keyboard),
+                style_choice: Some(flags.style),
                 keyboard_options: Vec::new(),
                 keyboard_category_options: Vec::new(),
                 style_options: Vec::new(),
                 keyboards_path,
                 startup: true,
-                settings: flags.settings,
+                settings: flags,
                 display_options: DisplayInfo::all().unwrap(),
                 edit_mode: false,
                 edit_history: Vec::new(),
