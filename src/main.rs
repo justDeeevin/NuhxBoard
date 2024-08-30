@@ -32,8 +32,6 @@ static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
-    let icon_image = image::load_from_memory(IMAGE)?;
-
     let nuhxboard_path = home::home_dir().unwrap().join(".local/share/NuhxBoard");
 
     if !nuhxboard_path.exists() {
@@ -110,6 +108,7 @@ fn main() -> eyre::Result<()> {
 
     let settings: Settings = serde_json::from_reader(settings_file)?;
 
+    let icon_image = image::load_from_memory(IMAGE)?;
     let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
     let flags = Flags { settings };
 
