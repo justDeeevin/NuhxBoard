@@ -1,17 +1,15 @@
 use crate::{
-    logic::{code_convert::*, listener},
+    logic::listener,
     types::{config::*, settings::*, style::*},
     ui::app::*,
     WindowUnion,
 };
-use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{
     advanced::graphics::core::SmolStr, multi_window::Application, widget::canvas::Cache, window,
     Color, Command, Renderer, Subscription, Theme,
 };
 use iced_multi_window::{window, WindowManager};
-use image::ImageReader;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -100,7 +98,7 @@ pub enum Message {
     LoadStyle(usize),
     ClosingMain,
     ChangeKeyboardCategory(String),
-    LoadKeyboard(usize),
+    LoadLayout(usize),
     ChangeSetting(Setting),
     ClearPressedKeys,
     ToggleEditMode,
@@ -112,8 +110,8 @@ pub enum Message {
     PushChange(Change),
     Undo,
     Redo,
-    ChangeSaveKeyboardAsCategory(String),
-    ChangeSaveKeyboardAsName(String),
+    ChangeSaveLayoutAsCategory(String),
+    ChangeSaveLayoutAsName(String),
     ChangeSaveStyleAsName(String),
     ToggleSaveStyleAsGlobal,
     ChangeBackground(Color),
@@ -125,6 +123,7 @@ pub enum ColorPicker {
     KeyboardBackground,
 }
 
+// TODO: Are window resized undoable?
 #[derive(Debug, Clone)]
 pub enum Change {
     MoveElement {
@@ -204,6 +203,12 @@ impl Application for NuhxBoard {
 
         let category = flags.category.clone();
 
+        let caps = match flags.capitalization {
+            Capitalization::Upper => true,
+            Capitalization::Lower => false,
+            Capitalization::Follow => false,
+        };
+
         (
             Self {
                 windows: WindowManager::new(window!(Main {})),
@@ -212,11 +217,7 @@ impl Application for NuhxBoard {
                 canvas: Cache::default(),
                 pressed_keys: HashMap::new(),
                 pressed_mouse_buttons: HashMap::new(),
-                caps: match flags.capitalization {
-                    Capitalization::Upper => true,
-                    Capitalization::Lower => false,
-                    Capitalization::Follow => false,
-                },
+                caps,
                 true_caps: false,
                 mouse_velocity: (0.0, 0.0),
                 pressed_scroll_buttons: HashMap::new(),
@@ -249,159 +250,12 @@ impl Application for NuhxBoard {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        let mut clear_canvas = true;
         match message {
-            Message::Listener(listener::Event::KeyReceived(event)) => match event.event_type {
-                rdev::EventType::KeyPress(key) => {
-                    if key == rdev::Key::CapsLock {
-                        self.true_caps = !self.true_caps;
-                        if self.settings.capitalization == Capitalization::Follow {
-                            self.caps = !self.caps;
-                        }
-                    }
-                    let Ok(key) = keycode_convert(key) else {
-                        return self.error(Error::UnknownKey(key));
-                    };
-                    self.pressed_keys.insert(key, Instant::now());
-                }
-                rdev::EventType::KeyRelease(key) => {
-                    let Ok(key_num) = keycode_convert(key) else {
-                        return self.error(Error::UnknownKey(key));
-                    };
-                    if !self.pressed_keys.contains_key(&key_num) {
-                        return Command::none();
-                    }
-                    if self
-                        .pressed_keys
-                        .get(&key_num)
-                        .unwrap()
-                        .elapsed()
-                        .as_millis()
-                        < self.settings.min_press_time
-                    {
-                        return Command::perform(
-                            sleep(std::time::Duration::from_millis(
-                                (self.settings.min_press_time
-                                    - self
-                                        .pressed_keys
-                                        .get(&key_num)
-                                        .unwrap()
-                                        .elapsed()
-                                        .as_millis())
-                                .try_into()
-                                .unwrap(),
-                            )),
-                            move |_| Message::key_release(key),
-                        );
-                    }
-                    self.pressed_keys.remove(&key_num);
-                }
-                rdev::EventType::ButtonPress(button) => {
-                    if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
-                        return Command::none();
-                    }
-                    let Ok(button) = mouse_button_code_convert(button) else {
-                        return self.error(Error::UnknownButton(button));
-                    };
-
-                    self.pressed_mouse_buttons.insert(button, Instant::now());
-                }
-                rdev::EventType::ButtonRelease(button) => {
-                    let Ok(button_num) = mouse_button_code_convert(button) else {
-                        return self.error(Error::UnknownButton(button));
-                    };
-                    if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
-                        return Command::none();
-                    }
-                    if !self.pressed_mouse_buttons.contains_key(&button_num) {
-                        return Command::none();
-                    }
-                    if self
-                        .pressed_mouse_buttons
-                        .get(&button_num)
-                        .unwrap()
-                        .elapsed()
-                        .as_millis()
-                        < self.settings.min_press_time
-                    {
-                        return Command::perform(
-                            sleep(std::time::Duration::from_millis(
-                                (self.settings.min_press_time
-                                    - self
-                                        .pressed_mouse_buttons
-                                        .get(&button_num)
-                                        .unwrap()
-                                        .elapsed()
-                                        .as_millis())
-                                .try_into()
-                                .unwrap(),
-                            )),
-                            move |_| Message::button_release(button),
-                        );
-                    }
-                    self.pressed_mouse_buttons.remove(&button_num);
-                }
-                rdev::EventType::Wheel { delta_x, delta_y } => {
-                    let button;
-                    if delta_x < 0 {
-                        button = 3;
-                    } else if delta_x > 0 {
-                        button = 2;
-                    } else if delta_y < 0 {
-                        button = 1;
-                    } else {
-                        button = 0;
-                    }
-
-                    self.pressed_scroll_buttons
-                        .entry(button)
-                        .and_modify(|v| *v += 1)
-                        .or_insert(1);
-
-                    self.canvas.clear();
-
-                    return Command::perform(
-                        sleep(std::time::Duration::from_millis(
-                            self.settings.scroll_hold_time,
-                        )),
-                        move |_| Message::ReleaseScroll(button),
-                    );
-                }
-                rdev::EventType::MouseMove { x, y } => {
-                    let (x, y) = (x as f32, y as f32);
-                    let current_time = event.time;
-                    let time_diff = match current_time.duration_since(self.previous_mouse_time) {
-                        Ok(diff) => diff,
-                        Err(_) => return Command::none(),
-                    };
-                    if time_diff.as_millis() < 10 {
-                        return Command::none();
-                    }
-
-                    let previous_pos = match self.settings.mouse_from_center {
-                        true => {
-                            let mut center = (0.0, 0.0);
-
-                            for display in &self.display_options {
-                                if display.id == self.settings.display_choice.id {
-                                    center = (
-                                        display.x as f32 + (display.width as f32 / 2.0),
-                                        display.height as f32 / 2.0,
-                                    )
-                                }
-                            }
-                            center
-                        }
-                        false => self.previous_mouse_position,
-                    };
-                    let position_diff = (x - previous_pos.0, y - previous_pos.1);
-                    self.mouse_velocity = (
-                        position_diff.0 / time_diff.as_secs_f32(),
-                        position_diff.1 / time_diff.as_secs_f32(),
-                    );
-                    self.previous_mouse_position = (x, y);
-                    self.previous_mouse_time = current_time;
-                }
-            },
+            Message::Listener(listener::Event::KeyReceived(event)) => {
+                self.canvas.clear();
+                return self.input_event(event);
+            }
             Message::ReleaseScroll(button) => {
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
                     1 => {
@@ -413,20 +267,21 @@ impl Application for NuhxBoard {
                 }
             }
             Message::ChangeKeyboardCategory(category) => {
+                // TODO: why is this here?
                 if category.is_empty() {
                     return Command::none();
                 }
-                let mut path = self.keyboards_path.clone();
                 self.settings.category = category;
 
                 if !self.startup {
                     self.keyboard_choice = None;
+                    self.settings.keyboard = 0;
                     self.style_choice = None;
+                    self.settings.style = 0;
                     self.style_options = Vec::new();
                 }
                 self.keyboard_options = {
-                    path.push(&self.settings.category);
-                    fs::read_dir(&path)
+                    fs::read_dir(self.keyboards_path.join(&self.settings.category))
                         .unwrap()
                         .map(|r| r.unwrap())
                         .filter(|entry| {
@@ -439,82 +294,17 @@ impl Application for NuhxBoard {
                 if self.startup {
                     self.startup = false;
                     let keyboard = self.keyboard_choice.unwrap();
-                    return self.update(Message::LoadKeyboard(keyboard));
+                    return self.update(Message::LoadLayout(keyboard));
                 }
+                clear_canvas = false;
             }
-            Message::LoadKeyboard(keyboard) => {
-                return self.load_keyboard(keyboard);
+            Message::LoadLayout(layout) => {
+                self.canvas.clear();
+                return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {
-                self.settings.style = style;
-
-                self.style_choice = Some(style);
-
-                if self.style_options[style] == StyleChoice::Default {
-                    self.style = Style::default();
-                } else {
-                    let path = self
-                        .keyboards_path
-                        .clone()
-                        .join(match &self.style_options[style] {
-                            StyleChoice::Default => unreachable!(),
-                            StyleChoice::Global(style_name) => {
-                                format!("global/{}.style", style_name)
-                            }
-                            StyleChoice::Custom(style_name) => format!(
-                                "{}/{}/{}.style",
-                                self.settings.category,
-                                self.keyboard_options[self.keyboard_choice.unwrap()],
-                                style_name
-                            ),
-                        });
-
-                    let style_file = match File::open(path) {
-                        Ok(f) => f,
-                        Err(e) => {
-                            return self.error(Error::StyleOpen(e.to_string()));
-                        }
-                    };
-                    self.style = match serde_json::from_reader(style_file) {
-                        Ok(style) => style,
-                        Err(e) => {
-                            return self.error(Error::StyleParse(if e.is_eof() {
-                                format!("Unexpeted EOF (End of file) at line {}", e.line())
-                            } else {
-                                e.to_string()
-                            }))
-                        }
-                    };
-                }
-
-                if let Some(name) = &self.style.background_image_file_name {
-                    let path = self
-                        .keyboards_path
-                        .join(&self.settings.category)
-                        .join("images")
-                        .join(name);
-                    if !name.is_empty() && path.exists() {
-                        ImageReader::open(path)
-                            .unwrap()
-                            .decode()
-                            .unwrap()
-                            .resize_exact(
-                                self.layout.width as u32,
-                                self.layout.height as u32,
-                                image::imageops::FilterType::Nearest,
-                            )
-                            .save(self.keyboards_path.parent().unwrap().join("background.png"))
-                            .unwrap();
-                    } else {
-                        let _ = fs::remove_file(
-                            self.keyboards_path.parent().unwrap().join("background.png"),
-                        );
-                    }
-                } else {
-                    let _ = fs::remove_file(
-                        self.keyboards_path.parent().unwrap().join("background.png"),
-                    );
-                }
+                self.canvas.clear();
+                return self.load_style(style);
             }
             Message::ClosingMain => {
                 let mut settings_file = File::create(
@@ -532,6 +322,7 @@ impl Application for NuhxBoard {
                 }
                 Setting::ScrollHoldTime(time) => {
                     self.settings.scroll_hold_time = time;
+                    clear_canvas = false;
                 }
                 Setting::CenterMouse => {
                     self.settings.mouse_from_center = !self.settings.mouse_from_center;
@@ -541,9 +332,11 @@ impl Application for NuhxBoard {
                 }
                 Setting::MinPressTime(time) => {
                     self.settings.min_press_time = time;
+                    clear_canvas = false;
                 }
                 Setting::WindowTitle(title) => {
                     self.settings.window_title = title;
+                    clear_canvas = false;
                 }
                 Setting::Capitalization(cap) => {
                     match cap {
@@ -569,12 +362,13 @@ impl Application for NuhxBoard {
                 }
                 Setting::UpdateTextPosition => {
                     self.settings.update_text_position = !self.settings.update_text_position;
+                    clear_canvas = false;
                 }
             },
             Message::ClearPressedKeys => {
                 self.pressed_keys.clear();
             }
-            Message::Listener(_) => {}
+            Message::Listener(_) => clear_canvas = false,
             Message::ToggleEditMode => {
                 self.edit_mode = !self.edit_mode;
             }
@@ -582,7 +376,7 @@ impl Application for NuhxBoard {
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveKeyboard(file) => {
-                let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
+                let path = file.unwrap_or(self.keyboards_path.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
                     self.keyboard_options[self.keyboard_choice.unwrap()]
@@ -590,9 +384,10 @@ impl Application for NuhxBoard {
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.layout).unwrap();
+                clear_canvas = false;
             }
             Message::SaveStyle(file) => {
-                let path = file.unwrap_or(self.keyboards_path.clone().join(format!(
+                let path = file.unwrap_or(self.keyboards_path.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
                     self.keyboard_options[self.keyboard_choice.unwrap()],
@@ -600,6 +395,7 @@ impl Application for NuhxBoard {
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
+                clear_canvas = false;
             }
             Message::SetHeight(height) => {
                 self.layout.height = height;
@@ -628,6 +424,7 @@ impl Application for NuhxBoard {
                     self.history_depth = 0;
                 }
                 self.edit_history.push(change);
+                clear_canvas = false;
             }
             Message::Undo => {
                 if self.history_depth < self.edit_history.len() {
@@ -657,24 +454,26 @@ impl Application for NuhxBoard {
                     }
                 }
             }
-            Message::ChangeSaveKeyboardAsCategory(category) => {
+            Message::ChangeSaveLayoutAsCategory(category) => {
                 self.save_keyboard_as_category = category;
+                clear_canvas = false;
             }
-            Message::ChangeSaveKeyboardAsName(name) => {
+            Message::ChangeSaveLayoutAsName(name) => {
                 self.save_keyboard_as_name = name;
+                clear_canvas = false;
             }
             Message::ChangeSaveStyleAsName(name) => {
                 self.save_style_as_name = name;
+                clear_canvas = false;
             }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
+                clear_canvas = false;
             }
             Message::Open(window) => {
                 match window {
                     window!(LoadKeyboard {}) => {
-                        let path = self.keyboards_path.clone();
-
-                        self.keyboard_category_options = fs::read_dir(path)
+                        self.keyboard_category_options = fs::read_dir(&self.keyboards_path)
                             .unwrap()
                             .map(|r| r.unwrap())
                             .filter(|entry| {
@@ -701,6 +500,7 @@ impl Application for NuhxBoard {
             }
             Message::Closed(window) => {
                 self.windows.closed(window);
+                clear_canvas = false;
             }
             Message::ChangeBackground(color) => {
                 self.style.background_color = color.into();
@@ -710,10 +510,13 @@ impl Application for NuhxBoard {
                 ColorPicker::KeyboardBackground => {
                     self.color_pickers.keyboard_background =
                         !self.color_pickers.keyboard_background;
+                    clear_canvas = false;
                 }
             },
         }
-        self.canvas.clear();
+        if clear_canvas {
+            self.canvas.clear();
+        }
         Command::none()
     }
 
@@ -734,7 +537,9 @@ impl Application for NuhxBoard {
             listener::bind().map(Message::Listener),
             iced::event::listen_with(|event, _| match event {
                 iced::Event::Window(id, window::Event::Closed) => Some(Message::Closed(id)),
-                iced::Event::Window(_, window::Event::CloseRequested) => Some(Message::ClosingMain),
+                iced::Event::Window(window::Id::MAIN, window::Event::CloseRequested) => {
+                    Some(Message::ClosingMain)
+                }
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key,
                     location: _,

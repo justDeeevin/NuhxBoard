@@ -56,6 +56,8 @@ fn seperator() -> Quad {
 pub struct Main;
 impl Window<NuhxBoard> for Main {
     fn settings(&self) -> window::Settings {
+        // This isn't actually the settings for the main window. The settings are defined in the
+        // invocation of `NuhxBoard::run` in `main.rs`.
         window::Settings::default()
     }
 
@@ -369,7 +371,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
                     text("Keyboard Layout:"),
                     SelectionList::new_with(
                         app.keyboard_options.clone().leak(),
-                        |i, _| Message::LoadKeyboard(i),
+                        |i, _| Message::LoadLayout(i),
                         12.0,
                         5.0,
                         <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
@@ -515,7 +517,7 @@ impl Window<NuhxBoard> for SaveDefinitionAs {
                     app.settings.category.as_str(),
                     &app.save_keyboard_as_category,
                 )
-                .on_input(Message::ChangeSaveKeyboardAsCategory)
+                .on_input(Message::ChangeSaveLayoutAsCategory)
             ],
             row![
                 text("Name: "),
@@ -523,7 +525,7 @@ impl Window<NuhxBoard> for SaveDefinitionAs {
                     &app.keyboard_options[app.keyboard_choice.unwrap()],
                     &app.save_keyboard_as_name,
                 )
-                .on_input(Message::ChangeSaveKeyboardAsName)
+                .on_input(Message::ChangeSaveLayoutAsName)
             ],
             button("Save").on_press(Message::SaveKeyboard(Some(
                 app.keyboards_path
