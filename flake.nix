@@ -38,15 +38,14 @@
       inherit (pkgs) lib;
 
       craneLib = crane.mkLib pkgs;
-      # iconFilter = path: (builtins.match ".*NuhxBoard.png$" path) != null;
-      # iconOrCargo = path: type: (iconFilter path) || (craneLib.filterCargoSources path type);
-      # src = lib.cleanSourceWith {
-      #   src = ./.;
-      #   filter = iconOrCargo;
-      #   name = "source";
-      # };
-      src = ./.;
 
+      iconFilter = path: (builtins.match ".*NuhxBoard.png$" path) != null;
+      iconOrCargo = path: type: (iconFilter path) || (craneLib.filterCargoSources path type);
+      src = lib.cleanSourceWith {
+        src = ./.;
+        filter = iconOrCargo;
+        name = "source";
+      };
       commonArgs = {
         inherit src;
         strictDeps = true;
