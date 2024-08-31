@@ -73,20 +73,24 @@
             pkgs.libiconv
           ];
 
-        nativeBuildInputs = with pkgs; [pkg-config];
+        nativeBuildInputs = with pkgs; [copyDesktopItems pkg-config];
 
-        desktopItem = pkgs.makeDesktopItem {
-          name = "NuhxBoard";
-          desktopName = "NuhxBoard";
-          comment = "Cross-platform input visualizer";
-          icon = "NuhxBoard.png";
-          exec = "nuhxboard";
-          terminal = false;
-          keywords = ["Keyboard"];
-          startupWMClass = "NuhxBoard";
-        };
+        desktopItems = [
+          (pkgs.makeDesktopItem {
+            name = "NuhxBoard";
+            desktopName = "NuhxBoard";
+            comment = "Cross-platform input visualizer";
+            icon = "NuhxBoard";
+            exec = "nuhxboard";
+            terminal = false;
+            keywords = ["Keyboard"];
+            startupWMClass = "NuhxBoard";
+          })
+        ];
 
-        postInstall = "install -Dm644 $src/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png";
+        postInstall = ''
+          install -Dm644 ${src}/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
+        '';
       };
 
       craneLibLLvmTools =
