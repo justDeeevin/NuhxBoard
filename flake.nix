@@ -72,24 +72,7 @@
             pkgs.libiconv
           ];
 
-        nativeBuildInputs = with pkgs; [copyDesktopItems pkg-config];
-
-        desktopItems = [
-          (pkgs.makeDesktopItem {
-            name = "NuhxBoard";
-            desktopName = "NuhxBoard";
-            comment = "Cross-platform input visualizer";
-            icon = "NuhxBoard";
-            exec = "nuhxboard";
-            terminal = false;
-            keywords = ["Keyboard"];
-            startupWMClass = "NuhxBoard";
-          })
-        ];
-
-        postInstall = ''
-          install -Dm644 ${src}/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
-        '';
+        nativeBuildInputs = with pkgs; [copyDesktopItems pkg-config makeWrapper];
       };
 
       craneLibLLvmTools =
@@ -109,6 +92,25 @@
       nuhxboard = craneLib.buildPackage (commonArgs
         // {
           inherit cargoArtifacts;
+        }
+        // {
+          desktopItems = [
+            (pkgs.makeDesktopItem {
+              name = "NuhxBoard";
+              desktopName = "NuhxBoard";
+              comment = "Cross-platform input visualizer";
+              icon = "NuhxBoard";
+              exec = "nuhxboard";
+              terminal = false;
+              keywords = ["Keyboard"];
+              startupWMClass = "NuhxBoard";
+            })
+          ];
+
+          postInstall = ''
+            install -Dm644 ${src}/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
+            wrapProgram $out/bin/nuhxboard --set PATH "${pkgs.lib.makeBinPath commonArgs.buildInputs}"
+          '';
         });
     in {
       checks = {
