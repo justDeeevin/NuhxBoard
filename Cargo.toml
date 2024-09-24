@@ -19,34 +19,29 @@ license = false
 eula = false
 
 [dependencies]
-image = { version = "0.25.2", features = ["ico"] }
 iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
-iced_aw = { version = "0.9.3", features = [
-  "selection_list",
-  "number_input",
-  "quad",
-  "color_picker",
-] }
-async-std = "1.12.0"
-color-eyre = "0.6.3"
+async-std = "1.13.0"
+color-eyre = { version = "0.6.3", default-features = false }
 colorgrad = "0.7.0"
+display-info = "0.5.1"
+eyre = "0.6.12"
 futures = "0.3.30"
+geo = "0.28.0"
 home = "0.5.9"
-iced = { version = "0.12.1", features = [
+iced = { version = "0.13.1", features = [
   "image",
   "canvas",
   "advanced",
   "async-std",
-  "multi-window",
 ] }
+iced_aw = "0.11.0"
+image = { version = "0.25.2", features = ["ico"] }
 rdev = "0.5.3"
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
 reqwest = { version = "0.12.7", features = ["blocking"] }
-display-info = "0.5.1"
-geo = "0.28.0"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
 zip = "2.2.0"
-eyre = "0.6.12"
+iced_fonts = "0.1.1"
 
 [features]
 grab = ["rdev/unstable_grab"]

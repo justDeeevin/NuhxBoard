@@ -4,7 +4,7 @@ use crate::{
     types::{settings::*, style::*},
 };
 use async_std::task::sleep;
-use iced::{window, Command};
+use iced::{window, Task};
 use image::ImageReader;
 use std::{
     fs::{self, File},
@@ -12,7 +12,7 @@ use std::{
 };
 
 impl NuhxBoard {
-    pub fn load_layout(&mut self, keyboard: usize) -> Command<Message> {
+    pub fn load_layout(&mut self, keyboard: usize) -> Task<Message> {
         self.settings.keyboard = keyboard;
 
         self.keyboard_choice = Some(keyboard);
@@ -87,7 +87,7 @@ impl NuhxBoard {
         self.style_choice = Some(0);
 
         window::resize(
-            window::Id::MAIN,
+            self.main_window,
             iced::Size {
                 width: self.layout.width,
                 height: self.layout.height,
@@ -95,7 +95,7 @@ impl NuhxBoard {
         )
     }
 
-    pub fn load_style(&mut self, style: usize) -> Command<Message> {
+    pub fn load_style(&mut self, style: usize) -> Task<Message> {
         self.settings.style = style;
 
         self.style_choice = Some(style);
@@ -160,10 +160,10 @@ impl NuhxBoard {
             let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
         }
 
-        Command::none()
+        Task::none()
     }
 
-    pub fn input_event(&mut self, event: rdev::Event) -> Command<Message> {
+    pub fn input_event(&mut self, event: rdev::Event) -> Task<Message> {
         match event.event_type {
             rdev::EventType::KeyPress(key) => {
                 if key == rdev::Key::CapsLock {
@@ -182,7 +182,7 @@ impl NuhxBoard {
                     return self.error(Error::UnknownKey(key));
                 };
                 if !self.pressed_keys.contains_key(&key_num) {
-                    return Command::none();
+                    return Task::none();
                 }
                 if self
                     .pressed_keys
@@ -192,7 +192,7 @@ impl NuhxBoard {
                     .as_millis()
                     < self.settings.min_press_time
                 {
-                    return Command::perform(
+                    return Task::perform(
                         sleep(std::time::Duration::from_millis(
                             (self.settings.min_press_time
                                 - self
@@ -211,7 +211,7 @@ impl NuhxBoard {
             }
             rdev::EventType::ButtonPress(button) => {
                 if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
-                    return Command::none();
+                    return Task::none();
                 }
                 let Ok(button) = mouse_button_code_convert(button) else {
                     return self.error(Error::UnknownButton(button));
@@ -224,10 +224,10 @@ impl NuhxBoard {
                     return self.error(Error::UnknownButton(button));
                 };
                 if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
-                    return Command::none();
+                    return Task::none();
                 }
                 if !self.pressed_mouse_buttons.contains_key(&button_num) {
-                    return Command::none();
+                    return Task::none();
                 }
                 if self
                     .pressed_mouse_buttons
@@ -237,7 +237,7 @@ impl NuhxBoard {
                     .as_millis()
                     < self.settings.min_press_time
                 {
-                    return Command::perform(
+                    return Task::perform(
                         sleep(std::time::Duration::from_millis(
                             (self.settings.min_press_time
                                 - self
@@ -273,7 +273,7 @@ impl NuhxBoard {
 
                 self.canvas.clear();
 
-                return Command::perform(
+                return Task::perform(
                     sleep(std::time::Duration::from_millis(
                         self.settings.scroll_hold_time,
                     )),
@@ -285,10 +285,10 @@ impl NuhxBoard {
                 let current_time = event.time;
                 let time_diff = match current_time.duration_since(self.previous_mouse_time) {
                     Ok(diff) => diff,
-                    Err(_) => return Command::none(),
+                    Err(_) => return Task::none(),
                 };
                 if time_diff.as_millis() < 10 {
-                    return Command::none();
+                    return Task::none();
                 }
 
                 let previous_pos = match self.settings.mouse_from_center {
@@ -317,6 +317,6 @@ impl NuhxBoard {
             }
         }
 
-        Command::none()
+        Task::none()
     }
 }

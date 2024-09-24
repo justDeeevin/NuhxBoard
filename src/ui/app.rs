@@ -1,24 +1,20 @@
-use crate::{
-    nuhxboard::*,
-    types::{settings::*, stylesheets::*},
-};
+use crate::{nuhxboard::*, types::settings::*};
 use iced::{
     font::Weight,
     widget::{
-        button, canvas, checkbox, column, container, horizontal_space, image, pick_list, radio,
-        row, text, text_input, Button, Scrollable,
+        button, canvas, checkbox, column, container, horizontal_space, pick_list, radio, row, text,
+        text_input, Button, Scrollable,
     },
-    window, Color, Font, Length, Renderer, Theme,
+    window, Background, Border, Color, Font, Length, Renderer, Theme,
 };
 use iced_aw::{
-    color_picker, number_input,
-    quad::Quad,
-    widgets::{FloatingElement, InnerBounds},
-    ContextMenu, SelectionList,
+    color_picker, number_input, quad::Quad, widgets::InnerBounds, ContextMenu, SelectionList,
 };
-use iced_multi_window::{window, Window};
+use iced_multi_window::Window;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, sync::Arc};
+
+static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct DisplayChoice {
@@ -39,7 +35,23 @@ impl Display for DisplayChoice {
 fn context_menu_button(label: &str) -> Button<Message> {
     let text = text(label).size(12);
     button(text)
-        .style(iced::theme::Button::Custom(Box::new(WhiteButton {})))
+        .style(|theme, status| match status {
+            button::Status::Active => button::Style {
+                background: Some(iced::Background::Color(iced::Color::WHITE)),
+                text_color: iced::Color::BLACK,
+                ..button::primary(theme, status)
+            },
+            button::Status::Hovered => button::Style {
+                border: iced::Border {
+                    color: iced::Color::BLACK,
+                    width: 2.0,
+                    radius: 0.into(),
+                },
+                text_color: iced::Color::BLACK,
+                ..button::primary(theme, status)
+            },
+            _ => button::primary(theme, status),
+        })
         .width(Length::Fill)
 }
 
@@ -54,21 +66,24 @@ fn seperator() -> Quad {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Main;
-impl Window<NuhxBoard> for Main {
-    fn settings(&self) -> window::Settings {
-        // This isn't actually the settings for the main window. The settings are defined in the
-        // invocation of `NuhxBoard::run` in `main.rs`.
-        window::Settings::default()
+impl Window<NuhxBoard, Theme, Message> for Main {
+    fn id(&self) -> &'static str {
+        "main"
     }
 
-    fn view<'a>(
-        &'a self,
-        app: &'a NuhxBoard,
-    ) -> iced::Element<
-        '_,
-        <NuhxBoard as iced::multi_window::Application>::Message,
-        <NuhxBoard as iced::multi_window::Application>::Theme,
-    > {
+    fn settings(&self) -> window::Settings {
+        let icon_image = image::load_from_memory(IMAGE).unwrap();
+        let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256).unwrap();
+
+        window::Settings {
+            size: DEFAULT_WINDOW_SIZE,
+            resizable: false,
+            icon: Some(icon),
+            ..window::Settings::default()
+        }
+    }
+
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(app)
             .height(Length::Fill)
             .width(Length::Fill);
@@ -77,14 +92,14 @@ impl Window<NuhxBoard> for Main {
             let mut menu = vec![
                 context_menu_button("Settings")
                     .on_press_maybe(
-                        (!app.windows.any_of(window!(SettingsWindow {})))
-                            .then_some(Message::Open(window!(SettingsWindow {}))),
+                        (!app.windows.any_of(&SettingsWindow))
+                            .then_some(Message::Open(Box::new(SettingsWindow))),
                     )
                     .into(),
                 context_menu_button("Load Keyboard")
                     .on_press_maybe(
-                        (!app.windows.any_of(window!(LoadKeyboard {})))
-                            .then_some(Message::Open(window!(LoadKeyboard {}))),
+                        (!app.windows.any_of(&LoadKeyboard))
+                            .then_some(Message::Open(Box::new(LoadKeyboard))),
                     )
                     .into(),
                 seperator().into(),
@@ -100,24 +115,45 @@ impl Window<NuhxBoard> for Main {
                 menu.append(&mut vec![
                     checkbox("Update Text Position", app.settings.update_text_position)
                         .on_toggle(|_| Message::ChangeSetting(Setting::UpdateTextPosition))
-                        .style(iced::theme::Checkbox::Custom(Box::new(
-                            ContextMenuCheckBox {},
-                        )))
+                        .style(|theme, status| match status {
+                            checkbox::Status::Active { is_checked } => checkbox::Style {
+                                text_color: Some(iced::Color::BLACK),
+                                background: Background::Color(match is_checked {
+                                    true => iced::Color::from_rgba(0.0, 0.4, 1.0, 0.5),
+                                    false => iced::Color::TRANSPARENT,
+                                }),
+                                border: Border {
+                                    color: iced::Color::BLACK,
+                                    width: 1.0,
+                                    radius: iced::border::Radius::default(),
+                                },
+                                icon_color: iced::Color::BLACK,
+                            },
+                            checkbox::Status::Hovered { is_checked: _ } => checkbox::Style {
+                                border: Border {
+                                    color: iced::Color::BLACK,
+                                    width: 2.0,
+                                    radius: iced::border::Radius::default(),
+                                },
+                                ..checkbox::primary(theme, status)
+                            },
+                            _ => checkbox::primary(theme, status),
+                        })
                         .text_size(12)
                         .size(15)
                         .into(),
                     seperator().into(),
                     context_menu_button("Keyboard Properties")
                         .on_press_maybe(
-                            (!app.windows.any_of(window!(KeyboardProperties {})))
-                                .then_some(Message::Open(window!(KeyboardProperties {}))),
+                            (!app.windows.any_of(&KeyboardProperties))
+                                .then_some(Message::Open(Box::new(KeyboardProperties))),
                         )
                         .into(),
                     context_menu_button("Element Properties").into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
-                            (!app.windows.any_of(window!(KeyboardStyle {})))
-                                .then_some(Message::Open(window!(KeyboardStyle {}))),
+                            (!app.windows.any_of(&KeyboardStyle))
+                                .then_some(Message::Open(Box::new(KeyboardStyle))),
                         )
                         .into(),
                     context_menu_button("Element Style").into(),
@@ -130,39 +166,31 @@ impl Window<NuhxBoard> for Main {
                     .on_press(Message::SaveKeyboard(None))
                     .into(),
                 context_menu_button("Save Definition As...")
-                    .on_press(Message::Open(window!(SaveDefinitionAs {})))
+                    .on_press(Message::Open(Box::new(SaveDefinitionAs)))
                     .into(),
                 context_menu_button("Save Style")
                     .on_press(Message::SaveStyle(None))
                     .into(),
                 context_menu_button("Save Style As...")
-                    .on_press(Message::Open(window!(SaveStyleAs {})))
+                    .on_press(Message::Open(Box::new(SaveStyleAs)))
                     .into(),
                 context_menu_button("Clear Pressed Keys")
                     .on_press(Message::ClearPressedKeys)
                     .into(),
-                context_menu_button("Exit")
-                    .on_press(Message::ClosingMain)
-                    .into(),
+                context_menu_button("Exit").on_press(Message::Exit).into(),
             ]);
             container(Scrollable::new(column(menu)))
-                .style(iced::theme::Container::Custom(Box::new(ContextMenuBox {})))
+                .style(|theme| container::Style {
+                    background: Some(iced::Background::Color(iced::Color::WHITE)),
+                    ..container::bordered_box(theme)
+                })
                 .width(Length::Fixed(150.0))
                 .into()
         });
-        if app.style.background_image_file_name.is_some() {
-            let image_path = app.keyboards_path.parent().unwrap().join("background.png");
-            FloatingElement::new(
-                image(image_path).height(Length::Fill).width(Length::Fill),
-                context_menu,
-            )
-            .into()
-        } else {
-            context_menu.into()
-        }
+        context_menu.into()
     }
 
-    fn theme(&self, app: &NuhxBoard) -> <NuhxBoard as iced::multi_window::Application>::Theme {
+    fn theme(&self, app: &NuhxBoard) -> Theme {
         let red = app.style.background_color.red / 255.0;
         let green = app.style.background_color.green / 255.0;
         let blue = app.style.background_color.blue / 255.0;
@@ -180,7 +208,11 @@ impl Window<NuhxBoard> for Main {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SettingsWindow;
-impl Window<NuhxBoard> for SettingsWindow {
+impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
+    fn id(&self) -> &'static str {
+        "settings"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
@@ -192,14 +224,7 @@ impl Window<NuhxBoard> for SettingsWindow {
         }
     }
 
-    fn view<'a>(
-        &'a self,
-        app: &'a NuhxBoard,
-    ) -> iced::Element<
-        '_,
-        <NuhxBoard as iced::multi_window::Application>::Message,
-        <NuhxBoard as iced::multi_window::Application>::Theme,
-    > {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         let display_choices = app
             .display_options
             .iter()
@@ -213,23 +238,23 @@ impl Window<NuhxBoard> for SettingsWindow {
             row![
                 text("Mouse sensitivity: ").size(12),
                 horizontal_space(),
-                number_input(app.settings.mouse_sensitivity, f32::MAX, |v| {
+                number_input(app.settings.mouse_sensitivity, 0.0.., |v| {
                     Message::ChangeSetting(Setting::MouseSensitivity(v))
                 })
                 .size(12.0)
             ]
             .padding(5)
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
             row![
                 text("Scroll hold time (ms): ").size(12),
                 horizontal_space(),
-                number_input(app.settings.scroll_hold_time, u64::MAX, |v| {
+                number_input(app.settings.scroll_hold_time, 0.., |v| {
                     Message::ChangeSetting(Setting::ScrollHoldTime(v))
                 })
                 .size(12.0)
             ]
             .padding(5)
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
             checkbox(
                 "Calculate mouse speed from center of screen",
                 app.settings.mouse_from_center
@@ -245,10 +270,10 @@ impl Window<NuhxBoard> for SettingsWindow {
                 .text_size(12)
             ]
             .padding(5)
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
             text("Show keypresses for at least").size(12),
             row![
-                number_input(app.settings.min_press_time, u128::MAX, |v| {
+                number_input(app.settings.min_press_time, 0.., |v| {
                     Message::ChangeSetting(Setting::MinPressTime(v))
                 })
                 .size(12.0)
@@ -256,9 +281,9 @@ impl Window<NuhxBoard> for SettingsWindow {
                 text("ms").size(12)
             ]
             .padding(5)
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
         ]
-        .align_items(iced::Alignment::Center);
+        .align_x(iced::Alignment::Center);
 
         let follow_for_sensitive_function =
             match app.settings.capitalization != Capitalization::Follow {
@@ -328,10 +353,10 @@ impl Window<NuhxBoard> for SettingsWindow {
                     .size(12)
                     .on_input(|v| Message::ChangeSetting(Setting::WindowTitle(v)))
             ]
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
             capitalization,
         ]
-        .align_items(iced::Alignment::Center)
+        .align_x(iced::Alignment::Center)
         .into()
     }
 
@@ -339,14 +364,18 @@ impl Window<NuhxBoard> for SettingsWindow {
         "Settings".to_string()
     }
 
-    fn theme(&self, _app: &NuhxBoard) -> <NuhxBoard as iced::multi_window::Application>::Theme {
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadKeyboard;
-impl Window<NuhxBoard> for LoadKeyboard {
+impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
+    fn id(&self) -> &'static str {
+        "load_keyboard"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
@@ -358,7 +387,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
         }
     }
 
-    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         column![
             text("Category:"),
             pick_list(
@@ -374,7 +403,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
                         |i, _| Message::LoadLayout(i),
                         12.0,
                         5.0,
-                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        iced_aw::style::selection_list::primary,
                         app.keyboard_choice,
                         iced::Font::default(),
                     )
@@ -386,7 +415,7 @@ impl Window<NuhxBoard> for LoadKeyboard {
                         |i, _| Message::LoadStyle(i),
                         12.0,
                         5.0,
-                        <Theme as iced_aw::style::selection_list::StyleSheet>::Style::default(),
+                        iced_aw::style::selection_list::primary,
                         app.style_choice,
                         iced::Font::default(),
                     )
@@ -409,7 +438,11 @@ impl Window<NuhxBoard> for LoadKeyboard {
 pub struct ErrorPopup {
     pub error: Error,
 }
-impl Window<NuhxBoard> for ErrorPopup {
+impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
+    fn id(&self) -> &'static str {
+        "error"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -429,7 +462,7 @@ impl Window<NuhxBoard> for ErrorPopup {
         "Error".to_string()
     }
 
-    fn view(&self, _app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+    fn view<'a>(&self, _app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         let error = &self.error;
         let kind = match error {
             Error::ConfigOpen(_) => "Keyboard file could not be opened.",
@@ -449,7 +482,7 @@ impl Window<NuhxBoard> for ErrorPopup {
         };
         container(
             column![text("Error:"), text(kind), text("More info:"), text(info),]
-                .align_items(iced::Alignment::Center),
+                .align_x(iced::Alignment::Center),
         )
         .height(iced::Length::Fill)
         .width(iced::Length::Fill)
@@ -461,7 +494,11 @@ impl Window<NuhxBoard> for ErrorPopup {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
-impl Window<NuhxBoard> for KeyboardProperties {
+impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
+    fn id(&self) -> &'static str {
+        "keyboard_properties"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -473,18 +510,18 @@ impl Window<NuhxBoard> for KeyboardProperties {
         }
     }
 
-    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         column![
             row![
                 text("Width: "),
-                number_input(app.layout.width, f32::MAX, Message::SetWidth)
+                number_input(app.layout.width, 0.0.., Message::SetWidth)
             ]
-            .align_items(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center),
             row![
                 text("Height: "),
-                number_input(app.layout.height, f32::MAX, Message::SetHeight)
+                number_input(app.layout.height, 0.0.., Message::SetHeight)
             ]
-            .align_items(iced::Alignment::Center)
+            .align_y(iced::Alignment::Center)
         ]
         .into()
     }
@@ -500,7 +537,11 @@ impl Window<NuhxBoard> for KeyboardProperties {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveDefinitionAs;
-impl Window<NuhxBoard> for SaveDefinitionAs {
+impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
+    fn id(&self) -> &'static str {
+        "save_definition_as"
+    }
+
     fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
@@ -509,7 +550,7 @@ impl Window<NuhxBoard> for SaveDefinitionAs {
         "Save Definition As".to_string()
     }
 
-    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         column![
             row![
                 text("Category: "),
@@ -551,7 +592,11 @@ impl Window<NuhxBoard> for SaveDefinitionAs {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveStyleAs;
-impl Window<NuhxBoard> for SaveStyleAs {
+impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
+    fn id(&self) -> &'static str {
+        "save_style_as"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -563,7 +608,7 @@ impl Window<NuhxBoard> for SaveStyleAs {
         }
     }
 
-    fn view(&self, app: &NuhxBoard) -> iced::Element<'_, Message, Theme> {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         column![
             row![
                 text("Name: "),
@@ -602,21 +647,18 @@ impl Window<NuhxBoard> for SaveStyleAs {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardStyle;
 
-impl Window<NuhxBoard> for KeyboardStyle {
+impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
+    fn id(&self) -> &'static str {
+        "keyboard_style"
+    }
+
     fn settings(&self) -> window::Settings {
         window::Settings {
             ..Default::default()
         }
     }
 
-    fn view<'a>(
-        &'a self,
-        app: &'a NuhxBoard,
-    ) -> iced::Element<
-        '_,
-        <NuhxBoard as iced::multi_window::Application>::Message,
-        <NuhxBoard as iced::multi_window::Application>::Theme,
-    > {
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
         let keyboard = column![
             text("Keyboard").font(Font {
                 weight: Weight::Bold,
@@ -629,9 +671,15 @@ impl Window<NuhxBoard> for KeyboardStyle {
                     button("")
                         .width(Length::Fixed(15.0))
                         .height(Length::Fixed(15.0))
-                        .style(iced::theme::Button::Custom(Box::new(ColorPickerBox {
-                            color: app.style.background_color.clone().into()
-                        })))
+                        .style(|theme, status| match status {
+                            button::Status::Active => button::Style {
+                                background: Some(iced::Background::Color(
+                                    app.style.background_color.clone().into()
+                                )),
+                                ..button::primary(theme, status)
+                            },
+                            _ => button::primary(theme, status),
+                        })
                         .on_press(Message::ToggleColorPicker(ColorPicker::KeyboardBackground)),
                     Message::ToggleColorPicker(ColorPicker::KeyboardBackground),
                     Message::ChangeBackground
@@ -647,10 +695,7 @@ impl Window<NuhxBoard> for KeyboardStyle {
         "Keyboard Style".to_string()
     }
 
-    fn theme<'a>(
-        &'a self,
-        _app: &'a NuhxBoard,
-    ) -> <NuhxBoard as iced::multi_window::Application>::Theme {
+    fn theme<'a>(&'a self, _app: &'a NuhxBoard) -> Theme {
         Theme::Light
     }
 }

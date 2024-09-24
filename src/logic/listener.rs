@@ -1,7 +1,9 @@
-use iced::{
-    futures::{channel::mpsc, StreamExt},
-    subscription, Subscription,
+use futures::{
+    channel::mpsc,
+    sink::SinkExt,
+    stream::{Stream, StreamExt},
 };
+use iced::stream;
 #[cfg(feature = "grab")]
 use rdev::grab;
 use rdev::listen;
@@ -18,14 +20,12 @@ pub enum Event {
     None,
 }
 
-pub fn bind() -> Subscription<Event> {
-    struct Keys;
+pub fn bind() -> impl Stream<Item = Event> {
+    stream::channel(100, |mut output| async move {
+        let mut state = State::Starting;
 
-    subscription::unfold(
-        std::any::TypeId::of::<Keys>(),
-        State::Starting,
-        |state| async move {
-            match state {
+        loop {
+            match &mut state {
                 State::Starting => {
                     let (tx, rx) = mpsc::unbounded();
                     std::thread::spawn(move || {
@@ -63,16 +63,16 @@ pub fn bind() -> Subscription<Event> {
                         })
                         .unwrap();
                     });
-                    (Event::Ready, State::Ready(rx))
+                    output.send(Event::Ready).await.unwrap();
+                    state = State::Ready(rx);
                 }
-                State::Ready(mut rx) => {
-                    let received = rx.next().await;
-                    match received {
-                        Some(key) => (Event::KeyReceived(key), State::Ready(rx)),
-                        None => (Event::None, State::Ready(rx)),
-                    }
+                State::Ready(ref mut rx) => {
+                    let Some(key) = rx.next().await else {
+                        continue;
+                    };
+                    output.send(Event::KeyReceived(key)).await.unwrap();
                 }
             }
-        },
-    )
+        }
+    })
 }

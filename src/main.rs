@@ -5,29 +5,12 @@ mod nuhxboard;
 mod types;
 mod ui;
 
-use iced::{multi_window::Application, window};
-use iced_multi_window::multi_window;
 use nuhxboard::*;
 use std::{
     fs::{self, File},
     io::{self, prelude::*},
 };
 use types::settings::Settings;
-use ui::app::*;
-
-multi_window! {
-    NuhxBoard,
-    Main,
-    SettingsWindow,
-    LoadKeyboard,
-    ErrorPopup,
-    KeyboardProperties,
-    SaveDefinitionAs,
-    SaveStyleAs,
-    KeyboardStyle,
-}
-
-static IMAGE: &[u8] = include_bytes!("../NuhxBoard.png");
 
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
@@ -104,25 +87,11 @@ fn main() -> eyre::Result<()> {
         fs::create_dir_all(&global_path)?;
     }
 
-    let settings_file = File::open(settings_path)?;
-
-    let settings: Settings = serde_json::from_reader(settings_file)?;
-
-    let icon_image = image::load_from_memory(IMAGE)?;
-    let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256)?;
-
-    let window_settings = iced::Settings {
-        window: window::Settings {
-            size: DEFAULT_WINDOW_SIZE,
-            resizable: false,
-            icon: Some(icon),
-            exit_on_close_request: false,
-            ..window::Settings::default()
-        },
-        flags: settings,
-        ..iced::Settings::default()
-    };
-    NuhxBoard::run(window_settings)?;
+    iced::daemon(NuhxBoard::title, NuhxBoard::update, NuhxBoard::view)
+        .theme(NuhxBoard::theme)
+        .subscription(NuhxBoard::subscription)
+        .font(iced_fonts::REQUIRED_FONT_BYTES)
+        .run_with(NuhxBoard::new)?;
 
     Ok(())
 }
