@@ -489,9 +489,6 @@ impl NuhxBoard {
             Message::Exit => return window::close(self.main_window),
             Message::Closed(window) => {
                 self.windows.was_closed(window);
-                if self.windows.empty() {
-                    return iced::exit();
-                }
                 if window == self.main_window {
                     let mut settings_file = File::create(
                         home::home_dir()
@@ -500,7 +497,14 @@ impl NuhxBoard {
                     )
                     .unwrap();
                     serde_json::to_writer_pretty(&mut settings_file, &self.settings).unwrap();
-                    return self.windows.close_all().map(|_| Message::none());
+                    if self.windows.empty() {
+                        return iced::exit();
+                    } else {
+                        return self.windows.close_all().map(|_| Message::none());
+                    }
+                }
+                if self.windows.empty() {
+                    return iced::exit();
                 }
                 clear_canvas = false;
             }
