@@ -355,7 +355,18 @@ impl canvas::Program<Message> for NuhxBoard {
                                                 state.hovered_element = Some(index);
                                             }
                                             state.previous_cursor_position = cursor_position_geo;
-                                            return (Status::Captured, None);
+
+                                            return (
+                                                Status::Captured,
+                                                if cfg!(target_os = "linux")
+                                                    && std::env::var("XDG_SESSION_TYPE").unwrap()
+                                                        == "wayland"
+                                                {
+                                                    Some(Message::UpdateCanvas)
+                                                } else {
+                                                    None
+                                                },
+                                            );
                                         }
                                     }
                                     _ => {
@@ -382,7 +393,17 @@ impl canvas::Program<Message> for NuhxBoard {
                                                 state.hovered_element = Some(index);
                                             }
                                             state.previous_cursor_position = cursor_position_geo;
-                                            return (Status::Captured, None);
+                                            return (
+                                                Status::Captured,
+                                                if cfg!(target_os = "linux")
+                                                    && std::env::var("XDG_SESSION_TYPE").unwrap()
+                                                        == "wayland"
+                                                {
+                                                    Some(Message::UpdateCanvas)
+                                                } else {
+                                                    None
+                                                },
+                                            );
                                         }
                                     }
                                 }
@@ -391,7 +412,16 @@ impl canvas::Program<Message> for NuhxBoard {
                             if state.hovered_element.is_some() {
                                 state.hovered_element = None;
                                 state.previous_cursor_position = cursor_position_geo;
-                                return (Status::Captured, None);
+                                return (
+                                    Status::Captured,
+                                    if cfg!(target_os = "linux")
+                                        && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
+                                    {
+                                        Some(Message::UpdateCanvas)
+                                    } else {
+                                        None
+                                    },
+                                );
                             }
                         }
                         Interaction::Dragging => {
@@ -422,7 +452,16 @@ impl canvas::Program<Message> for NuhxBoard {
                         state.selected_element = None;
                     }
 
-                    return (Status::Captured, None);
+                    return (
+                        Status::Captured,
+                        if cfg!(target_os = "linux")
+                            && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
+                        {
+                            Some(Message::UpdateCanvas)
+                        } else {
+                            None
+                        },
+                    );
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
                     let message = if state.delta_accumulator != Coord::default() {
@@ -438,7 +477,7 @@ impl canvas::Program<Message> for NuhxBoard {
                         out
                     } else {
                         state.selected_element = state.hovered_element;
-                        None
+                        Some(Message::UpdateCanvas)
                     };
 
                     state.held_element = None;

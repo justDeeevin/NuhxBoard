@@ -115,6 +115,7 @@ pub enum Message {
     ToggleSaveStyleAsGlobal,
     ChangeBackground(Color),
     ToggleColorPicker(ColorPicker),
+    UpdateCanvas,
 }
 
 #[derive(Debug, Clone)]
@@ -260,6 +261,7 @@ impl NuhxBoard {
                 self.canvas.clear();
                 return self.input_event(event);
             }
+            Message::Listener(_) => clear_canvas = false,
             Message::ReleaseScroll(button) => {
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
                     1 => {
@@ -362,7 +364,6 @@ impl NuhxBoard {
             Message::ClearPressedKeys => {
                 self.pressed_keys.clear();
             }
-            Message::Listener(_) => clear_canvas = false,
             Message::ToggleEditMode => {
                 self.edit_mode = !self.edit_mode;
             }
@@ -418,7 +419,6 @@ impl NuhxBoard {
                     self.history_depth = 0;
                 }
                 self.edit_history.push(change);
-                clear_canvas = false;
             }
             Message::Undo => {
                 if self.history_depth < self.edit_history.len() {
@@ -519,6 +519,7 @@ impl NuhxBoard {
                     clear_canvas = false;
                 }
             },
+            Message::UpdateCanvas => {}
         }
         if clear_canvas {
             self.canvas.clear();
