@@ -23,13 +23,11 @@ impl Default for Settings {
     fn default() -> Self {
         let displays = DisplayInfo::all().unwrap();
 
-        let mut display_id = 0;
-
-        for display in displays {
-            if display.is_primary {
-                display_id = display.id;
-            }
-        }
+        let display_id = displays
+            .iter()
+            .find(|d| d.is_primary)
+            .unwrap_or(&displays[0])
+            .id;
 
         Self {
             capitalization: Capitalization::Follow,
