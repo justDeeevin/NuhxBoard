@@ -109,7 +109,7 @@
 
           postInstall = ''
             install -Dm644 ${src}/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
-            wrapProgram $out/bin/nuhxboard --set PATH "${pkgs.lib.makeBinPath commonArgs.buildInputs}"
+            wrapProgram $out/bin/nuhxboard --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath commonArgs.buildInputs}"
           '';
         });
     in {
