@@ -101,7 +101,10 @@ pub enum Message {
     ChangeSetting(Setting),
     ClearPressedKeys,
     ToggleEditMode,
-    MoveElement { index: usize, delta: geo::Coord },
+    MoveElement {
+        index: usize,
+        delta: geo::Coord<f32>,
+    },
     SaveKeyboard(Option<std::path::PathBuf>),
     SaveStyle(Option<std::path::PathBuf>),
     SetHeight(f32),
@@ -128,7 +131,7 @@ pub enum ColorPicker {
 pub enum Change {
     MoveElement {
         index: usize,
-        delta: geo::Coord,
+        delta: geo::Coord<f32>,
         move_text: bool,
     },
 }

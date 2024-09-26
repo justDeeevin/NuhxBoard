@@ -303,8 +303,8 @@ pub struct CanvasState {
     held_element: Option<usize>,
     selected_element: Option<usize>,
     interaction: Interaction,
-    previous_cursor_position: Coord,
-    delta_accumulator: Coord,
+    previous_cursor_position: Coord<f32>,
+    delta_accumulator: Coord<f32>,
 }
 
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -336,8 +336,8 @@ impl canvas::Program<Message> for NuhxBoard {
         };
 
         let cursor_position_geo = Coord {
-            x: cursor_position.x as f64,
-            y: cursor_position.y as f64,
+            x: cursor_position.x,
+            y: cursor_position.y,
         };
 
         if let canvas::Event::Mouse(event) = event {

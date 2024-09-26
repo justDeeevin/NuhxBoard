@@ -23,7 +23,7 @@ pub enum BoardElement {
 }
 
 impl BoardElement {
-    pub fn translate(&mut self, delta: geo::Coord, move_text: bool) {
+    pub fn translate(&mut self, delta: geo::Coord<f32>, move_text: bool) {
         match self {
             BoardElement::MouseSpeedIndicator(key) => {
                 key.location += delta;
@@ -123,18 +123,18 @@ impl From<SerializablePoint> for Point {
     }
 }
 
-impl From<SerializablePoint> for geo::Coord {
+impl From<SerializablePoint> for geo::Coord<f32> {
     fn from(value: SerializablePoint) -> Self {
         Self {
-            x: value.x as f64,
-            y: value.y as f64,
+            x: value.x,
+            y: value.y,
         }
     }
 }
 
-impl std::ops::AddAssign<geo::Coord> for SerializablePoint {
-    fn add_assign(&mut self, rhs: geo::Coord) {
-        self.x += rhs.x as f32;
-        self.y += rhs.y as f32;
+impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
+    fn add_assign(&mut self, rhs: geo::Coord<f32>) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
