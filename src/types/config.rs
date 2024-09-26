@@ -18,7 +18,7 @@ pub struct Layout {
 pub enum BoardElement {
     KeyboardKey(KeyboardKeyDefinition),
     MouseKey(MouseKeyDefinition),
-    MouseScroll(MouseScrollDefinition),
+    MouseScroll(MouseKeyDefinition),
     MouseSpeedIndicator(MouseSpeedIndicatorDefinition),
 }
 
@@ -85,18 +85,33 @@ pub struct MouseKeyDefinition {
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MouseScrollDefinition {
-    #[serde(rename = "Id")]
+pub struct CommonDefinition {
     pub id: u32,
-    #[serde(rename = "Boundaries")]
-    pub boundaries: Vec<SerializablePoint>,
-    #[serde(rename = "TextPosition")]
     pub text_position: SerializablePoint,
-    #[serde(rename = "KeyCodes")]
+    pub boundaries: Vec<SerializablePoint>,
     pub keycodes: Vec<u32>,
-    #[serde(rename = "Text")]
-    pub text: String,
+}
+
+impl From<KeyboardKeyDefinition> for CommonDefinition {
+    fn from(val: KeyboardKeyDefinition) -> Self {
+        CommonDefinition {
+            id: val.id,
+            text_position: val.text_position,
+            boundaries: val.boundaries,
+            keycodes: val.keycodes,
+        }
+    }
+}
+
+impl From<MouseKeyDefinition> for CommonDefinition {
+    fn from(val: MouseKeyDefinition) -> Self {
+        CommonDefinition {
+            id: val.id,
+            text_position: val.text_position,
+            boundaries: val.boundaries,
+            keycodes: val.keycodes,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -4,297 +4,20 @@ use crate::{
     types::{config::*, settings::*, style::*},
 };
 use colorgrad::Gradient;
-use geo::{Coord, LineString, Polygon, Within};
+use geo::{Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
 use iced::{
     mouse,
-    widget::canvas::{self, event::Status, Geometry, Path},
+    widget::canvas::{self, event::Status, Frame, Geometry, Path},
     Color, Rectangle, Renderer, Theme,
 };
+use std::collections::HashSet;
 
-macro_rules! draw_key {
-    ($self: ident, $state:ident, $def: ident, $frame: ident, $content: expr, $pressed_button_list: expr, $index: expr) => {
-        let mut boundaries_iter = $def.boundaries.iter();
-        let key = Path::new(|builder| {
-            builder.move_to((*boundaries_iter.next().unwrap()).clone().into());
-            for boundary in boundaries_iter {
-                builder.line_to((*boundary).clone().into());
-            }
-            builder.close();
-        });
-
-        let element_style = &$self
-            .style
-            .element_styles
-            .iter()
-            .find(|style| style.key == $def.id);
-
-        let style: &KeyStyle;
-
-        if let Some(s) = element_style {
-            style = match &s.value {
-                ElementStyleUnion::KeyStyle(i_s) => i_s,
-                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
-            };
-        } else {
-            style = &$self.style.default_key_style;
-        }
-
-        let mut pressed = false;
-
-        for keycode in &$def.keycodes {
-            if $pressed_button_list.contains_key(keycode) {
-                pressed = true;
-                break;
-            }
-        }
-
-        let current_style = match pressed {
-            true => &style.pressed,
-            false => &style.loose,
-        };
-
-        $frame.fill(
-            &key,
-            Color::from_rgb(
-                current_style.background.red / 255.0,
-                current_style.background.blue / 255.0,
-                current_style.background.green / 255.0,
-            ),
-        );
-        $frame.fill_text(canvas::Text {
-            content: $content,
-            position: $def.text_position.clone().into(),
-            color: Color::from_rgb(
-                current_style.text.red / 255.0,
-                current_style.text.green / 255.0,
-                current_style.text.blue / 255.0,
-            ),
-            size: iced::Pixels(current_style.font.size as f32),
-            font: iced::Font {
-                family: iced::font::Family::Name(
-                    // Leak is required because Name requires static lifetime
-                    // as opposed to application lifetime.
-                    // I suppose they were just expecting you to pass in a
-                    // literal here... damn you!!
-                    current_style.font.font_family.clone().leak(),
-                ),
-                weight: if current_style.font.style & 1 != 0 {
-                    iced::font::Weight::Bold
-                } else {
-                    iced::font::Weight::Normal
-                },
-                stretch: iced::font::Stretch::Normal,
-                style: if current_style.font.style & 0b10 != 0 {
-                    iced::font::Style::Italic
-                } else {
-                    iced::font::Style::Normal
-                },
-            },
-            horizontal_alignment: iced::alignment::Horizontal::Center,
-            vertical_alignment: iced::alignment::Vertical::Center,
-            shaping: iced::widget::text::Shaping::Advanced,
-            ..Default::default()
-        });
-
-        if $state.hovered_element == Some($index)
-            && $state.held_element.is_none()
-            && $state.selected_element.is_none()
-        {
-            $frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
-        } else if $state.held_element == Some($index) {
-            $frame.fill(
-                &key,
-                Color {
-                    a: 0.5,
-                    ..style.pressed.background.clone().into()
-                },
-            );
-        }
-        if $state.selected_element == Some($index) {
-            $frame.stroke(
-                &key,
-                canvas::Stroke {
-                    style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
-                    width: 2.0,
-                    ..Default::default()
-                },
-            );
-        }
-    };
-}
-
-macro_rules! draw_speed_indicator {
-    ($self: ident, $state: ident, $def: ident, $frame: ident, $index: expr) => {
-                            let inner = Path::circle($def.location.clone().into(), $def.radius / 5.0);
-                            let outer = Path::circle($def.location.clone().into(), $def.radius);
-                            let polar_velocity = (
-                                ($self.mouse_velocity.0.powi(2) + $self.mouse_velocity.1.powi(2))
-                                    .sqrt(),
-                                $self.mouse_velocity.1.atan2($self.mouse_velocity.0),
-                            );
-                            let squashed_magnitude =
-                                ($self.settings.mouse_sensitivity * 0.000005 * polar_velocity.0)
-                                    .tanh();
-                            let ball = Path::circle(
-                                iced::Point {
-                                    x: $def.location.x + ($def.radius * polar_velocity.1.cos()),
-                                    y: $def.location.y + ($def.radius * polar_velocity.1.sin()),
-                                },
-                                $def.radius / 5.0,
-                            );
-
-                            // This is a whole lot of trig... just trust the process...
-                            // Check out [This Desmos thing](https://www.desmos.com/calculator/wf52bomadb) if you want to see it all workin
-                            let triangle = Path::new(|builder| {
-                                builder.move_to(iced::Point {
-                                    x: $def.location.x
-                                        + (squashed_magnitude
-                                            * (($def.radius * polar_velocity.1.cos())
-                                                - (($def.radius / 5.0)
-                                                    * (-polar_velocity.1.tan().powi(-1))
-                                                        .atan()
-                                                        .cos()))),
-                                    y: $def.location.y
-                                        + (squashed_magnitude
-                                            * (($def.radius * polar_velocity.1.sin())
-                                                - (($def.radius / 5.0)
-                                                    * (-polar_velocity.1.tan().powi(-1))
-                                                        .atan()
-                                                        .sin()))),
-                                });
-                                builder.line_to(iced::Point {
-                                    x: $def.location.x
-                                        + (squashed_magnitude
-                                            * (($def.radius * polar_velocity.1.cos())
-                                                + (($def.radius / 5.0)
-                                                    * (-polar_velocity.1.tan().powi(-1))
-                                                        .atan()
-                                                        .cos()))),
-                                    y: $def.location.y
-                                        + (squashed_magnitude
-                                            * (($def.radius * polar_velocity.1.sin())
-                                                + (($def.radius / 5.0)
-                                                    * (-polar_velocity.1.tan().powi(-1))
-                                                        .atan()
-                                                        .sin()))),
-                                });
-                                builder.line_to($def.location.clone().into());
-                                builder.close();
-                            });
-
-                            let element_style = &$self
-                                .style
-                                .element_styles
-                                .iter()
-                                .find(|style| style.key == $def.id);
-
-                            let style: &MouseSpeedIndicatorStyle;
-
-                            let default_style = &$self.style.default_mouse_speed_indicator_style;
-
-                            if let Some(s) = element_style {
-                                style = match &s.value {
-                                    ElementStyleUnion::KeyStyle(_) => unreachable!(),
-                                    ElementStyleUnion::MouseSpeedIndicatorStyle(i_s) => i_s,
-                                };
-                            } else {
-                                style = default_style;
-                            }
-
-                            $frame.fill(
-                                &inner,
-                                Color::from_rgb(
-                                    style.inner_color.red / 255.0,
-                                    style.inner_color.green / 255.0,
-                                    style.inner_color.blue / 255.0,
-                                ),
-                            );
-
-                            $frame.stroke(
-                                &outer,
-                                canvas::Stroke {
-                                    width: style.outline_width,
-                                    style: canvas::Style::Solid(Color::from_rgb(
-                                        style.inner_color.red / 255.0,
-                                        style.inner_color.green / 255.0,
-                                        style.inner_color.blue / 255.0,
-                                    )),
-                                    ..Default::default()
-                                },
-                            );
-
-                            // TODO: Still highlight when an element is selected. I dislike this
-                            // behavior of NohBoard.
-                            if $state.hovered_element == Some($index) && $state.held_element.is_none() && $state.selected_element.is_none()
-                            {
-                                $frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
-                            } else if $state.held_element == Some($index) {
-                                $frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
-                            }
-                            if $state.selected_element == Some($index) {
-                                $frame.stroke(
-                                    &outer,
-                                    canvas::Stroke {
-                                        width: 2.0,
-                                        style: canvas::Style::Solid(Color::from_rgba(
-                                            1.0, 0.0, 1.0, 1.0,
-                                        )),
-                                        ..Default::default()
-                                    },
-                                );
-                            }
-
-                            let ball_gradient = colorgrad::GradientBuilder::new()
-                                .colors(&[
-                                    colorgrad::Color::new(
-                                        style.inner_color.red  / 255.0,
-                                        style.inner_color.green  / 255.0,
-                                        style.inner_color.blue  / 255.0,
-                                        1.0,
-                                    ),
-                                    colorgrad::Color::new(
-                                        style.outer_color.red  / 255.0,
-                                        style.outer_color.green / 255.0,
-                                        style.outer_color.blue / 255.0,
-                                        1.0,
-                                    ),
-                                ])
-                                .build::<colorgrad::LinearGradient>()
-                                .unwrap();
-                            let ball_color = ball_gradient.at(squashed_magnitude);
-                            $frame.fill(
-                                &ball,
-                                Color::from_rgb(
-                                    ball_color.r as f32,
-                                    ball_color.g as f32,
-                                    ball_color.b as f32,
-                                ),
-                            );
-                            let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
-                                $def.location.clone().into(),
-                                iced::Point {
-                                    x: $def.location.x + ($def.radius * polar_velocity.1.cos()),
-                                    y: $def.location.y + ($def.radius * polar_velocity.1.sin()),
-                                },
-                            )
-                            .add_stop(
-                                0.0,
-                                iced::Color::from_rgb(
-                                    style.inner_color.red / 255.0,
-                                    style.inner_color.green / 255.0,
-                                    style.inner_color.blue / 255.0,
-                                ),
-                            )
-                            .add_stop(
-                                1.0,
-                                iced::Color::from_rgb(
-                                    style.outer_color.red / 255.0,
-                                    style.outer_color.green / 255.0,
-                                    style.outer_color.blue / 255.0,
-                                ),
-                            );
-                            $frame.fill(&triangle, triangle_gradient);
-    };
+fn captured_message() -> Option<Message> {
+    if cfg!(target_os = "linux") && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
+        Some(Message::UpdateCanvas)
+    } else {
+        None
+    }
 }
 
 #[derive(Default)]
@@ -335,158 +58,112 @@ impl canvas::Program<Message> for NuhxBoard {
             return (Status::Ignored, None);
         };
 
-        let cursor_position_geo = Coord {
+        let cursor_position = Coord {
             x: cursor_position.x,
             y: cursor_position.y,
         };
 
-        if let canvas::Event::Mouse(event) = event {
-            match event {
-                mouse::Event::CursorMoved { position: _ } => {
-                    match state.interaction {
-                        Interaction::None => {
-                            for (index, element) in self.layout.elements.iter().enumerate() {
-                                match element {
-                                    BoardElement::MouseSpeedIndicator(def) => {
-                                        if cursor_position.distance(def.location.clone().into())
-                                            < def.radius
-                                        {
-                                            if state.hovered_element != Some(index) {
-                                                state.hovered_element = Some(index);
-                                            }
-                                            state.previous_cursor_position = cursor_position_geo;
-
-                                            return (
-                                                Status::Captured,
-                                                if cfg!(target_os = "linux")
-                                                    && std::env::var("XDG_SESSION_TYPE").unwrap()
-                                                        == "wayland"
-                                                {
-                                                    Some(Message::UpdateCanvas)
-                                                } else {
-                                                    None
-                                                },
-                                            );
+        match event {
+            canvas::Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+                match state.interaction {
+                    Interaction::None => {
+                        state.previous_cursor_position = cursor_position;
+                        for (index, element) in self.layout.elements.iter().enumerate() {
+                            match element {
+                                BoardElement::MouseSpeedIndicator(def) => {
+                                    if cursor_position
+                                        .euclidean_distance(&Coord::from(def.location.clone()))
+                                        < def.radius
+                                    {
+                                        if state.hovered_element != Some(index) {
+                                            state.hovered_element = Some(index);
                                         }
+
+                                        return (Status::Captured, captured_message());
                                     }
-                                    _ => {
-                                        let mut vertices = match element {
-                                            BoardElement::KeyboardKey(def) => {
-                                                def.boundaries.clone()
-                                            }
-                                            BoardElement::MouseKey(def) => def.boundaries.clone(),
-                                            BoardElement::MouseScroll(def) => {
-                                                def.boundaries.clone()
-                                            }
-                                            BoardElement::MouseSpeedIndicator(_) => {
-                                                unreachable!()
-                                            }
-                                        };
-
-                                        vertices.push(vertices[0].clone());
-
-                                        let bounds =
-                                            Polygon::new(LineString::from(vertices), vec![]);
-
-                                        if cursor_position_geo.is_within(&bounds) {
-                                            if state.hovered_element != Some(index) {
-                                                state.hovered_element = Some(index);
-                                            }
-                                            state.previous_cursor_position = cursor_position_geo;
-                                            return (
-                                                Status::Captured,
-                                                if cfg!(target_os = "linux")
-                                                    && std::env::var("XDG_SESSION_TYPE").unwrap()
-                                                        == "wayland"
-                                                {
-                                                    Some(Message::UpdateCanvas)
-                                                } else {
-                                                    None
-                                                },
-                                            );
+                                }
+                                _ => {
+                                    let mut vertices = match element {
+                                        BoardElement::KeyboardKey(def) => def.boundaries.clone(),
+                                        BoardElement::MouseKey(def) => def.boundaries.clone(),
+                                        BoardElement::MouseScroll(def) => def.boundaries.clone(),
+                                        BoardElement::MouseSpeedIndicator(_) => {
+                                            unreachable!()
                                         }
+                                    };
+
+                                    vertices.push(vertices[0].clone());
+
+                                    let bounds = Polygon::new(LineString::from(vertices), vec![]);
+
+                                    if cursor_position.is_within(&bounds) {
+                                        if state.hovered_element != Some(index) {
+                                            state.hovered_element = Some(index);
+                                        }
+                                        return (Status::Captured, captured_message());
                                     }
                                 }
                             }
-
-                            if state.hovered_element.is_some() {
-                                state.hovered_element = None;
-                                state.previous_cursor_position = cursor_position_geo;
-                                return (
-                                    Status::Captured,
-                                    if cfg!(target_os = "linux")
-                                        && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
-                                    {
-                                        Some(Message::UpdateCanvas)
-                                    } else {
-                                        None
-                                    },
-                                );
-                            }
                         }
-                        Interaction::Dragging => {
-                            if state.held_element.is_some() {
-                                let delta = cursor_position_geo - state.previous_cursor_position;
-                                state.previous_cursor_position = cursor_position_geo;
-                                state.delta_accumulator.x += delta.x;
-                                state.delta_accumulator.y += delta.y;
-                                return (
-                                    Status::Captured,
-                                    Some(Message::MoveElement {
-                                        index: state.held_element.unwrap(),
-                                        delta,
-                                    }),
-                                );
-                            }
+
+                        if state.hovered_element.is_some() {
+                            state.hovered_element = None;
+                            return (Status::Captured, captured_message());
                         }
                     }
-                    state.previous_cursor_position = cursor_position_geo;
-                }
-                mouse::Event::ButtonPressed(mouse::Button::Left) => {
-                    state.interaction = Interaction::Dragging;
-
-                    if state.selected_element.is_none() {
-                        state.held_element = state.hovered_element;
-                    } else {
-                        state.held_element = state.selected_element;
-                        state.selected_element = None;
+                    Interaction::Dragging => {
+                        if state.held_element.is_some() {
+                            let delta = cursor_position - state.previous_cursor_position;
+                            state.previous_cursor_position = cursor_position;
+                            state.delta_accumulator.x += delta.x;
+                            state.delta_accumulator.y += delta.y;
+                            return (
+                                Status::Captured,
+                                Some(Message::MoveElement {
+                                    index: state.held_element.unwrap(),
+                                    delta,
+                                }),
+                            );
+                        }
                     }
-
-                    return (
-                        Status::Captured,
-                        if cfg!(target_os = "linux")
-                            && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland"
-                        {
-                            Some(Message::UpdateCanvas)
-                        } else {
-                            None
-                        },
-                    );
                 }
-                mouse::Event::ButtonReleased(mouse::Button::Left) => {
-                    let message = if state.delta_accumulator != Coord::default() {
-                        let out = state.held_element.map(|index| {
-                            Message::PushChange(Change::MoveElement {
-                                index,
-                                delta: state.delta_accumulator,
-                                move_text: self.settings.update_text_position,
-                            })
-                        });
-                        state.delta_accumulator = Coord::default();
-                        state.selected_element = state.held_element;
-                        out
-                    } else {
-                        state.selected_element = state.hovered_element;
-                        Some(Message::UpdateCanvas)
-                    };
-
-                    state.held_element = None;
-
-                    state.interaction = Interaction::None;
-                    return (Status::Ignored, message);
-                }
-                _ => {}
+                state.previous_cursor_position = cursor_position;
             }
+            canvas::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                state.interaction = Interaction::Dragging;
+
+                if state.selected_element.is_none() {
+                    state.held_element = state.hovered_element;
+                } else {
+                    state.held_element = state.selected_element;
+                    state.selected_element = None;
+                }
+
+                return (Status::Captured, captured_message());
+            }
+            canvas::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                let message = if state.delta_accumulator != Coord::default() {
+                    let out = state.held_element.map(|index| {
+                        Message::PushChange(Change::MoveElement {
+                            index,
+                            delta: state.delta_accumulator,
+                            move_text: self.settings.update_text_position,
+                        })
+                    });
+                    state.delta_accumulator = Coord::default();
+                    state.selected_element = state.held_element;
+                    out
+                } else {
+                    state.selected_element = state.hovered_element;
+                    Some(Message::UpdateCanvas)
+                };
+
+                state.held_element = None;
+
+                state.interaction = Interaction::None;
+                return (Status::Ignored, message);
+            }
+            _ => {}
         }
         (Status::Ignored, None)
     }
@@ -501,143 +178,389 @@ impl canvas::Program<Message> for NuhxBoard {
     ) -> Vec<Geometry> {
         let canvas = self.canvas.draw(renderer, bounds.size(), |frame| {
             for (index, element) in self.layout.elements.iter().enumerate() {
-                if Some(index) != state.selected_element && Some(index) != state.held_element {
-                    match element {
-                        BoardElement::KeyboardKey(def) => {
-                            draw_key!(
-                                self,
-                                state,
-                                def,
-                                frame,
-                                {
-                                    let shift_pressed = self.pressed_keys.contains_key(
-                                        &keycode_convert(rdev::Key::ShiftLeft).unwrap(),
-                                    ) || self.pressed_keys.contains_key(
-                                        &keycode_convert(rdev::Key::ShiftRight).unwrap(),
-                                    );
-                                    match def.change_on_caps {
-                                        true => match self.caps
-                                            ^ (shift_pressed
-                                                && (self.settings.capitalization
-                                                    == Capitalization::Follow
-                                                    || self.settings.follow_for_caps_sensitive))
-                                        {
-                                            true => def.shift_text.clone(),
-                                            false => def.text.clone(),
-                                        },
-                                        false => match shift_pressed
-                                            && (self.settings.capitalization
-                                                == Capitalization::Follow
-                                                || self.settings.follow_for_caps_insensitive)
-                                        {
-                                            true => def.shift_text.clone(),
-                                            false => def.text.clone(),
-                                        },
-                                    }
-                                },
-                                self.pressed_keys,
-                                index
-                            );
-                        }
-                        BoardElement::MouseKey(def) => {
-                            draw_key!(
-                                self,
-                                state,
-                                def,
-                                frame,
-                                def.text.clone(),
-                                self.pressed_mouse_buttons,
-                                index
-                            );
-                        }
-                        BoardElement::MouseScroll(def) => {
-                            draw_key!(
-                                self,
-                                state,
-                                def,
-                                frame,
-                                def.text.clone(),
-                                self.pressed_scroll_buttons,
-                                index
-                            );
-                        }
-                        BoardElement::MouseSpeedIndicator(def) => {
-                            draw_speed_indicator!(self, state, def, frame, index);
-                        }
-                    }
+                if state.selected_element == Some(index) || state.held_element == Some(index) {
+                    continue;
                 }
+                self.draw_element(element, state, frame, index);
             }
-            let highlighted_element = if state.selected_element.is_some() {
+            let top_element = if state.selected_element.is_some() {
                 state.selected_element
             } else {
                 state.held_element
             };
-            if let Some(hilighted_index) = highlighted_element {
-                match &self.layout.elements[hilighted_index] {
-                    BoardElement::KeyboardKey(def) => {
-                        draw_key!(
-                            self,
-                            state,
-                            def,
-                            frame,
-                            {
-                                let shift_pressed = self
-                                    .pressed_keys
-                                    .contains_key(&keycode_convert(rdev::Key::ShiftLeft).unwrap())
-                                    || self.pressed_keys.contains_key(
-                                        &keycode_convert(rdev::Key::ShiftRight).unwrap(),
-                                    );
-                                match def.change_on_caps {
-                                    true => match self.caps
-                                        ^ (shift_pressed
-                                            && (self.settings.capitalization
-                                                == Capitalization::Follow
-                                                || self.settings.follow_for_caps_sensitive))
-                                    {
-                                        true => def.shift_text.clone(),
-                                        false => def.text.clone(),
-                                    },
-                                    false => match shift_pressed
-                                        && (self.settings.capitalization == Capitalization::Follow
-                                            || self.settings.follow_for_caps_insensitive)
-                                    {
-                                        true => def.shift_text.clone(),
-                                        false => def.text.clone(),
-                                    },
-                                }
-                            },
-                            self.pressed_keys,
-                            hilighted_index
-                        );
-                    }
-                    BoardElement::MouseKey(def) => {
-                        draw_key!(
-                            self,
-                            state,
-                            def,
-                            frame,
-                            def.text.clone(),
-                            self.pressed_mouse_buttons,
-                            hilighted_index
-                        );
-                    }
-                    BoardElement::MouseScroll(def) => {
-                        draw_key!(
-                            self,
-                            state,
-                            def,
-                            frame,
-                            def.text.clone(),
-                            self.pressed_scroll_buttons,
-                            hilighted_index
-                        );
-                    }
-                    BoardElement::MouseSpeedIndicator(def) => {
-                        draw_speed_indicator!(self, state, def, frame, hilighted_index);
-                    }
-                }
+            if let Some(top_element) = top_element {
+                self.draw_element(
+                    &self.layout.elements[top_element],
+                    state,
+                    frame,
+                    top_element,
+                );
             }
         });
         vec![canvas]
     }
+}
+
+impl NuhxBoard {
+    fn draw_element(
+        &self,
+        element: &BoardElement,
+        state: &CanvasState,
+        frame: &mut Frame,
+        index: usize,
+    ) {
+        match element {
+            BoardElement::KeyboardKey(def) => {
+                self.draw_key(
+                    state,
+                    def.clone().into(),
+                    frame,
+                    {
+                        let shift_pressed = self
+                            .pressed_keys
+                            .contains_key(&keycode_convert(rdev::Key::ShiftLeft).unwrap())
+                            || self
+                                .pressed_keys
+                                .contains_key(&keycode_convert(rdev::Key::ShiftRight).unwrap());
+                        match def.change_on_caps {
+                            true => match self.caps
+                                ^ (shift_pressed
+                                    && (self.settings.capitalization == Capitalization::Follow
+                                        || self.settings.follow_for_caps_sensitive))
+                            {
+                                true => def.shift_text.clone(),
+                                false => def.text.clone(),
+                            },
+                            false => match shift_pressed
+                                && (self.settings.capitalization == Capitalization::Follow
+                                    || self.settings.follow_for_caps_insensitive)
+                            {
+                                true => def.shift_text.clone(),
+                                false => def.text.clone(),
+                            },
+                        }
+                    },
+                    self.pressed_keys.keys().cloned().collect(),
+                    index,
+                );
+            }
+            BoardElement::MouseKey(def) => {
+                self.draw_key(
+                    state,
+                    def.clone().into(),
+                    frame,
+                    def.text.clone(),
+                    self.pressed_mouse_buttons.keys().cloned().collect(),
+                    index,
+                );
+            }
+            BoardElement::MouseScroll(def) => {
+                self.draw_key(
+                    state,
+                    def.clone().into(),
+                    frame,
+                    def.text.clone(),
+                    self.pressed_scroll_buttons.keys().cloned().collect(),
+                    index,
+                );
+            }
+            BoardElement::MouseSpeedIndicator(def) => {
+                let inner = Path::circle(def.location.clone().into(), def.radius / 5.0);
+                let outer = Path::circle(def.location.clone().into(), def.radius);
+
+                let element_style = &self
+                    .style
+                    .element_styles
+                    .iter()
+                    .find(|style| style.key == def.id);
+
+                let style: &MouseSpeedIndicatorStyle;
+
+                let default_style = &self.style.default_mouse_speed_indicator_style;
+
+                if let Some(s) = element_style {
+                    style = match &s.value {
+                        ElementStyleUnion::KeyStyle(_) => unreachable!(),
+                        ElementStyleUnion::MouseSpeedIndicatorStyle(style) => style,
+                    };
+                } else {
+                    style = default_style;
+                }
+
+                frame.fill(
+                    &inner,
+                    Color::from_rgb(
+                        style.inner_color.red / 255.0,
+                        style.inner_color.green / 255.0,
+                        style.inner_color.blue / 255.0,
+                    ),
+                );
+
+                frame.stroke(
+                    &outer,
+                    canvas::Stroke {
+                        width: style.outline_width,
+                        style: canvas::Style::Solid(Color::from_rgb(
+                            style.inner_color.red / 255.0,
+                            style.inner_color.green / 255.0,
+                            style.inner_color.blue / 255.0,
+                        )),
+                        ..Default::default()
+                    },
+                );
+
+                // TODO: Still highlight when an element is selected. I dislike this
+                // behavior of NohBoard.
+                if state.hovered_element == Some(index)
+                    && state.held_element.is_none()
+                    && state.selected_element.is_none()
+                {
+                    frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+                } else if state.held_element == Some(index) {
+                    frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
+                }
+                if state.selected_element == Some(index) {
+                    frame.stroke(
+                        &outer,
+                        canvas::Stroke {
+                            width: 2.0,
+                            style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                            ..Default::default()
+                        },
+                    );
+                }
+
+                if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
+                    return;
+                }
+
+                let polar_velocity = (
+                    (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
+                    self.mouse_velocity.1.atan2(self.mouse_velocity.0),
+                );
+                let squashed_magnitude =
+                    (self.settings.mouse_sensitivity * 0.000005 * polar_velocity.0).tanh();
+                let ball = Path::circle(
+                    {
+                        let normalized_velocity =
+                            Coord::from(self.mouse_velocity).try_normalize().unwrap();
+                        iced::Point {
+                            x: def.location.x + (def.radius * normalized_velocity.x),
+                            y: def.location.y + (def.radius * normalized_velocity.y),
+                        }
+                    },
+                    def.radius / 5.0,
+                );
+
+                let triangle = indicator_triangle(
+                    def.radius,
+                    polar_velocity.1,
+                    1.0 / 5.0,
+                    squashed_magnitude,
+                    def.location.clone().into(),
+                );
+
+                let ball_gradient = colorgrad::GradientBuilder::new()
+                    .colors(&[
+                        colorgrad::Color::new(
+                            style.inner_color.red / 255.0,
+                            style.inner_color.green / 255.0,
+                            style.inner_color.blue / 255.0,
+                            1.0,
+                        ),
+                        colorgrad::Color::new(
+                            style.outer_color.red / 255.0,
+                            style.outer_color.green / 255.0,
+                            style.outer_color.blue / 255.0,
+                            1.0,
+                        ),
+                    ])
+                    .build::<colorgrad::LinearGradient>()
+                    .unwrap();
+                let ball_color = ball_gradient.at(squashed_magnitude);
+                frame.fill(
+                    &ball,
+                    Color::from_rgb(ball_color.r, ball_color.g, ball_color.b),
+                );
+                let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
+                    def.location.clone().into(),
+                    iced::Point {
+                        x: def.location.x + (def.radius * polar_velocity.1.cos()),
+                        y: def.location.y + (def.radius * polar_velocity.1.sin()),
+                    },
+                )
+                .add_stop(
+                    0.0,
+                    iced::Color::from_rgb(
+                        style.inner_color.red / 255.0,
+                        style.inner_color.green / 255.0,
+                        style.inner_color.blue / 255.0,
+                    ),
+                )
+                .add_stop(
+                    1.0,
+                    iced::Color::from_rgb(
+                        style.outer_color.red / 255.0,
+                        style.outer_color.green / 255.0,
+                        style.outer_color.blue / 255.0,
+                    ),
+                );
+                frame.fill(&triangle, triangle_gradient);
+            }
+        }
+    }
+
+    fn draw_key(
+        &self,
+        state: &CanvasState,
+        def: CommonDefinition,
+        frame: &mut Frame,
+        text: String,
+        pressed_button_list: HashSet<u32>,
+        index: usize,
+    ) {
+        let key = Path::new(|builder| {
+            builder.move_to(def.boundaries[0].clone().into());
+            for boundary in def.boundaries.iter().skip(1) {
+                builder.line_to(boundary.clone().into());
+            }
+            builder.close();
+        });
+
+        let element_style = &self
+            .style
+            .element_styles
+            .iter()
+            .find(|style| style.key == def.id);
+
+        let style = match element_style {
+            Some(s) => match &s.value {
+                ElementStyleUnion::KeyStyle(i_s) => i_s,
+                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
+            },
+            None => &self.style.default_key_style,
+        };
+
+        let pressed = pressed_button_list
+            .difference(&HashSet::from_iter(def.keycodes))
+            .cloned()
+            .collect::<HashSet<_>>()
+            != pressed_button_list;
+
+        let current_style = match pressed {
+            true => &style.pressed,
+            false => &style.loose,
+        };
+
+        frame.fill(
+            &key,
+            Color::from_rgb(
+                current_style.background.red / 255.0,
+                current_style.background.blue / 255.0,
+                current_style.background.green / 255.0,
+            ),
+        );
+        frame.fill_text(canvas::Text {
+            content: text,
+            position: def.text_position.clone().into(),
+            color: Color::from_rgb(
+                current_style.text.red / 255.0,
+                current_style.text.green / 255.0,
+                current_style.text.blue / 255.0,
+            ),
+            size: iced::Pixels(current_style.font.size),
+            font: iced::Font {
+                family: iced::font::Family::Name(
+                    // Leak is required because Name requires static lifetime
+                    // as opposed to application lifetime.
+                    // I suppose they were just expecting you to pass in a
+                    // literal here... damn you!!
+                    current_style.font.font_family.clone().leak(),
+                ),
+                weight: if current_style.font.style & 1 != 0 {
+                    iced::font::Weight::Bold
+                } else {
+                    iced::font::Weight::Normal
+                },
+                stretch: iced::font::Stretch::Normal,
+                style: if current_style.font.style & 0b10 != 0 {
+                    iced::font::Style::Italic
+                } else {
+                    iced::font::Style::Normal
+                },
+            },
+            horizontal_alignment: iced::alignment::Horizontal::Center,
+            vertical_alignment: iced::alignment::Vertical::Center,
+            shaping: iced::widget::text::Shaping::Advanced,
+            ..Default::default()
+        });
+
+        if state.hovered_element == Some(index)
+            && state.held_element.is_none()
+            && state.selected_element.is_none()
+        {
+            frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+        } else if state.held_element == Some(index) {
+            frame.fill(
+                &key,
+                Color {
+                    a: 0.5,
+                    ..style.pressed.background.clone().into()
+                },
+            );
+        }
+        if state.selected_element == Some(index) {
+            frame.stroke(
+                &key,
+                canvas::Stroke {
+                    style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                    width: 2.0,
+                    ..Default::default()
+                },
+            );
+        }
+    }
+}
+
+/// This is a whole lot of trig... just trust the process...
+/// Check out [This Desmos thing](https://www.desmos.com/calculator/lij5p4ptfo) if you want to see it all working
+fn indicator_triangle(
+    radius: f32,
+    angle: f32,
+    ball_to_ring_ratio: f32,
+    magnitude: f32,
+    center: iced::Point,
+) -> Path {
+    let r = radius;
+    let n = angle;
+    let b = ball_to_ring_ratio;
+    let t = magnitude;
+
+    fn cos(n: f32) -> f32 {
+        n.cos()
+    }
+
+    fn sin(n: f32) -> f32 {
+        n.sin()
+    }
+
+    fn cot(n: f32) -> f32 {
+        n.tan().powi(-1)
+    }
+
+    fn atan(n: f32) -> f32 {
+        n.atan()
+    }
+
+    Path::new(|builder| {
+        builder.move_to(center);
+        builder.line_to(iced::Point {
+            x: center.x + (t * ((r * cos(n)) - (b * r * cos(atan(-cot(n)))))),
+            y: center.y + (t * ((r * sin(n)) - (b * r * sin(atan(-cot(n)))))),
+        });
+        builder.line_to(iced::Point {
+            x: center.x + (t * ((r * cos(n)) + (b * r * cos(atan(-cot(n)))))),
+            y: center.y + (t * ((r * sin(n)) + (b * r * sin(atan(-cot(n)))))),
+        })
+    })
 }
