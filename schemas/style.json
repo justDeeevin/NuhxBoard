@@ -1,0 +1,224 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Style",
+  "type": "object",
+  "required": [
+    "BackgroundColor",
+    "DefaultKeyStyle",
+    "DefaultMouseSpeedIndicatorStyle",
+    "ElementStyles"
+  ],
+  "properties": {
+    "BackgroundColor": {
+      "$ref": "#/definitions/NohRgb"
+    },
+    "BackgroundImageFileName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "DefaultKeyStyle": {
+      "$ref": "#/definitions/KeyStyle"
+    },
+    "DefaultMouseSpeedIndicatorStyle": {
+      "$ref": "#/definitions/MouseSpeedIndicatorStyle"
+    },
+    "ElementStyles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ElementStyle"
+      }
+    }
+  },
+  "definitions": {
+    "ElementStyle": {
+      "type": "object",
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "properties": {
+        "Key": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "Value": {
+          "$ref": "#/definitions/ElementStyleUnion"
+        }
+      }
+    },
+    "ElementStyleUnion": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Loose",
+            "Pressed",
+            "__type"
+          ],
+          "properties": {
+            "Loose": {
+              "$ref": "#/definitions/KeySubStyle"
+            },
+            "Pressed": {
+              "$ref": "#/definitions/KeySubStyle"
+            },
+            "__type": {
+              "type": "string",
+              "enum": [
+                "KeyStyle"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "InnerColor",
+            "OuterColor",
+            "OutlineWidth",
+            "__type"
+          ],
+          "properties": {
+            "InnerColor": {
+              "$ref": "#/definitions/NohRgb"
+            },
+            "OuterColor": {
+              "$ref": "#/definitions/NohRgb"
+            },
+            "OutlineWidth": {
+              "type": "number",
+              "format": "float"
+            },
+            "__type": {
+              "type": "string",
+              "enum": [
+                "MouseSpeedIndicatorStyle"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Font": {
+      "type": "object",
+      "required": [
+        "FontFamily",
+        "Size",
+        "Style"
+      ],
+      "properties": {
+        "FontFamily": {
+          "type": "string"
+        },
+        "Size": {
+          "type": "number",
+          "format": "float"
+        },
+        "Style": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "KeyStyle": {
+      "type": "object",
+      "required": [
+        "Loose",
+        "Pressed"
+      ],
+      "properties": {
+        "Loose": {
+          "$ref": "#/definitions/KeySubStyle"
+        },
+        "Pressed": {
+          "$ref": "#/definitions/KeySubStyle"
+        }
+      }
+    },
+    "KeySubStyle": {
+      "type": "object",
+      "required": [
+        "Background",
+        "Font",
+        "Outline",
+        "OutlineWidth",
+        "ShowOutline",
+        "Text"
+      ],
+      "properties": {
+        "Background": {
+          "$ref": "#/definitions/NohRgb"
+        },
+        "BackgroundImageFileName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Font": {
+          "$ref": "#/definitions/Font"
+        },
+        "Outline": {
+          "$ref": "#/definitions/NohRgb"
+        },
+        "OutlineWidth": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "ShowOutline": {
+          "type": "boolean"
+        },
+        "Text": {
+          "$ref": "#/definitions/NohRgb"
+        }
+      }
+    },
+    "MouseSpeedIndicatorStyle": {
+      "type": "object",
+      "required": [
+        "InnerColor",
+        "OuterColor",
+        "OutlineWidth"
+      ],
+      "properties": {
+        "InnerColor": {
+          "$ref": "#/definitions/NohRgb"
+        },
+        "OuterColor": {
+          "$ref": "#/definitions/NohRgb"
+        },
+        "OutlineWidth": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "NohRgb": {
+      "type": "object",
+      "required": [
+        "Blue",
+        "Green",
+        "Red"
+      ],
+      "properties": {
+        "Blue": {
+          "type": "number",
+          "format": "float"
+        },
+        "Green": {
+          "type": "number",
+          "format": "float"
+        },
+        "Red": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    }
+  }
+}

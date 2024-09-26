@@ -1,6 +1,7 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Style {
     #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
@@ -14,7 +15,7 @@ pub struct Style {
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: f32,
@@ -60,7 +61,7 @@ impl From<iced::Color> for NohRgb {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct KeyStyle {
     #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
@@ -68,7 +69,7 @@ pub struct KeyStyle {
     pub pressed: KeySubStyle,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct KeySubStyle {
     #[serde(rename = "Background")]
     pub background: NohRgb,
@@ -86,7 +87,7 @@ pub struct KeySubStyle {
     pub background_image_file_name: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct Font {
     #[serde(rename = "FontFamily")]
     pub font_family: String,
@@ -96,7 +97,7 @@ pub struct Font {
     pub style: u8,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct MouseSpeedIndicatorStyle {
     #[serde(rename = "InnerColor")]
     pub inner_color: NohRgb,
@@ -106,7 +107,7 @@ pub struct MouseSpeedIndicatorStyle {
     pub outline_width: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct ElementStyle {
     #[serde(rename = "Key")]
     pub key: u32,
@@ -114,7 +115,7 @@ pub struct ElementStyle {
     pub value: ElementStyleUnion,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(tag = "__type")]
 pub enum ElementStyleUnion {
     KeyStyle(KeyStyle),

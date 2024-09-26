@@ -1,4 +1,4 @@
-use crate::{nuhxboard::*, types::settings::*};
+use crate::nuhxboard::*;
 use iced::{
     font::Weight,
     widget::{
@@ -11,26 +11,10 @@ use iced_aw::{
     color_picker, number_input, quad::Quad, widgets::InnerBounds, ContextMenu, SelectionList,
 };
 use iced_multi_window::Window;
-use serde::{Deserialize, Serialize};
-use std::{fmt::Display, sync::Arc};
+use std::sync::Arc;
+use types::settings::*;
 
 static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
-
-#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
-pub struct DisplayChoice {
-    pub id: u32,
-    pub primary: bool,
-}
-
-impl Display for DisplayChoice {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.primary {
-            write!(f, "{} (primary)", self.id)
-        } else {
-            write!(f, "{}", self.id)
-        }
-    }
-}
 
 fn context_menu_button(label: &str) -> Button<Message> {
     let text = text(label).size(12);

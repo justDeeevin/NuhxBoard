@@ -1,8 +1,4 @@
-use crate::{
-    logic::code_convert::*,
-    nuhxboard::*,
-    types::{config::*, settings::*, style::*},
-};
+use crate::{logic::code_convert::*, nuhxboard::*};
 use colorgrad::Gradient;
 use geo::{Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
 use iced::{
@@ -11,6 +7,7 @@ use iced::{
     Color, Rectangle, Renderer, Theme,
 };
 use std::collections::HashSet;
+use types::{config::*, settings::*, style::*};
 
 fn captured_message() -> Option<Message> {
     if cfg!(target_os = "linux") && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {

@@ -1,8 +1,4 @@
-use crate::{
-    logic::listener,
-    types::{config::*, settings::*, style::*},
-    ui::app::*,
-};
+use crate::{logic::listener, ui::app::*};
 use display_info::DisplayInfo;
 use iced::{
     advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Color, Renderer,
@@ -14,6 +10,7 @@ use std::{
     fs::{self, File},
     time::Instant,
 };
+use types::{config::*, settings::*, style::*};
 
 pub struct NuhxBoard {
     pub windows: WindowManager<NuhxBoard, Theme, Message>,

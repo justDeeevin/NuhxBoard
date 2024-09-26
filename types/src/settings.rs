@@ -1,8 +1,8 @@
 use display_info::DisplayInfo;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
-use crate::ui::app::DisplayChoice;
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
     pub capitalization: Capitalization,
     pub follow_for_caps_sensitive: bool,
@@ -50,9 +50,25 @@ impl Default for Settings {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Capitalization {
     Lower,
     Upper,
     Follow,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
+pub struct DisplayChoice {
+    pub id: u32,
+    pub primary: bool,
+}
+
+impl Display for DisplayChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.primary {
+            write!(f, "{} (primary)", self.id)
+        } else {
+            write!(f, "{}", self.id)
+        }
+    }
 }

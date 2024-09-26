@@ -1,7 +1,8 @@
 use iced::Point;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
 pub struct Layout {
     #[serde(rename = "Version")]
     pub version: Option<u8>,
@@ -13,7 +14,7 @@ pub struct Layout {
     pub elements: Vec<BoardElement>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(tag = "__type")]
 pub enum BoardElement {
     KeyboardKey(KeyboardKeyDefinition),
@@ -53,7 +54,7 @@ impl BoardElement {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct KeyboardKeyDefinition {
     #[serde(rename = "Id")]
     pub id: u32,
@@ -71,7 +72,7 @@ pub struct KeyboardKeyDefinition {
     pub change_on_caps: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct MouseKeyDefinition {
     #[serde(rename = "Id")]
     pub id: u32,
@@ -114,7 +115,7 @@ impl From<MouseKeyDefinition> for CommonDefinition {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct MouseSpeedIndicatorDefinition {
     #[serde(rename = "Id")]
     pub id: u32,
@@ -124,7 +125,7 @@ pub struct MouseSpeedIndicatorDefinition {
     pub radius: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct SerializablePoint {
     #[serde(rename = "X")]
     pub x: f32,

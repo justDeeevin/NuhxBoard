@@ -1,8 +1,4 @@
-use crate::{
-    logic::code_convert::*,
-    nuhxboard::*,
-    types::{settings::*, style::*},
-};
+use crate::{logic::code_convert::*, nuhxboard::*};
 use async_std::task::sleep;
 use iced::{window, Task};
 use image::ImageReader;
@@ -10,6 +6,7 @@ use std::{
     fs::{self, File},
     time::Instant,
 };
+use types::{settings::*, style::*};
 
 impl NuhxBoard {
     pub fn load_layout(&mut self, keyboard: usize) -> Task<Message> {
