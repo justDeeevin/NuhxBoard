@@ -50,8 +50,21 @@ impl canvas::Program<Message> for NuhxBoard {
         cursor: iced::advanced::mouse::Cursor,
     ) -> (canvas::event::Status, Option<Message>) {
         if !self.edit_mode {
+            let mut clear_canvas = false;
             if state.hovered_element.is_some() {
                 state.hovered_element = None;
+                clear_canvas = true;
+            }
+            if state.selected_element.is_some() {
+                state.selected_element = None;
+                clear_canvas = true;
+            }
+            if state.held_element.is_some() {
+                state.held_element = None;
+                clear_canvas = true;
+            }
+            if clear_canvas {
+                return (Status::Captured, captured_message());
             }
             return (Status::Ignored, None);
         }
