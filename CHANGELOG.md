@@ -17,7 +17,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 
 - Nix support. [#7](https://github.com/justdeeevin/nuhxboard/pull/7)
 - Some example keyboards are downloaded if none are present. [e7bc762](https://github.com/justdeeevin/nuhxboard/commit/e7bc7623d35056860e2005927a31eb115346a0a0)
-- Support for _window_ background images (not keys yet). [11fcdde](https://github.com/justdeeevin/nuhxboard/commit/11fcdded31b17fadfae1dfb79f21803d3d7da9fa)
+- Key background images. [e4bd63](https://github.com/justdeeevin/nuhxboard/commit/e4bd63b86414d6dbcadf3033c3296da0c00e3e87)
 - Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commit/f1c04a61dff29c7406cd297261292a60f80ad74d)
 - Version info in settings menu. [c46943d](https://github.com/justdeeevin/nuhxboard/commit/c46943d0d1c25499b3382aca8d29a7e5b74c2e4f)
 - Labels for the layout and style picklists in the load keyboard menu. [2805261](https://github.com/justdeeevin/nuhxboard/commit/28052612b8a0a120e8f0f5c47b372d69922e108d)
@@ -26,7 +26,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 ### Fixed
 
 - The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commit/6594a7553115938b6de4f15411f5c930939bce74)
-- Holding keys for an extended time period causing them to never being released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commit/bb12d9960a3d6bf003662af6445794d4f8472a23)
+- Holding keys for an extended time period causing them to never be released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commit/bb12d9960a3d6bf003662af6445794d4f8472a23)
 - Font size not changing with key pressed/loose state. [6726d1c](https://github.com/justdeeevin/nuhxboard/commit/6726d1cb5c86770177ae62bf5902bfc6ad98c2cd)
 
 ### Changed
