@@ -1,11 +1,15 @@
 use crate::nuhxboard::*;
 use colorgrad::Gradient;
-use geo::{Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
+use geo::{BoundingRect, Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
 use iced::{
     mouse,
-    widget::canvas::{self, event::Status, Frame, Geometry, Path},
+    widget::{
+        canvas::{self, event::Status, Frame, Geometry, Image, Path},
+        image::Handle,
+    },
     Color, Rectangle, Renderer, Theme,
 };
+use image::ImageReader;
 use logic::code_convert::*;
 use std::collections::HashSet;
 use types::{config::*, settings::*, style::*};
@@ -417,14 +421,6 @@ impl NuhxBoard {
         pressed_button_list: HashSet<u32>,
         index: usize,
     ) {
-        let key = Path::new(|builder| {
-            builder.move_to(def.boundaries[0].clone().into());
-            for boundary in def.boundaries.iter().skip(1) {
-                builder.line_to(boundary.clone().into());
-            }
-            builder.close();
-        });
-
         let element_style = &self
             .style
             .element_styles
@@ -450,14 +446,6 @@ impl NuhxBoard {
             false => &style.loose,
         };
 
-        frame.fill(
-            &key,
-            Color::from_rgb(
-                current_style.background.red / 255.0,
-                current_style.background.blue / 255.0,
-                current_style.background.green / 255.0,
-            ),
-        );
         frame.fill_text(canvas::Text {
             content: text,
             position: def.text_position.clone().into(),
@@ -492,6 +480,61 @@ impl NuhxBoard {
             shaping: iced::widget::text::Shaping::Advanced,
             ..Default::default()
         });
+
+        let key = Path::new(|builder| {
+            builder.move_to(def.boundaries[0].clone().into());
+            for boundary in def.boundaries.iter().skip(1) {
+                builder.line_to(boundary.clone().into());
+            }
+            builder.close();
+        });
+
+        if let Some(name) = &current_style.background_image_file_name {
+            let path = self
+                .keyboards_path
+                .join(&self.settings.category)
+                .join("images")
+                .join(name);
+
+            if !name.is_empty() && path.exists() {
+                let mut boundaries = def.boundaries.clone();
+                boundaries.push(boundaries[0].clone());
+                let shape = Polygon::new(LineString::from(boundaries), vec![]);
+                let rect = shape.bounding_rect().unwrap();
+                let width = rect.width();
+                let height = rect.height();
+
+                let image = ImageReader::open(path).unwrap();
+                let image = image.decode().unwrap();
+                let image = image.resize_exact(
+                    width as u32,
+                    height as u32,
+                    image::imageops::FilterType::Nearest,
+                );
+                let pos = rect.min();
+
+                frame.draw_image(
+                    iced::Rectangle::new(
+                        iced::Point { x: pos.x, y: pos.y },
+                        iced::Size::new(width, height),
+                    ),
+                    Image::new(Handle::from_rgba(
+                        width as u32,
+                        height as u32,
+                        image.to_rgba8().to_vec(),
+                    )),
+                );
+            }
+        } else {
+            frame.fill(
+                &key,
+                Color::from_rgb(
+                    current_style.background.red / 255.0,
+                    current_style.background.blue / 255.0,
+                    current_style.background.green / 255.0,
+                ),
+            );
+        }
 
         if state.hovered_element == Some(index)
             && state.held_element.is_none()
