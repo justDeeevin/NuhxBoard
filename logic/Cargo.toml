@@ -1,0 +1,12 @@
+[package]
+name = "logic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures = "0.3.30"
+iced = "0.13.1"
+rdev = "0.5.3"
+
+[features]
+grab = ["rdev/unstable_grab"]

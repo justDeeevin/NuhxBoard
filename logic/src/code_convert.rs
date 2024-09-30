@@ -1,6 +1,17 @@
 use rdev::{Button, Key};
 
-pub fn mouse_button_code_convert(rdev_button: Button) -> Result<u32, ()> {
+#[derive(Debug)]
+pub struct UnknownCode;
+
+impl std::fmt::Display for UnknownCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Unknown code")
+    }
+}
+
+impl std::error::Error for UnknownCode {}
+
+pub fn mouse_button_code_convert(rdev_button: Button) -> Result<u32, UnknownCode> {
     match rdev_button {
         Button::Left => Ok(0),
         Button::Middle => Ok(2),
@@ -10,12 +21,12 @@ pub fn mouse_button_code_convert(rdev_button: Button) -> Result<u32, ()> {
             2 | 9 | 20 => Ok(4),
             6 => Ok(6),
             7 => Ok(7),
-            _ => Err(()),
+            _ => Err(UnknownCode),
         },
     }
 }
 
-pub fn keycode_convert(rdev_key: Key) -> Result<u32, ()> {
+pub fn keycode_convert(rdev_key: Key) -> Result<u32, UnknownCode> {
     match rdev_key {
         Key::Backspace => Ok(8),
         Key::Tab => Ok(9),
@@ -122,6 +133,6 @@ pub fn keycode_convert(rdev_key: Key) -> Result<u32, ()> {
         Key::KpReturn => Ok(1025),
         // Menu
         Key::Unknown(135) => Ok(93),
-        _ => Err(()),
+        _ => Err(UnknownCode),
     }
 }

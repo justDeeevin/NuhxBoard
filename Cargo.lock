@@ -2755,6 +2755,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "logic"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "iced",
+ "rdev",
+]
+
+[[package]]
 name = "loop9"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3065,6 +3074,7 @@ dependencies = [
  "iced_aw",
  "iced_fonts",
  "image 0.25.2",
+ "logic",
  "rdev",
  "reqwest",
  "schemars",

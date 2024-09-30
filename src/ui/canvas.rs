@@ -1,4 +1,4 @@
-use crate::{logic::code_convert::*, nuhxboard::*};
+use crate::nuhxboard::*;
 use colorgrad::Gradient;
 use geo::{Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
 use iced::{
@@ -6,6 +6,7 @@ use iced::{
     widget::canvas::{self, event::Status, Frame, Geometry, Path},
     Color, Rectangle, Renderer, Theme,
 };
+use logic::code_convert::*;
 use std::collections::HashSet;
 use types::{config::*, settings::*, style::*};
 

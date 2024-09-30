@@ -43,6 +43,7 @@ serde_json = "1.0.128"
 zip = "2.2.0"
 iced_fonts = "0.1.1"
 types = { path = "types" }
+logic = { path = "logic" }
 
 [build-dependencies]
 schemars = "0.8.21"
@@ -50,10 +51,10 @@ types = { path = "types" }
 serde_json = "1.0.128"
 
 [workspace]
-members = ["types"]
+members = ["types", "logic"]
 
 [features]
-grab = ["rdev/unstable_grab"]
+grab = ["logic/grab"]
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
