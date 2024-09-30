@@ -42,7 +42,6 @@ serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
 zip = "2.2.0"
 iced_fonts = "0.1.1"
-schemars = "0.8.21"
 types = { path = "types" }
 
 [build-dependencies]
