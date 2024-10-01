@@ -21,7 +21,9 @@
           "Y": 228
         }
       ],
-      "KeyCodes": [32],
+      "KeyCodes": [
+        32
+      ],
       "Text": "",
       "TextPosition": {
         "X": 208,
@@ -51,7 +53,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [49],
+      "KeyCodes": [
+        49
+      ],
       "Text": "1",
       "TextPosition": {
         "X": 30,
@@ -81,7 +85,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [50],
+      "KeyCodes": [
+        50
+      ],
       "Text": "2",
       "TextPosition": {
         "X": 74,
@@ -111,7 +117,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [51],
+      "KeyCodes": [
+        51
+      ],
       "Text": "3",
       "TextPosition": {
         "X": 118,
@@ -141,7 +149,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [52],
+      "KeyCodes": [
+        52
+      ],
       "Text": "4",
       "TextPosition": {
         "X": 162,
@@ -171,7 +181,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [65],
+      "KeyCodes": [
+        65
+      ],
       "Text": "a",
       "TextPosition": {
         "X": 66,
@@ -201,7 +213,9 @@
           "Y": 184
         }
       ],
-      "KeyCodes": [67],
+      "KeyCodes": [
+        67
+      ],
       "Text": "c",
       "TextPosition": {
         "X": 175,
@@ -231,7 +245,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [68],
+      "KeyCodes": [
+        68
+      ],
       "Text": "d",
       "TextPosition": {
         "X": 154,
@@ -261,7 +277,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [69],
+      "KeyCodes": [
+        69
+      ],
       "Text": "e",
       "TextPosition": {
         "X": 142,
@@ -291,7 +309,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [0],
+      "KeyCodes": [
+        0
+      ],
       "Text": "LMB",
       "TextPosition": {
         "X": 209,
@@ -319,7 +339,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [1],
+      "KeyCodes": [
+        1
+      ],
       "Text": "RMB",
       "TextPosition": {
         "X": 253,
@@ -347,7 +369,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [81],
+      "KeyCodes": [
+        81
+      ],
       "Text": "q",
       "TextPosition": {
         "X": 54,
@@ -377,7 +401,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [82],
+      "KeyCodes": [
+        82
+      ],
       "Text": "r",
       "TextPosition": {
         "X": 186,
@@ -407,7 +433,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [83],
+      "KeyCodes": [
+        83
+      ],
       "Text": "s",
       "TextPosition": {
         "X": 110,
@@ -437,7 +465,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [87],
+      "KeyCodes": [
+        87
+      ],
       "Text": "w",
       "TextPosition": {
         "X": 98,
@@ -467,7 +497,9 @@
           "Y": 184
         }
       ],
-      "KeyCodes": [88],
+      "KeyCodes": [
+        88
+      ],
       "Text": "x",
       "TextPosition": {
         "X": 131,
@@ -497,7 +529,9 @@
           "Y": 184
         }
       ],
-      "KeyCodes": [90],
+      "KeyCodes": [
+        90
+      ],
       "Text": "z",
       "TextPosition": {
         "X": 87,
@@ -527,7 +561,9 @@
           "Y": 228
         }
       ],
-      "KeyCodes": [164],
+      "KeyCodes": [
+        164
+      ],
       "Text": "Alt",
       "TextPosition": {
         "X": 114,

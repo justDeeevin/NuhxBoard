@@ -21,7 +21,9 @@
           "Y": 98
         }
       ],
-      "KeyCodes": [37],
+      "KeyCodes": [
+        37
+      ],
       "Text": "←",
       "TextPosition": {
         "X": 31,
@@ -51,7 +53,9 @@
           "Y": 53
         }
       ],
-      "KeyCodes": [38],
+      "KeyCodes": [
+        38
+      ],
       "Text": "↑",
       "TextPosition": {
         "X": 76,
@@ -81,7 +85,9 @@
           "Y": 98
         }
       ],
-      "KeyCodes": [39],
+      "KeyCodes": [
+        39
+      ],
       "Text": "→",
       "TextPosition": {
         "X": 121,
@@ -111,7 +117,9 @@
           "Y": 98
         }
       ],
-      "KeyCodes": [40],
+      "KeyCodes": [
+        40
+      ],
       "Text": "↓",
       "TextPosition": {
         "X": 76,

@@ -21,7 +21,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [37],
+      "KeyCodes": [
+        37
+      ],
       "Text": "←",
       "TextPosition": {
         "X": 142,
@@ -51,7 +53,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [38],
+      "KeyCodes": [
+        38
+      ],
       "Text": "↑",
       "TextPosition": {
         "X": 186,
@@ -81,7 +85,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [39],
+      "KeyCodes": [
+        39
+      ],
       "Text": "→",
       "TextPosition": {
         "X": 230,
@@ -111,7 +117,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [40],
+      "KeyCodes": [
+        40
+      ],
       "Text": "↓",
       "TextPosition": {
         "X": 186,
@@ -141,7 +149,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [65],
+      "KeyCodes": [
+        65
+      ],
       "Text": "A",
       "TextPosition": {
         "X": 30,
@@ -171,7 +181,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [68],
+      "KeyCodes": [
+        68
+      ],
       "Text": "D",
       "TextPosition": {
         "X": 118,
@@ -201,7 +213,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [83],
+      "KeyCodes": [
+        83
+      ],
       "Text": "S",
       "TextPosition": {
         "X": 74,
@@ -231,7 +245,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [81],
+      "KeyCodes": [
+        81
+      ],
       "Text": "Q",
       "TextPosition": {
         "X": 39,
@@ -261,7 +277,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [87],
+      "KeyCodes": [
+        87
+      ],
       "Text": "W",
       "TextPosition": {
         "X": 83,
@@ -291,7 +309,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [32],
+      "KeyCodes": [
+        32
+      ],
       "Text": "Space",
       "TextPosition": {
         "X": 68,
@@ -321,7 +341,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [160],
+      "KeyCodes": [
+        160
+      ],
       "Text": "Bomb",
       "TextPosition": {
         "X": 158,

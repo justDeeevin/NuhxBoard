@@ -21,7 +21,9 @@
           "Y": 199
         }
       ],
-      "KeyCodes": [37],
+      "KeyCodes": [
+        37
+      ],
       "Text": "←",
       "TextPosition": {
         "X": 52,
@@ -51,7 +53,9 @@
           "Y": 155
         }
       ],
-      "KeyCodes": [38],
+      "KeyCodes": [
+        38
+      ],
       "Text": "↑",
       "TextPosition": {
         "X": 96,
@@ -81,7 +85,9 @@
           "Y": 199
         }
       ],
-      "KeyCodes": [39],
+      "KeyCodes": [
+        39
+      ],
       "Text": "→",
       "TextPosition": {
         "X": 140,
@@ -111,7 +117,9 @@
           "Y": 199
         }
       ],
-      "KeyCodes": [40],
+      "KeyCodes": [
+        40
+      ],
       "Text": "↓",
       "TextPosition": {
         "X": 96,
@@ -141,7 +149,9 @@
           "Y": 46
         }
       ],
-      "KeyCodes": [65],
+      "KeyCodes": [
+        65
+      ],
       "Text": "a",
       "TextPosition": {
         "X": 30,
@@ -171,7 +181,9 @@
           "Y": 46
         }
       ],
-      "KeyCodes": [83],
+      "KeyCodes": [
+        83
+      ],
       "Text": "s",
       "TextPosition": {
         "X": 74,
@@ -201,7 +213,9 @@
           "Y": 46
         }
       ],
-      "KeyCodes": [68],
+      "KeyCodes": [
+        68
+      ],
       "Text": "d",
       "TextPosition": {
         "X": 118,
@@ -231,7 +245,9 @@
           "Y": 46
         }
       ],
-      "KeyCodes": [70],
+      "KeyCodes": [
+        70
+      ],
       "Text": "f",
       "TextPosition": {
         "X": 162,
@@ -261,7 +277,9 @@
           "Y": 92
         }
       ],
-      "KeyCodes": [90],
+      "KeyCodes": [
+        90
+      ],
       "Text": "z",
       "TextPosition": {
         "X": 30,
@@ -291,7 +309,9 @@
           "Y": 92
         }
       ],
-      "KeyCodes": [88],
+      "KeyCodes": [
+        88
+      ],
       "Text": "x",
       "TextPosition": {
         "X": 74,
@@ -321,7 +341,9 @@
           "Y": 92
         }
       ],
-      "KeyCodes": [67],
+      "KeyCodes": [
+        67
+      ],
       "Text": "c",
       "TextPosition": {
         "X": 118,
@@ -351,7 +373,9 @@
           "Y": 92
         }
       ],
-      "KeyCodes": [86],
+      "KeyCodes": [
+        86
+      ],
       "Text": "v",
       "TextPosition": {
         "X": 162,

@@ -25,7 +25,9 @@
           "Y": 34
         }
       ],
-      "KeyCodes": [38],
+      "KeyCodes": [
+        38
+      ],
       "Text": "↑",
       "TextPosition": {
         "X": 61,
@@ -59,7 +61,9 @@
           "Y": 61
         }
       ],
-      "KeyCodes": [39],
+      "KeyCodes": [
+        39
+      ],
       "Text": "→",
       "TextPosition": {
         "X": 92,
@@ -93,7 +97,9 @@
           "Y": 86
         }
       ],
-      "KeyCodes": [37],
+      "KeyCodes": [
+        37
+      ],
       "Text": "←",
       "TextPosition": {
         "X": 30,
@@ -127,7 +133,9 @@
           "Y": 113
         }
       ],
-      "KeyCodes": [40],
+      "KeyCodes": [
+        40
+      ],
       "Text": "↓",
       "TextPosition": {
         "X": 61,
@@ -221,7 +229,9 @@
           "Y": 118
         }
       ],
-      "KeyCodes": [69],
+      "KeyCodes": [
+        69
+      ],
       "Text": "B",
       "TextPosition": {
         "X": 155,
@@ -315,7 +325,9 @@
           "Y": 103
         }
       ],
-      "KeyCodes": [85],
+      "KeyCodes": [
+        85
+      ],
       "Text": "A",
       "TextPosition": {
         "X": 219,
@@ -345,7 +357,9 @@
           "Y": 36
         }
       ],
-      "KeyCodes": [73],
+      "KeyCodes": [
+        73
+      ],
       "Text": "hold",
       "TextPosition": {
         "X": 151,
@@ -375,7 +389,9 @@
           "Y": 36
         }
       ],
-      "KeyCodes": [192],
+      "KeyCodes": [
+        192
+      ],
       "Text": "pause",
       "TextPosition": {
         "X": 218,

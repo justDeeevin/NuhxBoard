@@ -21,7 +21,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [65],
+      "KeyCodes": [
+        65
+      ],
       "Text": "a",
       "TextPosition": {
         "X": 121,
@@ -51,7 +53,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [68],
+      "KeyCodes": [
+        68
+      ],
       "Text": "d",
       "TextPosition": {
         "X": 209,
@@ -81,7 +85,9 @@
           "Y": 96
         }
       ],
-      "KeyCodes": [83],
+      "KeyCodes": [
+        83
+      ],
       "Text": "s",
       "TextPosition": {
         "X": 165,
@@ -111,7 +117,9 @@
           "Y": 52
         }
       ],
-      "KeyCodes": [87],
+      "KeyCodes": [
+        87
+      ],
       "Text": "w",
       "TextPosition": {
         "X": 165,
@@ -141,7 +149,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [32],
+      "KeyCodes": [
+        32
+      ],
       "Text": "",
       "TextPosition": {
         "X": 125,
@@ -171,7 +181,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [162],
+      "KeyCodes": [
+        162
+      ],
       "Text": "Ctrl",
       "TextPosition": {
         "X": 41,
@@ -201,7 +213,9 @@
           "Y": 140
         }
       ],
-      "KeyCodes": [163],
+      "KeyCodes": [
+        163
+      ],
       "Text": "Ctrl",
       "TextPosition": {
         "X": 204,
