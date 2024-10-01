@@ -3078,7 +3078,6 @@ dependencies = [
  "rdev",
  "reqwest",
  "schemars",
- "serde",
  "serde_json",
  "types",
  "zip",
