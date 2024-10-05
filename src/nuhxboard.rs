@@ -126,7 +126,7 @@ pub enum ColorPicker {
     KeyboardBackground,
 }
 
-// TODO: Are window resized undoable?
+// TODO: Are window resized undoable in NohBoard?
 #[derive(Debug, Clone)]
 pub enum Change {
     MoveElement {
