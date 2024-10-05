@@ -18,6 +18,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - Nix support. [#7](https://github.com/justdeeevin/nuhxboard/pull/7)
 - Some example keyboards are downloaded if none are present. [e7bc762](https://github.com/justdeeevin/nuhxboard/commit/e7bc7623d35056860e2005927a31eb115346a0a0)
 - Key background images. [e4bd63](https://github.com/justdeeevin/nuhxboard/commit/e4bd63b86414d6dbcadf3033c3296da0c00e3e87)
+- Layout background images. [912027](https://github.com/justdeeevin/nuhxboard/commit/9120279b59bdc0b64dbc693bcb3edf5024ea238f)
 - Exit button in global context menu. [f1c04a6](https://github.com/justdeeevin/nuhxboard/commit/f1c04a61dff29c7406cd297261292a60f80ad74d)
 - Version info in settings menu. [c46943d](https://github.com/justdeeevin/nuhxboard/commit/c46943d0d1c25499b3382aca8d29a7e5b74c2e4f)
 - Labels for the layout and style picklists in the load keyboard menu. [2805261](https://github.com/justdeeevin/nuhxboard/commit/28052612b8a0a120e8f0f5c47b372d69922e108d)
