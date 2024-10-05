@@ -2,8 +2,8 @@ use crate::nuhxboard::*;
 use iced::{
     font::Weight,
     widget::{
-        button, canvas, checkbox, column, container, horizontal_space, pick_list, radio, row, text,
-        text_input, Button, Scrollable,
+        button, canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list,
+        radio, row, text, text_input, Button, Image, Scrollable, Stack,
     },
     window, Background, Border, Color, Font, Length, Renderer, Theme,
 };
@@ -171,6 +171,12 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                 .width(Length::Fixed(150.0))
                 .into()
         });
+        if app.style.background_image_file_name.is_some() {
+            let image = Image::new(Handle::from_path(
+                app.keyboards_path.parent().unwrap().join("background.png"),
+            ));
+            return Stack::with_children(vec![image.into(), context_menu.into()]).into();
+        }
         context_menu.into()
     }
 
