@@ -276,7 +276,6 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeKeyboardCategory(category) => {
-                // TODO: why is this here?
                 if category.is_empty() {
                     return Task::none();
                 }
