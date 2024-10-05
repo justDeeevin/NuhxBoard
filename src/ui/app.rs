@@ -27,11 +27,17 @@ fn context_menu_button(label: &str) -> Button<Message> {
             },
             button::Status::Hovered => button::Style {
                 border: iced::Border {
-                    color: iced::Color::BLACK,
+                    color: iced::Color::from_rgb(0.0, 0.0, 1.0),
                     width: 2.0,
                     radius: 0.into(),
                 },
                 text_color: iced::Color::BLACK,
+                background: Some(iced::Background::Color(iced::Color::WHITE)),
+                ..button::primary(theme, status)
+            },
+            button::Status::Disabled => button::Style {
+                background: Some(iced::Background::Color(iced::Color::WHITE)),
+                text_color: iced::Color::from_rgb(100.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
                 ..button::primary(theme, status)
             },
             _ => button::primary(theme, status),
@@ -119,6 +125,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                                     width: 2.0,
                                     radius: iced::border::Radius::default(),
                                 },
+                                text_color: Some(iced::Color::BLACK),
                                 ..checkbox::primary(theme, status)
                             },
                             _ => checkbox::primary(theme, status),
