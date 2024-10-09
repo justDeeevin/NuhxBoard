@@ -231,7 +231,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
             })
             .collect::<Vec<_>>();
 
-        let input = column![
+        let mut input = vec![
             row![
                 text("Mouse sensitivity: ").size(12),
                 horizontal_space(),
@@ -241,7 +241,8 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 .size(12.0)
             ]
             .padding(5)
-            .align_y(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center)
+            .into(),
             row![
                 text("Scroll hold time (ms): ").size(12),
                 horizontal_space(),
@@ -251,24 +252,33 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 .size(12.0)
             ]
             .padding(5)
-            .align_y(iced::Alignment::Center),
+            .align_y(iced::Alignment::Center)
+            .into(),
             checkbox(
                 "Calculate mouse speed from center of screen",
-                app.settings.mouse_from_center
+                app.settings.mouse_from_center,
             )
             .text_size(12)
             .size(15)
-            .on_toggle(|_| { Message::ChangeSetting(Setting::CenterMouse) }),
-            row![
-                text("Display to use: ").size(12),
-                pick_list(display_choices, Some(&app.settings.display_choice), |v| {
-                    Message::ChangeSetting(Setting::DisplayChoice(v))
-                })
-                .text_size(12)
-            ]
-            .padding(5)
-            .align_y(iced::Alignment::Center),
-            text("Show keypresses for at least").size(12),
+            .on_toggle(|_| Message::ChangeSetting(Setting::CenterMouse))
+            .into(),
+        ];
+        if app.display_options.len() > 1 {
+            input.push(
+                row![
+                    text("Display to use: ").size(12),
+                    pick_list(display_choices, Some(&app.settings.display_choice), |v| {
+                        Message::ChangeSetting(Setting::DisplayChoice(v))
+                    })
+                    .text_size(12)
+                ]
+                .padding(5)
+                .align_y(iced::Alignment::Center)
+                .into(),
+            );
+        }
+        input.extend([
+            text("Show keypresses for at least").size(12).into(),
             row![
                 number_input(app.settings.min_press_time, 0.., |v| {
                     Message::ChangeSetting(Setting::MinPressTime(v))
@@ -278,9 +288,10 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 text("ms").size(12)
             ]
             .padding(5)
-            .align_y(iced::Alignment::Center),
-        ]
-        .align_x(iced::Alignment::Center);
+            .align_y(iced::Alignment::Center)
+            .into(),
+        ]);
+        let input = column(input).align_x(iced::Alignment::Center);
 
         let follow_for_sensitive_function =
             match app.settings.capitalization != Capitalization::Follow {
