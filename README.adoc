@@ -350,7 +350,14 @@ Follow Caps-Lock and Shift:: These three radio buttons allow you to fine-tune ca
 
 == Caveats
 
+=== Linux
+
 NuhxBoard will lack native Wayland support for the foreseeable future. This is due to the fact that Wayland provides no protocol for global input listening. However, through XWayland, NuhxBoard will still receive events when X11 applications have focus. The staggering majority of games with some version of Linux support (be it through proton or native support) use X11, so the primary usecase for NuhxBoard (being game recording) still works well enough.
+
+=== MacOS
+
+Doesn't work right now. :( +
+Support is in the works.
 
 == Installation
 
