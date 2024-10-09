@@ -58,7 +58,60 @@ As previously stated, keyboard layouts define key positions, shapes, and behavio
 
 [source, rust]
 ----
-include::types/src/config.rs[lines=5..22;54..75;105..118]
+#[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct Layout {
+    pub version: Option<u8>,
+    pub width: f32,
+    pub height: f32,
+    pub elements: Vec<BoardElement>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(tag = "__type")]
+pub enum BoardElement {
+    KeyboardKey(KeyboardKeyDefinition),
+    MouseKey(MouseKeyDefinition),
+    MouseScroll(MouseKeyDefinition),
+    MouseSpeedIndicator(MouseSpeedIndicatorDefinition),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct KeyboardKeyDefinition {
+    pub id: u32,
+    pub boundaries: Vec<SerializablePoint>,
+    pub text_position: SerializablePoint,
+    pub key_codes: Vec<u32>,
+    pub text: String,
+    pub shift_text: String,
+    pub change_on_caps: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct MouseKeyDefinition {
+    pub id: u32,
+    pub boundaries: Vec<SerializablePoint>,
+    pub text_position: SerializablePoint,
+    pub key_codes: Vec<u32>,
+    pub text: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct MouseSpeedIndicatorDefinition {
+    pub id: u32,
+    pub location: SerializablePoint,
+    pub radius: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct SerializablePoint {
+    pub x: f32,
+    pub y: f32,
+}
 ----
 
 If you can make sense of that, then good for you! Otherwise, here's an actual explanation of how a keyboard layout is defined.
@@ -121,7 +174,74 @@ Again, here's the type definition in rust:
 
 [source, rust]
 ----
-include::types/src/style.rs[lines=4..23;60..108]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct Style {
+    pub background_color: NohRgb,
+    pub background_image_file_name: Option<String>,
+    pub default_key_style: KeyStyle,
+    pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
+    pub element_styles: Vec<ElementStyle>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+pub struct NohRgb {
+    #[serde(rename = "Red")]
+    pub red: f32,
+    #[serde(rename = "Green")]
+    pub green: f32,
+    #[serde(rename = "Blue")]
+    pub blue: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct KeyStyle {
+    pub loose: KeySubStyle,
+    pub pressed: KeySubStyle,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct KeySubStyle {
+    pub background: NohRgb,
+    pub text: NohRgb,
+    pub outline: NohRgb,
+    pub show_outline: bool,
+    pub outline_width: u32,
+    pub font: Font,
+    pub background_image_file_name: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct Font {
+    pub font_family: String,
+    pub size: f32,
+    pub style: u8,
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct MouseSpeedIndicatorStyle {
+    pub inner_color: NohRgb,
+    pub outer_color: NohRgb,
+    pub outline_width: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+pub struct ElementStyle {
+    pub key: u32,
+    pub value: ElementStyleUnion,
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(tag = "__type")]
+pub enum ElementStyleUnion {
+    KeyStyle(KeyStyle),
+    MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
+}
 ----
 
 ==== Top-Level Properties
