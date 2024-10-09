@@ -2,16 +2,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct Style {
-    #[serde(rename = "BackgroundColor")]
     pub background_color: NohRgb,
-    #[serde(rename = "BackgroundImageFileName")]
     pub background_image_file_name: Option<String>,
-    #[serde(rename = "DefaultKeyStyle")]
     pub default_key_style: KeyStyle,
-    #[serde(rename = "DefaultMouseSpeedIndicatorStyle")]
     pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
-    #[serde(rename = "ElementStyles")]
     pub element_styles: Vec<ElementStyle>,
 }
 
@@ -62,56 +58,44 @@ impl From<iced::Color> for NohRgb {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct KeyStyle {
-    #[serde(rename = "Loose")]
     pub loose: KeySubStyle,
-    #[serde(rename = "Pressed")]
     pub pressed: KeySubStyle,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct KeySubStyle {
-    #[serde(rename = "Background")]
     pub background: NohRgb,
-    #[serde(rename = "Text")]
     pub text: NohRgb,
-    #[serde(rename = "Outline")]
     pub outline: NohRgb,
-    #[serde(rename = "ShowOutline")]
     pub show_outline: bool,
-    #[serde(rename = "OutlineWidth")]
     pub outline_width: u32,
-    #[serde(rename = "Font")]
     pub font: Font,
-    #[serde(rename = "BackgroundImageFileName")]
     pub background_image_file_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct Font {
-    #[serde(rename = "FontFamily")]
     pub font_family: String,
-    #[serde(rename = "Size")]
     pub size: f32,
-    #[serde(rename = "Style")]
     pub style: u8,
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicatorStyle {
-    #[serde(rename = "InnerColor")]
     pub inner_color: NohRgb,
-    #[serde(rename = "OuterColor")]
     pub outer_color: NohRgb,
-    #[serde(rename = "OutlineWidth")]
     pub outline_width: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct ElementStyle {
-    #[serde(rename = "Key")]
     pub key: u32,
-    #[serde(rename = "Value")]
     pub value: ElementStyleUnion,
 }
 

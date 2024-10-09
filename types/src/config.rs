@@ -3,14 +3,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct Layout {
-    #[serde(rename = "Version")]
     pub version: Option<u8>,
-    #[serde(rename = "Width")]
     pub width: f32,
-    #[serde(rename = "Height")]
     pub height: f32,
-    #[serde(rename = "Elements")]
     pub elements: Vec<BoardElement>,
 }
 
@@ -55,34 +52,24 @@ impl BoardElement {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct KeyboardKeyDefinition {
-    #[serde(rename = "Id")]
     pub id: u32,
-    #[serde(rename = "Boundaries")]
     pub boundaries: Vec<SerializablePoint>,
-    #[serde(rename = "TextPosition")]
     pub text_position: SerializablePoint,
-    #[serde(rename = "KeyCodes")]
-    pub keycodes: Vec<u32>,
-    #[serde(rename = "Text")]
+    pub key_codes: Vec<u32>,
     pub text: String,
-    #[serde(rename = "ShiftText")]
     pub shift_text: String,
-    #[serde(rename = "ChangeOnCaps")]
     pub change_on_caps: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct MouseKeyDefinition {
-    #[serde(rename = "Id")]
     pub id: u32,
-    #[serde(rename = "Boundaries")]
     pub boundaries: Vec<SerializablePoint>,
-    #[serde(rename = "TextPosition")]
     pub text_position: SerializablePoint,
-    #[serde(rename = "KeyCodes")]
-    pub keycodes: Vec<u32>,
-    #[serde(rename = "Text")]
+    pub key_codes: Vec<u32>,
     pub text: String,
 }
 
@@ -99,7 +86,7 @@ impl From<KeyboardKeyDefinition> for CommonDefinition {
             id: val.id,
             text_position: val.text_position,
             boundaries: val.boundaries,
-            keycodes: val.keycodes,
+            keycodes: val.key_codes,
         }
     }
 }
@@ -110,26 +97,23 @@ impl From<MouseKeyDefinition> for CommonDefinition {
             id: val.id,
             text_position: val.text_position,
             boundaries: val.boundaries,
-            keycodes: val.keycodes,
+            keycodes: val.key_codes,
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicatorDefinition {
-    #[serde(rename = "Id")]
     pub id: u32,
-    #[serde(rename = "Location")]
     pub location: SerializablePoint,
-    #[serde(rename = "Radius")]
     pub radius: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct SerializablePoint {
-    #[serde(rename = "X")]
     pub x: f32,
-    #[serde(rename = "Y")]
     pub y: f32,
 }
 
