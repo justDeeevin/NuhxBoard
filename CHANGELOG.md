@@ -36,6 +36,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - `Version` property of keyboard layout is now optional. [79a3162](https://github.com/justdeeevin/nuhxboard/commit/79a3162acdf7de5606f48b6aa7535f39d321cb06)
 - Global default style's mouse speed indicator's outer color now matches NohBoard's (white). [fda0006](https://github.com/justdeeevin/nuhxboard/commit/fda000645e15ff3cc2ac7e6f894c821c9b1b1e7a)
 - Mouse speed indicator's sensitivity is closer to NohBoard's. [1fde6e6](https://github.com/justdeeevin/nuhxboard/commit/1fde6e6cb385aa77930eda06268e5a8127c7bb05)
+- Display option dropdown is not displayed if there is only one option. [1db5fc1](https://github.com/justdeeevin/nuhxboard/commit/1db5fc1b3d3b16467d0beaf7e32816292bbb8326)
 
 ### Removed
 
