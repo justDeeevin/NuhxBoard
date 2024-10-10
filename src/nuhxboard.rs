@@ -300,9 +300,7 @@ impl NuhxBoard {
                 };
 
                 if self.startup {
-                    self.startup = false;
-                    let keyboard = self.keyboard_choice.unwrap();
-                    return self.update(Message::LoadLayout(keyboard));
+                    return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
                 }
                 clear_canvas = false;
             }
@@ -641,13 +639,23 @@ impl NuhxBoard {
         );
         self.style_choice = Some(0);
 
-        window::resize(
+        let resize_task = window::resize(
             self.main_window,
             iced::Size {
                 width: self.layout.width,
                 height: self.layout.height,
             },
-        )
+        );
+
+        if self.startup {
+            self.startup = false;
+            Task::batch([
+                resize_task,
+                self.update(Message::LoadStyle(self.settings.style)),
+            ])
+        } else {
+            resize_task
+        }
     }
 
     fn load_style(&mut self, style: usize) -> Task<Message> {
