@@ -29,6 +29,7 @@ There's a new toggle for edit mode in the global context menu. You can graphical
 - The global styles directory appearing in the keyboard categories list. [6594a75](https://github.com/justdeeevin/nuhxboard/commit/6594a7553115938b6de4f15411f5c930939bce74)
 - Holding keys for an extended time period causing them to never be released. [bb12d99](https://github.com/justdeeevin/nuhxboard/commit/bb12d9960a3d6bf003662af6445794d4f8472a23)
 - Font size not changing with key pressed/loose state. [6726d1c](https://github.com/justdeeevin/nuhxboard/commit/6726d1cb5c86770177ae62bf5902bfc6ad98c2cd)
+- Selected style not being remembered between launches. [ef73d9f](https://github.com/justdeeevin/nuhxboard/commit/ef73d9f56414fa1d9067050e0ef79d51dab98451)
 
 ### Changed
 
