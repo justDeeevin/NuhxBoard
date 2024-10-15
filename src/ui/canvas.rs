@@ -577,8 +577,8 @@ impl NuhxBoard {
     }
 }
 
-/// This is a whole lot of trig... just trust the process...
-/// Check out [This Desmos thing](https://www.desmos.com/calculator/lij5p4ptfo) if you want to see it all working
+// A previous iteration of this function used a bunch of messy trig. This vector math solution is
+// actually slower (by a whopping microsecond), but the improved readability is definitely worth it.
 fn indicator_triangle(
     velocity: Vector2<f32>,
     radius: f32,
