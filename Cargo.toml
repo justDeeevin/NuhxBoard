@@ -55,6 +55,7 @@ members = ["types", "logic"]
 
 [features]
 grab = ["logic/grab"]
+debug = ["iced/debug"]
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
