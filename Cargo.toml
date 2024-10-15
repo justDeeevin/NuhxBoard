@@ -43,6 +43,7 @@ iced_fonts = "0.1.1"
 types = { path = "types" }
 logic = { path = "logic" }
 rdev = "0.5.3"
+nalgebra = "0.33.0"
 
 [build-dependencies]
 schemars = "0.8.21"

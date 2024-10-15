@@ -1,6 +1,6 @@
 use crate::nuhxboard::*;
 use colorgrad::Gradient;
-use geo::{BoundingRect, Coord, EuclideanDistance, LineString, Polygon, Vector2DOps, Within};
+use geo::{BoundingRect, Coord, EuclideanDistance, LineString, Polygon, Within};
 use iced::{
     mouse,
     widget::{
@@ -11,6 +11,7 @@ use iced::{
 };
 use image::ImageReader;
 use logic::code_convert::*;
+use nalgebra::{Vector2, Vector3};
 use std::collections::HashSet;
 use types::{config::*, settings::*, style::*};
 
@@ -349,28 +350,28 @@ impl NuhxBoard {
                     return;
                 }
 
-                let polar_velocity = (
-                    (self.mouse_velocity.0.powi(2) + self.mouse_velocity.1.powi(2)).sqrt(),
-                    self.mouse_velocity.1.atan2(self.mouse_velocity.0),
-                );
+                let velocity = Vector2::new(self.mouse_velocity.0, self.mouse_velocity.1);
+                let normalized_velocity = velocity.normalize();
+
+                let ball_to_radius_ratio = 0.2;
+
                 let squashed_magnitude =
-                    (self.settings.mouse_sensitivity * 0.000005 * polar_velocity.0).tanh();
+                    (self.settings.mouse_sensitivity * 0.000005 * velocity.magnitude()).tanh();
+
                 let ball = Path::circle(
                     {
-                        let normalized_velocity =
-                            Coord::from(self.mouse_velocity).try_normalize().unwrap();
                         iced::Point {
                             x: def.location.x + (def.radius * normalized_velocity.x),
                             y: def.location.y + (def.radius * normalized_velocity.y),
                         }
                     },
-                    def.radius / 5.0,
+                    def.radius * ball_to_radius_ratio,
                 );
 
                 let triangle = indicator_triangle(
+                    velocity,
                     def.radius,
-                    polar_velocity.1,
-                    1.0 / 5.0,
+                    ball_to_radius_ratio,
                     squashed_magnitude,
                     def.location.clone().into(),
                 );
@@ -400,8 +401,8 @@ impl NuhxBoard {
                 let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
                     def.location.clone().into(),
                     iced::Point {
-                        x: def.location.x + (def.radius * polar_velocity.1.cos()),
-                        y: def.location.y + (def.radius * polar_velocity.1.sin()),
+                        x: def.location.x + (def.radius * normalized_velocity.x),
+                        y: def.location.y + (def.radius * normalized_velocity.y),
                     },
                 )
                 .add_stop(
@@ -579,42 +580,38 @@ impl NuhxBoard {
 /// This is a whole lot of trig... just trust the process...
 /// Check out [This Desmos thing](https://www.desmos.com/calculator/lij5p4ptfo) if you want to see it all working
 fn indicator_triangle(
+    velocity: Vector2<f32>,
     radius: f32,
-    angle: f32,
     ball_to_ring_ratio: f32,
     magnitude: f32,
     center: iced::Point,
 ) -> Path {
+    let v = Vector3::new(velocity.x, velocity.y, 0.0);
     let r = radius;
-    let n = angle;
     let b = ball_to_ring_ratio;
     let t = magnitude;
+    let c = center;
 
-    fn cos(n: f32) -> f32 {
-        n.cos()
-    }
+    let u = Vector3::new(0.0, 0.0, 1.0);
 
-    fn sin(n: f32) -> f32 {
-        n.sin()
-    }
+    let j = v.normalize();
+    let i = j.cross(&u).normalize();
 
-    fn cot(n: f32) -> f32 {
-        n.tan().powi(-1)
-    }
+    let ball_vector = r * j;
 
-    fn atan(n: f32) -> f32 {
-        n.atan()
-    }
+    let left_vector = t * (ball_vector - (b * r * i));
+    let right_vector = t * (ball_vector + (b * r * i));
 
     Path::new(|builder| {
-        builder.move_to(center);
+        builder.move_to(c);
         builder.line_to(iced::Point {
-            x: center.x + (t * ((r * cos(n)) - (b * r * cos(atan(-cot(n)))))),
-            y: center.y + (t * ((r * sin(n)) - (b * r * sin(atan(-cot(n)))))),
+            x: c.x + left_vector.x,
+            y: c.y + left_vector.y,
         });
         builder.line_to(iced::Point {
-            x: center.x + (t * ((r * cos(n)) + (b * r * cos(atan(-cot(n)))))),
-            y: center.y + (t * ((r * sin(n)) + (b * r * sin(atan(-cot(n)))))),
-        })
+            x: c.x + right_vector.x,
+            y: c.y + right_vector.y,
+        });
+        builder.close();
     })
 }
