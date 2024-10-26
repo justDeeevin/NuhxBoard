@@ -3,7 +3,7 @@ use iced::{
     font::Weight,
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list,
-        radio, row, text, text_input, Button, Image, Scrollable, Stack,
+        radio, row, text, text_input, Button, Image, Row, Scrollable, Stack,
     },
     window, Background, Border, Color, Font, Length, Renderer, Theme,
 };
@@ -15,6 +15,34 @@ use std::sync::Arc;
 use types::settings::*;
 
 static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
+
+fn picker_button<'a>(
+    label: impl iced::widget::text::IntoFragment<'a>,
+    open: bool,
+    color: Color,
+    picker: ColorPicker,
+) -> Row<'a, Message> {
+    row![
+        color_picker(
+            open,
+            color,
+            button("")
+                .width(Length::Fixed(15.0))
+                .height(Length::Fixed(15.0))
+                .style(move |theme, status| match status {
+                    button::Status::Active => button::Style {
+                        background: Some(iced::Background::Color(color)),
+                        ..button::primary(theme, status)
+                    },
+                    _ => button::primary(theme, status),
+                })
+                .on_press(Message::ToggleColorPicker(picker)),
+            Message::ToggleColorPicker(picker),
+            move |v| Message::ChangeColor(picker, v)
+        ),
+        text(label)
+    ]
+}
 
 fn context_menu_button(label: &str) -> Button<Message> {
     let text = text(label).size(12);
@@ -564,17 +592,17 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
                 text("Category: "),
                 text_input(
                     app.settings.category.as_str(),
-                    &app.save_keyboard_as_category,
+                    &app.text_input.save_keyboard_as_category,
                 )
-                .on_input(Message::ChangeSaveLayoutAsCategory)
+                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsCategory, v))
             ],
             row![
                 text("Name: "),
                 text_input(
                     &app.keyboard_options[app.keyboard_choice.unwrap()],
-                    &app.save_keyboard_as_name,
+                    &app.text_input.save_keyboard_as_name,
                 )
-                .on_input(Message::ChangeSaveLayoutAsName)
+                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
             button("Save").on_press(Message::SaveKeyboard(Some(
                 app.keyboards_path
@@ -622,9 +650,9 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
                 text("Name: "),
                 text_input(
                     &app.style_options[app.style_choice.unwrap()].name(),
-                    &app.save_style_as_name,
+                    &app.text_input.save_style_as_name,
                 )
-                .on_input(Message::ChangeSaveStyleAsName)
+                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveStyleAsName, v))
             ],
             checkbox("Save as global", app.save_style_as_global)
                 .on_toggle(|_| Message::ToggleSaveStyleAsGlobal),
@@ -672,31 +700,42 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 weight: Weight::Bold,
                 ..Default::default()
             }),
+            picker_button(
+                "Background",
+                app.color_pickers.keyboard_background,
+                app.style.background_color.into(),
+                ColorPicker::KeyboardBackground,
+            ),
             row![
-                color_picker(
-                    app.color_pickers.keyboard_background,
-                    app.style.background_color.clone().into(),
-                    button("")
-                        .width(Length::Fixed(15.0))
-                        .height(Length::Fixed(15.0))
-                        .style(|theme, status| match status {
-                            button::Status::Active => button::Style {
-                                background: Some(iced::Background::Color(
-                                    app.style.background_color.clone().into()
-                                )),
-                                ..button::primary(theme, status)
-                            },
-                            _ => button::primary(theme, status),
-                        })
-                        .on_press(Message::ToggleColorPicker(ColorPicker::KeyboardBackground)),
-                    Message::ToggleColorPicker(ColorPicker::KeyboardBackground),
-                    Message::ChangeBackground
-                ),
-                text("Background Color")
+                text("Image: "),
+                text_input(
+                    app.style
+                        .background_image_file_name
+                        .as_deref()
+                        .unwrap_or(""),
+                    app.text_input.keyboard_background_image.as_str()
+                )
+                .on_input(|v| Message::ChangeTextInput(TextInputType::KeyboardBackgroundImage, v))
             ]
         ];
 
-        row![keyboard].into()
+        let mouse_speed_indicator = column![
+            text("MouseSpeedIndicator").font(Font {
+                weight: Weight::Bold,
+                ..Default::default()
+            }),
+            picker_button(
+                "Color 1 (low speed)",
+                app.color_pickers.default_mouse_speed_indicator_1,
+                app.style
+                    .default_mouse_speed_indicator_style
+                    .inner_color
+                    .into(),
+                ColorPicker::DefaultMouseSpeedIndicator1
+            )
+        ];
+
+        row![column![keyboard, mouse_speed_indicator]].into()
     }
 
     fn title<'a>(&'a self, _app: &'a NuhxBoard) -> String {

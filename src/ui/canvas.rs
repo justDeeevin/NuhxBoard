@@ -560,7 +560,7 @@ impl NuhxBoard {
                 &key,
                 Color {
                     a: 0.5,
-                    ..style.pressed.background.clone().into()
+                    ..style.pressed.background.into()
                 },
             );
         }

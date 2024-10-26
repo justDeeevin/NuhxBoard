@@ -11,7 +11,7 @@ pub struct Style {
     pub element_styles: Vec<ElementStyle>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema)]
 pub struct NohRgb {
     #[serde(rename = "Red")]
     pub red: f32,

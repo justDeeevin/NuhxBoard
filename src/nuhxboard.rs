@@ -51,14 +51,68 @@ pub struct NuhxBoard {
     pub save_style_as_name: String,
     pub save_style_as_global: bool,
     pub color_pickers: ColorPickers,
+    pub text_input: TextInput,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
+pub struct TextInput {
+    pub keyboard_background_image: String,
+    pub save_keyboard_as_category: String,
+    pub save_keyboard_as_name: String,
+    pub save_style_as_name: String,
+}
+
+#[derive(Clone, Debug)]
+pub enum TextInputType {
+    KeyboardBackgroundImage,
+    SaveKeyboardAsCategory,
+    SaveKeyboardAsName,
+    SaveStyleAsName,
+}
+
+#[derive(Default)]
 pub struct ColorPickers {
     pub keyboard_background: bool,
+    pub default_mouse_speed_indicator_1: bool,
+    pub default_mouse_speed_indicator_2: bool,
+    pub default_loose_background: bool,
+    pub default_loose_text: bool,
+    pub default_loose_outline: bool,
+    pub default_pressed_background: bool,
+    pub default_pressed_text: bool,
+    pub default_pressed_outline: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+impl ColorPickers {
+    pub fn get(&mut self, picker: ColorPicker) -> &mut bool {
+        match picker {
+            ColorPicker::KeyboardBackground => &mut self.keyboard_background,
+            ColorPicker::DefaultMouseSpeedIndicator1 => &mut self.default_mouse_speed_indicator_1,
+            ColorPicker::DefaultMouseSpeedIndicator2 => &mut self.default_mouse_speed_indicator_2,
+            ColorPicker::DefaultLooseBackground => &mut self.default_loose_background,
+            ColorPicker::DefaultLooseText => &mut self.default_loose_text,
+            ColorPicker::DefaultLooseOutline => &mut self.default_loose_outline,
+            ColorPicker::DefaultPressedBackground => &mut self.default_pressed_background,
+            ColorPicker::DefaultPressedText => &mut self.default_pressed_text,
+            ColorPicker::DefaultPressedOutline => &mut self.default_pressed_outline,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ColorPicker {
+    KeyboardBackground,
+    DefaultMouseSpeedIndicator1,
+    DefaultMouseSpeedIndicator2,
+    DefaultLooseBackground,
+    DefaultLooseText,
+    DefaultLooseOutline,
+    DefaultPressedBackground,
+    DefaultPressedText,
+    DefaultPressedOutline,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum StyleChoice {
     Default,
     Global(String),
@@ -112,18 +166,11 @@ pub enum Message {
     PushChange(Change),
     Undo,
     Redo,
-    ChangeSaveLayoutAsCategory(String),
-    ChangeSaveLayoutAsName(String),
-    ChangeSaveStyleAsName(String),
     ToggleSaveStyleAsGlobal,
-    ChangeBackground(Color),
+    ChangeColor(ColorPicker, Color),
     ToggleColorPicker(ColorPicker),
     UpdateCanvas,
-}
-
-#[derive(Debug, Clone)]
-pub enum ColorPicker {
-    KeyboardBackground,
+    ChangeTextInput(TextInputType, String),
 }
 
 // TODO: Are window resized undoable in NohBoard?
@@ -247,6 +294,7 @@ impl NuhxBoard {
                 save_style_as_name: String::new(),
                 save_style_as_global: false,
                 color_pickers: ColorPickers::default(),
+                text_input: TextInput::default(),
             },
             Task::batch([
                 Task::perform(async {}, move |_| {
@@ -448,16 +496,19 @@ impl NuhxBoard {
                     }
                 }
             }
-            Message::ChangeSaveLayoutAsCategory(category) => {
-                self.save_keyboard_as_category = category;
-                clear_canvas = false;
-            }
-            Message::ChangeSaveLayoutAsName(name) => {
-                self.save_keyboard_as_name = name;
-                clear_canvas = false;
-            }
-            Message::ChangeSaveStyleAsName(name) => {
-                self.save_style_as_name = name;
+            Message::ChangeTextInput(input, value) => {
+                match input {
+                    TextInputType::SaveStyleAsName => self.text_input.save_style_as_name = value,
+                    TextInputType::SaveKeyboardAsName => {
+                        self.text_input.save_keyboard_as_name = value
+                    }
+                    TextInputType::SaveKeyboardAsCategory => {
+                        self.text_input.save_keyboard_as_category = value
+                    }
+                    TextInputType::KeyboardBackgroundImage => {
+                        self.text_input.keyboard_background_image = value
+                    }
+                }
                 clear_canvas = false;
             }
             Message::ToggleSaveStyleAsGlobal => {
@@ -474,13 +525,7 @@ impl NuhxBoard {
                         })
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                         .collect::<Vec<_>>();
-                } else if window.eq(&SaveDefinitionAs) {
-                    self.save_keyboard_as_category
-                        .clone_from(&self.settings.category);
-                    self.save_keyboard_as_name
-                        .clone_from(&self.keyboard_options[self.keyboard_choice.unwrap()]);
                 } else if window.eq(&SaveStyleAs) {
-                    self.save_style_as_name = self.style_options[self.style_choice.unwrap()].name();
                     self.save_style_as_global =
                         self.style_options[self.style_choice.unwrap()].is_global();
                 }
@@ -512,6 +557,11 @@ impl NuhxBoard {
                 self.style.background_color = color.into();
                 self.color_pickers.keyboard_background = false;
             }
+            Message::ChangeColor(picker, color) => match picker {
+                ColorPicker::KeyboardBackground => {
+                    self.style.background_color = color.into();
+                }
+            },
             Message::ToggleColorPicker(picker) => match picker {
                 ColorPicker::KeyboardBackground => {
                     self.color_pickers.keyboard_background =
