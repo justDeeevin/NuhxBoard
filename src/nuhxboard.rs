@@ -97,6 +97,11 @@ impl ColorPickers {
             ColorPicker::DefaultPressedOutline => &mut self.default_pressed_outline,
         }
     }
+
+    pub fn toggle(&mut self, picker: ColorPicker) {
+        let picker = self.get(picker);
+        *picker = !*picker;
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -553,22 +558,16 @@ impl NuhxBoard {
                 }
                 clear_canvas = false;
             }
-            Message::ChangeBackground(color) => {
-                self.style.background_color = color.into();
-                self.color_pickers.keyboard_background = false;
+            Message::ChangeColor(picker, color) => {
+                self.color_pickers.toggle(picker);
+                match picker {
+                    ColorPicker::KeyboardBackground => {
+                        self.style.background_color = color.into();
+                    }
+                    _ => todo!(),
+                }
             }
-            Message::ChangeColor(picker, color) => match picker {
-                ColorPicker::KeyboardBackground => {
-                    self.style.background_color = color.into();
-                }
-            },
-            Message::ToggleColorPicker(picker) => match picker {
-                ColorPicker::KeyboardBackground => {
-                    self.color_pickers.keyboard_background =
-                        !self.color_pickers.keyboard_background;
-                    clear_canvas = false;
-                }
-            },
+            Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
             Message::UpdateCanvas => {}
         }
         if clear_canvas {
