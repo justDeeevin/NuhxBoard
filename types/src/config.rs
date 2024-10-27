@@ -31,7 +31,7 @@ impl BoardElement {
                     BoardElement::KeyboardKey(key) => &mut key.boundaries,
                     BoardElement::MouseKey(key) => &mut key.boundaries,
                     BoardElement::MouseScroll(key) => &mut key.boundaries,
-                    _ => return,
+                    _ => unreachable!(),
                 };
                 for boundary in boundaries {
                     *boundary += delta;
@@ -41,7 +41,7 @@ impl BoardElement {
                         BoardElement::KeyboardKey(key) => &mut key.text_position,
                         BoardElement::MouseKey(key) => &mut key.text_position,
                         BoardElement::MouseScroll(key) => &mut key.text_position,
-                        _ => return,
+                        _ => unreachable!(),
                     };
 
                     *text_position += delta;
