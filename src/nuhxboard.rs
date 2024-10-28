@@ -369,6 +369,7 @@ impl NuhxBoard {
                     self.settings.style = 0;
                     self.style_options = Vec::new();
                 }
+
                 self.keyboard_options =
                     fs::read_dir(self.keyboards_path.join(&self.settings.category))
                         .unwrap()
@@ -383,6 +384,7 @@ impl NuhxBoard {
                 if self.startup {
                     return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
                 }
+
                 clear_canvas = false;
             }
             Message::LoadLayout(layout) => {
@@ -460,6 +462,7 @@ impl NuhxBoard {
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.layout).unwrap();
+
                 clear_canvas = false;
             }
             Message::SaveStyle(file) => {
@@ -471,6 +474,7 @@ impl NuhxBoard {
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
+
                 clear_canvas = false;
             }
             Message::SetHeight(height) => {
@@ -599,6 +603,7 @@ impl NuhxBoard {
             Message::Exit => return window::close(self.main_window),
             Message::Closed(window) => {
                 self.windows.was_closed(window);
+
                 if window == self.main_window {
                     let mut settings_file = File::create(
                         home::home_dir()
@@ -613,9 +618,11 @@ impl NuhxBoard {
                         return self.windows.close_all().map(|_| Message::none());
                     }
                 }
+
                 if self.windows.empty() {
                     return iced::exit();
                 }
+
                 clear_canvas = false;
             }
             Message::ChangeColor(picker, color) => {
@@ -978,6 +985,7 @@ impl NuhxBoard {
             }
             rdev::EventType::MouseMove { x, y } => {
                 let (x, y) = (x as f32, y as f32);
+
                 let current_time = event.time;
                 let time_diff = match current_time.duration_since(self.previous_mouse_time) {
                     Ok(diff) => diff,
@@ -1003,7 +1011,9 @@ impl NuhxBoard {
                     }
                     false => self.previous_mouse_position,
                 };
+
                 let position_diff = (x - previous_pos.0, y - previous_pos.1);
+
                 self.mouse_velocity = (
                     position_diff.0 / time_diff.as_secs_f32(),
                     position_diff.1 / time_diff.as_secs_f32(),
