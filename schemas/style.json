@@ -89,8 +89,9 @@
               "$ref": "#/definitions/NohRgb"
             },
             "OutlineWidth": {
-              "type": "number",
-              "format": "float"
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
             },
             "__type": {
               "type": "string",
@@ -193,8 +194,9 @@
           "$ref": "#/definitions/NohRgb"
         },
         "OutlineWidth": {
-          "type": "number",
-          "format": "float"
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
         }
       }
     },

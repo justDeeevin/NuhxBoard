@@ -89,7 +89,7 @@ pub struct Font {
 pub struct MouseSpeedIndicatorStyle {
     pub inner_color: NohRgb,
     pub outer_color: NohRgb,
-    pub outline_width: f32,
+    pub outline_width: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -154,7 +154,7 @@ impl Default for Style {
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
                 outer_color: NohRgb::WHITE,
-                outline_width: 1.0,
+                outline_width: 1,
             },
             element_styles: vec![],
         }

@@ -315,7 +315,7 @@ impl NuhxBoard {
                 frame.stroke(
                     &outer,
                     canvas::Stroke {
-                        width: style.outline_width,
+                        width: style.outline_width as f32,
                         style: canvas::Style::Solid(Color::from_rgb(
                             style.inner_color.red / 255.0,
                             style.inner_color.green / 255.0,
