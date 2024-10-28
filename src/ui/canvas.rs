@@ -550,6 +550,17 @@ impl NuhxBoard {
             );
         }
 
+        if current_style.show_outline {
+            frame.stroke(
+                &key,
+                canvas::Stroke {
+                    style: canvas::Style::Solid(current_style.outline.into()),
+                    width: current_style.outline_width as f32,
+                    ..Default::default()
+                },
+            );
+        }
+
         if state.hovered_element == Some(index)
             && state.held_element.is_none()
             && state.selected_element.is_none()
