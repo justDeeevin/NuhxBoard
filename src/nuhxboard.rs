@@ -128,6 +128,18 @@ pub enum StyleChoice {
     Custom(String),
 }
 
+impl PartialOrd for StyleChoice {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.to_string().cmp(&other.to_string()))
+    }
+}
+
+impl Ord for StyleChoice {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 impl StyleChoice {
     pub fn is_global(&self) -> bool {
         matches!(self, StyleChoice::Global(_))
@@ -357,7 +369,7 @@ impl NuhxBoard {
                     self.settings.style = 0;
                     self.style_options = Vec::new();
                 }
-                self.keyboard_options = {
+                self.keyboard_options =
                     fs::read_dir(self.keyboards_path.join(&self.settings.category))
                         .unwrap()
                         .map(|r| r.unwrap())
@@ -365,8 +377,8 @@ impl NuhxBoard {
                             entry.file_type().unwrap().is_dir() && entry.file_name() != "images"
                         })
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                        .collect()
-                };
+                        .collect();
+                self.keyboard_options.sort();
 
                 if self.startup {
                     return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
@@ -577,6 +589,7 @@ impl NuhxBoard {
                         })
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                         .collect::<Vec<_>>();
+                    self.keyboard_category_options.sort();
                 } else if window.eq(&SaveStyleAs) {
                     self.save_style_as_global =
                         self.style_options[self.style_choice.unwrap()].is_global();
@@ -756,6 +769,7 @@ impl NuhxBoard {
                 })
                 .collect(),
         );
+        self.style_options.sort();
         self.style_choice = Some(0);
 
         let resize_task = window::resize(
