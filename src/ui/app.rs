@@ -1,23 +1,49 @@
 use crate::nuhxboard::*;
 use iced::{
+    border::Radius,
     font::Weight,
     widget::{
         button, canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list,
-        radio, row, text, text_input, Button, Image, Row, Scrollable, Stack,
+        radio, row, text, text::IntoFragment, text_input, Button, Container, Image, Row,
+        Scrollable, Stack, Text,
     },
-    window, Background, Border, Color, Font, Length, Renderer, Theme,
+    window, Alignment, Background, Border, Color, Element, Font, Length, Renderer, Shadow, Theme,
 };
 use iced_aw::{
     color_picker, number_input, quad::Quad, widgets::InnerBounds, ContextMenu, SelectionList,
 };
 use iced_multi_window::Window;
 use std::sync::Arc;
-use types::settings::*;
+use types::{settings::*, style::NohRgb};
 
 static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
 
+fn labeled_text_input<'a>(
+    label: impl IntoFragment<'a>,
+    text_input: iced::widget::TextInput<'a, Message>,
+) -> Row<'a, Message> {
+    row![text(label), text_input].align_y(Alignment::Center)
+}
+
+fn gray_box<'a>(content: impl Into<Element<'a, Message>>) -> Container<'a, Message> {
+    container(content)
+        .style(move |_| container::Style {
+            background: None,
+            text_color: None,
+            border: Border {
+                color: NohRgb::DEFAULT_GRAY.into(),
+                width: 1.0,
+                radius: Radius::from(0.0),
+            },
+            shadow: Shadow::default(),
+        })
+        .padding(5)
+        .width(Length::Fill)
+        .align_x(Alignment::Center)
+}
+
 fn picker_button<'a>(
-    label: impl iced::widget::text::IntoFragment<'a>,
+    label: impl IntoFragment<'a>,
     open: bool,
     color: Color,
     picker: ColorPicker,
@@ -32,6 +58,11 @@ fn picker_button<'a>(
                 .style(move |theme, status| match status {
                     button::Status::Active => button::Style {
                         background: Some(iced::Background::Color(color)),
+                        border: Border {
+                            color: Color::BLACK,
+                            width: 1.0,
+                            radius: Radius::new(0)
+                        },
                         ..button::primary(theme, status)
                     },
                     _ => button::primary(theme, status),
@@ -42,6 +73,7 @@ fn picker_button<'a>(
         ),
         text(label)
     ]
+    .align_y(Alignment::Center)
 }
 
 fn context_menu_button(label: &str) -> Button<Message> {
@@ -695,47 +727,230 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
     }
 
     fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        fn category_label<'a>(label: impl IntoFragment<'a>) -> Text<'a> {
+            text(label)
+                .font(Font {
+                    weight: Weight::Bold,
+                    ..Default::default()
+                })
+                .align_x(Alignment::Center)
+                .width(Length::Fill)
+        }
+
         let keyboard = column![
-            text("Keyboard").font(Font {
-                weight: Weight::Bold,
-                ..Default::default()
-            }),
-            picker_button(
-                "Background",
-                app.color_pickers.keyboard_background,
-                app.style.background_color.into(),
-                ColorPicker::KeyboardBackground,
-            ),
-            row![
-                text("Image: "),
-                text_input(
-                    app.style
-                        .background_image_file_name
-                        .as_deref()
-                        .unwrap_or(""),
-                    app.text_input.keyboard_background_image.as_str()
+            category_label("Keyboard"),
+            text("Background"),
+            gray_box(column![
+                picker_button(
+                    "Background Color",
+                    app.color_pickers.keyboard_background,
+                    app.style.background_color.into(),
+                    ColorPicker::KeyboardBackground,
+                ),
+                labeled_text_input(
+                    "Image: ",
+                    text_input(
+                        app.style
+                            .background_image_file_name
+                            .as_deref()
+                            .unwrap_or(""),
+                        app.text_input.keyboard_background_image.as_str()
+                    )
+                    .on_input(|v| Message::ChangeTextInput(
+                        TextInputType::KeyboardBackgroundImage,
+                        v
+                    ))
                 )
-                .on_input(|v| Message::ChangeTextInput(TextInputType::KeyboardBackgroundImage, v))
-            ]
+            ])
         ];
 
         let mouse_speed_indicator = column![
-            text("MouseSpeedIndicator").font(Font {
-                weight: Weight::Bold,
-                ..Default::default()
-            }),
-            picker_button(
-                "Color 1 (low speed)",
-                app.color_pickers.default_mouse_speed_indicator_1,
-                app.style
-                    .default_mouse_speed_indicator_style
-                    .inner_color
-                    .into(),
-                ColorPicker::DefaultMouseSpeedIndicator1
-            )
+            category_label("MouseSpeedIndicator"),
+            text("General"),
+            gray_box(column![
+                picker_button(
+                    "Color 1 (low speed)",
+                    app.color_pickers.default_mouse_speed_indicator_1,
+                    app.style
+                        .default_mouse_speed_indicator_style
+                        .inner_color
+                        .into(),
+                    ColorPicker::DefaultMouseSpeedIndicator1
+                ),
+                picker_button(
+                    "Color 2 (high speed)",
+                    app.color_pickers.default_mouse_speed_indicator_2,
+                    app.style
+                        .default_mouse_speed_indicator_style
+                        .outer_color
+                        .into(),
+                    ColorPicker::DefaultMouseSpeedIndicator2
+                ),
+                row![
+                    number_input(
+                        app.style.default_mouse_speed_indicator_style.outline_width,
+                        1..,
+                        |v| Message::ChangeStyle(
+                            StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(v)
+                        )
+                    ),
+                    text(" Outline Width")
+                ]
+                .align_y(Alignment::Center)
+            ])
         ];
 
-        row![column![keyboard, mouse_speed_indicator]].into()
+        let loose_keys = column![
+            category_label("Loose Keys"),
+            text("Background"),
+            gray_box(column![
+                picker_button(
+                    "Background Color",
+                    app.color_pickers.default_loose_background,
+                    app.style.default_key_style.loose.background.into(),
+                    ColorPicker::DefaultLooseBackground
+                ),
+                labeled_text_input(
+                    "Image: ",
+                    text_input(
+                        app.style
+                            .default_key_style
+                            .loose
+                            .background_image_file_name
+                            .as_deref()
+                            .unwrap_or(""),
+                        app.text_input.default_loose_key_background_image.as_str()
+                    )
+                    .on_input(|v| Message::ChangeTextInput(
+                        TextInputType::DefaultLooseKeyBackgroundImage,
+                        v
+                    ))
+                )
+            ]),
+            text("Text"),
+            gray_box(column![
+                picker_button(
+                    "Text Color",
+                    app.color_pickers.default_loose_text,
+                    app.style.default_key_style.loose.text.into(),
+                    ColorPicker::DefaultLooseText
+                ),
+                labeled_text_input(
+                    "Font Family: ",
+                    text_input(
+                        "",
+                        app.style.default_key_style.loose.font.font_family.as_str()
+                    )
+                    .on_input(|v| Message::ChangeStyle(StyleSetting::DefaultLooseKeyFontFamily(v)))
+                )
+            ]),
+            text("Outline"),
+            gray_box(column![
+                picker_button(
+                    "Outline Color",
+                    app.color_pickers.default_loose_outline,
+                    app.style.default_key_style.loose.outline.into(),
+                    ColorPicker::DefaultLooseOutline
+                ),
+                checkbox(
+                    "Show Outline",
+                    app.style.default_key_style.loose.show_outline
+                )
+                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultLooseKeyShowOutline)),
+                row![
+                    number_input(app.style.default_key_style.loose.outline_width, 1.., |v| {
+                        Message::ChangeStyle(StyleSetting::DefaultLooseKeyOutlineWidth(v))
+                    }),
+                    text(" Outline Width")
+                ]
+            ])
+        ]
+        .padding(5);
+
+        let pressed_keys = column![
+            category_label("Pressed Keys"),
+            text("Background"),
+            gray_box(column![
+                picker_button(
+                    "Background Color",
+                    app.color_pickers.default_pressed_background,
+                    app.style.default_key_style.pressed.background.into(),
+                    ColorPicker::DefaultPressedBackground
+                ),
+                labeled_text_input(
+                    "Image: ",
+                    text_input(
+                        app.style
+                            .default_key_style
+                            .pressed
+                            .background_image_file_name
+                            .as_deref()
+                            .unwrap_or(""),
+                        app.text_input.default_pressed_key_background_image.as_str()
+                    )
+                    .on_input(|v| Message::ChangeTextInput(
+                        TextInputType::DefaultPressedKeyBackgroundImage,
+                        v
+                    ))
+                )
+            ]),
+            text("Text"),
+            gray_box(column![
+                picker_button(
+                    "Text Color",
+                    app.color_pickers.default_pressed_text,
+                    app.style.default_key_style.pressed.text.into(),
+                    ColorPicker::DefaultPressedText
+                ),
+                labeled_text_input(
+                    "Font Family: ",
+                    text_input(
+                        "",
+                        app.style
+                            .default_key_style
+                            .pressed
+                            .font
+                            .font_family
+                            .as_str()
+                    )
+                    .on_input(|v| Message::ChangeStyle(
+                        StyleSetting::DefaultPressedKeyFontFamily(v)
+                    ))
+                )
+            ]),
+            text("Outline"),
+            gray_box(column![
+                picker_button(
+                    "Outline Color",
+                    app.color_pickers.default_pressed_outline,
+                    app.style.default_key_style.pressed.outline.into(),
+                    ColorPicker::DefaultPressedOutline
+                ),
+                checkbox(
+                    "Show Outline",
+                    app.style.default_key_style.pressed.show_outline
+                )
+                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultPressedKeyShowOutline)),
+                row![
+                    number_input(
+                        app.style.default_key_style.pressed.outline_width,
+                        1..,
+                        |v| {
+                            Message::ChangeStyle(StyleSetting::DefaultPressedKeyOutlineWidth(v))
+                        }
+                    ),
+                    text(" Outline Width")
+                ]
+            ])
+        ]
+        .padding(5);
+
+        row![
+            column![keyboard, mouse_speed_indicator].padding(5),
+            loose_keys,
+            pressed_keys,
+        ]
+        .into()
     }
 
     fn title<'a>(&'a self, _app: &'a NuhxBoard) -> String {

@@ -60,6 +60,8 @@ pub struct TextInput {
     pub save_keyboard_as_category: String,
     pub save_keyboard_as_name: String,
     pub save_style_as_name: String,
+    pub default_loose_key_background_image: String,
+    pub default_pressed_key_background_image: String,
 }
 
 #[derive(Clone, Debug)]
@@ -68,6 +70,8 @@ pub enum TextInputType {
     SaveKeyboardAsCategory,
     SaveKeyboardAsName,
     SaveStyleAsName,
+    DefaultLooseKeyBackgroundImage,
+    DefaultPressedKeyBackgroundImage,
 }
 
 #[derive(Default)]
@@ -84,7 +88,7 @@ pub struct ColorPickers {
 }
 
 impl ColorPickers {
-    pub fn get(&mut self, picker: ColorPicker) -> &mut bool {
+    pub fn get_mut(&mut self, picker: ColorPicker) -> &mut bool {
         match picker {
             ColorPicker::KeyboardBackground => &mut self.keyboard_background,
             ColorPicker::DefaultMouseSpeedIndicator1 => &mut self.default_mouse_speed_indicator_1,
@@ -99,7 +103,7 @@ impl ColorPickers {
     }
 
     pub fn toggle(&mut self, picker: ColorPicker) {
-        let picker = self.get(picker);
+        let picker = self.get_mut(picker);
         *picker = !*picker;
     }
 }
@@ -158,6 +162,7 @@ pub enum Message {
     ChangeKeyboardCategory(String),
     LoadLayout(usize),
     ChangeSetting(Setting),
+    ChangeStyle(StyleSetting),
     ClearPressedKeys,
     ToggleEditMode,
     MoveElement {
@@ -176,6 +181,17 @@ pub enum Message {
     ToggleColorPicker(ColorPicker),
     UpdateCanvas,
     ChangeTextInput(TextInputType, String),
+}
+
+#[derive(Debug, Clone)]
+pub enum StyleSetting {
+    DefaultMouseSpeedIndicatorOutlineWidth(u32),
+    DefaultLooseKeyFontFamily(String),
+    DefaultLooseKeyShowOutline,
+    DefaultLooseKeyOutlineWidth(u32),
+    DefaultPressedKeyFontFamily(String),
+    DefaultPressedKeyShowOutline,
+    DefaultPressedKeyOutlineWidth(u32),
 }
 
 // TODO: Are window resized undoable in NohBoard?
@@ -513,9 +529,40 @@ impl NuhxBoard {
                     TextInputType::KeyboardBackgroundImage => {
                         self.text_input.keyboard_background_image = value
                     }
+                    TextInputType::DefaultLooseKeyBackgroundImage => {
+                        self.text_input.default_loose_key_background_image = value
+                    }
+                    TextInputType::DefaultPressedKeyBackgroundImage => {
+                        self.text_input.default_pressed_key_background_image = value
+                    }
                 }
                 clear_canvas = false;
             }
+            Message::ChangeStyle(style) => match style {
+                StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
+                    self.style.default_mouse_speed_indicator_style.outline_width = width;
+                }
+                StyleSetting::DefaultLooseKeyFontFamily(family) => {
+                    self.style.default_key_style.loose.font.font_family = family;
+                }
+                StyleSetting::DefaultLooseKeyShowOutline => {
+                    self.style.default_key_style.loose.show_outline =
+                        !self.style.default_key_style.loose.show_outline;
+                }
+                StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
+                    self.style.default_key_style.loose.outline_width = width;
+                }
+                StyleSetting::DefaultPressedKeyFontFamily(family) => {
+                    self.style.default_key_style.pressed.font.font_family = family;
+                }
+                StyleSetting::DefaultPressedKeyShowOutline => {
+                    self.style.default_key_style.pressed.show_outline =
+                        !self.style.default_key_style.pressed.show_outline;
+                }
+                StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
+                    self.style.default_key_style.pressed.outline_width = width;
+                }
+            },
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
                 clear_canvas = false;
@@ -564,7 +611,30 @@ impl NuhxBoard {
                     ColorPicker::KeyboardBackground => {
                         self.style.background_color = color.into();
                     }
-                    _ => todo!(),
+                    ColorPicker::DefaultLooseBackground => {
+                        self.style.default_key_style.loose.background = color.into();
+                    }
+                    ColorPicker::DefaultLooseText => {
+                        self.style.default_key_style.loose.text = color.into();
+                    }
+                    ColorPicker::DefaultLooseOutline => {
+                        self.style.default_key_style.loose.outline = color.into();
+                    }
+                    ColorPicker::DefaultPressedBackground => {
+                        self.style.default_key_style.pressed.background = color.into();
+                    }
+                    ColorPicker::DefaultPressedText => {
+                        self.style.default_key_style.pressed.text = color.into();
+                    }
+                    ColorPicker::DefaultPressedOutline => {
+                        self.style.default_key_style.pressed.outline = color.into();
+                    }
+                    ColorPicker::DefaultMouseSpeedIndicator1 => {
+                        self.style.default_mouse_speed_indicator_style.inner_color = color.into();
+                    }
+                    ColorPicker::DefaultMouseSpeedIndicator2 => {
+                        self.style.default_mouse_speed_indicator_style.outer_color = color.into();
+                    }
                 }
             }
             Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
