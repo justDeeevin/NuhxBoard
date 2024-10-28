@@ -479,6 +479,7 @@ impl NuhxBoard {
             }
             Message::SetHeight(height) => {
                 self.layout.height = height;
+                self.canvas.clear();
                 return window::resize(
                     self.main_window,
                     iced::Size {
@@ -489,6 +490,7 @@ impl NuhxBoard {
             }
             Message::SetWidth(width) => {
                 self.layout.width = width;
+                self.canvas.clear();
                 return window::resize(
                     self.main_window,
                     iced::Size {
