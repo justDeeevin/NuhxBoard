@@ -12,12 +12,10 @@ pub struct Style {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct NohRgb {
-    #[serde(rename = "Red")]
     pub red: f32,
-    #[serde(rename = "Green")]
     pub green: f32,
-    #[serde(rename = "Blue")]
     pub blue: f32,
 }
 
