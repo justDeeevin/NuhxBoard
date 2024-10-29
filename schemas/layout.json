@@ -15,10 +15,12 @@
       }
     },
     "Height": {
+      "description": "Window height",
       "type": "number",
       "format": "float"
     },
     "Version": {
+      "description": "Doesn't do anything",
       "type": [
         "integer",
         "null"
@@ -27,12 +29,14 @@
       "minimum": 0.0
     },
     "Width": {
+      "description": "Window width",
       "type": "number",
       "format": "float"
     }
   },
   "definitions": {
     "BoardElement": {
+      "description": "Union for different element types",
       "oneOf": [
         {
           "type": "object",

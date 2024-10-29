@@ -16,6 +16,7 @@ use std::{
 };
 use types::{config::*, settings::*, style::*};
 
+// See canvas.rs:478
 pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
     LazyLock::new(|| RwLock::new(HashSet::new()));
 
@@ -25,11 +26,11 @@ pub struct NuhxBoard {
     pub layout: Layout,
     pub style: Style,
     pub canvas: Cache,
-    /// `[keycode: time_pressed]`
+    /// `{[keycode]: [time_pressed]}`
     pub pressed_keys: HashMap<u32, Instant>,
-    /// `[keycode: time_pressed]`
+    /// `{[keycode]: [time_pressed]}`
     pub pressed_mouse_buttons: HashMap<u32, Instant>,
-    /// `[axis: releases_queued]`
+    /// `{[axis]: [releases_queued]}`
     pub pressed_scroll_buttons: HashMap<u32, u32>,
     /// `(x, y)`
     pub mouse_velocity: (f32, f32),
@@ -297,7 +298,10 @@ impl NuhxBoard {
 
         let mut windows = WindowManager::default();
 
-        let (main_window, task) = windows.open(Box::new(Main));
+        // The app will open the main window on startup. The WindowManager automatically tracks IDs
+        // and corresponding window types and runs the correct view, theme, and title logic when
+        // necessary.
+        let (main_window, window_open_task) = windows.open(Box::new(Main));
 
         (
             Self {
@@ -337,7 +341,7 @@ impl NuhxBoard {
                 Task::perform(async {}, move |_| {
                     Message::ChangeKeyboardCategory(category.clone())
                 }),
-                task.map(|_| Message::none()),
+                window_open_task.map(|_| Message::none()),
             ]),
         )
     }
@@ -875,6 +879,7 @@ impl NuhxBoard {
         Task::none()
     }
 
+    /// See canvas.rs:478
     fn update_fonts(&self) {
         let mut new_fonts = HashSet::new();
         new_fonts.insert(self.style.default_key_style.loose.font.font_family.clone());

@@ -504,6 +504,13 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ErrorPopup {
+    // Simple example of the power of using polymorphism for multi-window management. Instead of
+    // having some datastructure dedicated to tracking errors corresponding to window IDs, each
+    // instance of an error popup knows its own error. This is put to much greater use for
+    // individual key styles.
+    // It is important to note, however, that these properties are unable to be changed. I would
+    // argue that mutable per-window state would be problematically complex, but it is nevertheless
+    // a limitation on the versatility of my multi-window system.
     pub error: Error,
 }
 impl Window<NuhxBoard, Theme, Message> for ErrorPopup {

@@ -199,6 +199,10 @@ impl canvas::Program<Message> for NuhxBoard {
                 }
                 self.draw_element(element, state, frame, index);
             }
+
+            // I can only have so much control over the layering of the elements. Geometry, text,
+            // and images are rendered in their own distinct passes, and their order over one
+            // another cannot be specified (to my knowledge).
             let top_element = if state.selected_element.is_some() {
                 state.selected_element
             } else {
@@ -325,8 +329,8 @@ impl NuhxBoard {
                     },
                 );
 
-                // TODO: Still highlight when an element is selected. I dislike this
-                // behavior of NohBoard.
+                // TODO: Still highlight when an element is selected. While the current code is
+                // closer to NohBoard's behavior, I'm not a fan of it.
                 if state.hovered_element == Some(index)
                     && state.held_element.is_none()
                     && state.selected_element.is_none()
@@ -608,12 +612,18 @@ fn indicator_triangle(
 
     let u = Vector3::new(0.0, 0.0, 1.0);
 
+    // i and j components allow me to create a coordinate space relative to the velocity
+    // j points in the direction of the velocity
     let j = v.normalize();
+    // i is orthogonal to the velocity
     let i = j.cross(&u).normalize();
 
+    // points to the center of the ball
     let ball_vector = r * j;
 
+    // points to the leftmost side of the ball
     let left_vector = t * (ball_vector - (b * r * i));
+    // points to the rightmost side of the ball
     let right_vector = t * (ball_vector + (b * r * i));
 
     Path::new(|builder| {

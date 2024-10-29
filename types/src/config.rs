@@ -5,14 +5,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct Layout {
+    /// Doesn't do anything
     pub version: Option<u8>,
+    /// Window width
     pub width: f32,
+    /// Window height
     pub height: f32,
     pub elements: Vec<BoardElement>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(tag = "__type")]
+/// Union for different element types
 pub enum BoardElement {
     KeyboardKey(KeyboardKeyDefinition),
     MouseKey(MouseKeyDefinition),

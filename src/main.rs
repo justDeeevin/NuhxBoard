@@ -85,6 +85,7 @@ fn main() -> eyre::Result<()> {
         fs::create_dir_all(&global_path)?;
     }
 
+    // Runs the app, initializing state using NuhxBoard::new
     iced::daemon(NuhxBoard::title, NuhxBoard::update, NuhxBoard::view)
         .theme(NuhxBoard::theme)
         .subscription(NuhxBoard::subscription)

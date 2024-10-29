@@ -6,6 +6,7 @@ use std::{
 use schemars::schema_for;
 use types::{config::Layout, style::Style};
 
+/// Automatically generates the JSON schemas for the config files.
 fn main() {
     let layout_schema = schema_for!(Layout);
     let style_schema = schema_for!(Style);
