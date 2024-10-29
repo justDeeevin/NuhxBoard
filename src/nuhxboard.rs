@@ -9,11 +9,15 @@ use iced_multi_window::{Window, WindowManager};
 use image::ImageReader;
 use logic::{code_convert::*, listener};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{self, File},
+    sync::{LazyLock, RwLock},
     time::Instant,
 };
 use types::{config::*, settings::*, style::*};
+
+pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
+    LazyLock::new(|| RwLock::new(HashSet::new()));
 
 pub struct NuhxBoard {
     pub windows: WindowManager<NuhxBoard, Theme, Message>,
@@ -711,6 +715,7 @@ impl NuhxBoard {
 
         self.keyboard_choice = Some(keyboard);
         self.style = Style::default();
+        self.update_fonts();
 
         let config_file = match File::open(
             self.keyboards_path
@@ -865,7 +870,44 @@ impl NuhxBoard {
             let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
         }
 
+        self.update_fonts();
+
         Task::none()
+    }
+
+    fn update_fonts(&self) {
+        let mut new_fonts = HashSet::new();
+        new_fonts.insert(self.style.default_key_style.loose.font.font_family.clone());
+        new_fonts.insert(
+            self.style
+                .default_key_style
+                .pressed
+                .font
+                .font_family
+                .clone(),
+        );
+        new_fonts.extend(
+            self.style
+                .element_styles
+                .iter()
+                .filter_map(|style| match &style.value {
+                    ElementStyleUnion::KeyStyle(key_style) => Some(
+                        [
+                            key_style.loose.font.font_family.clone(),
+                            key_style.pressed.font.font_family.clone(),
+                        ]
+                        .into_iter(),
+                    ),
+                    ElementStyleUnion::MouseSpeedIndicatorStyle(_) => None,
+                })
+                .flatten(),
+        );
+
+        for font in new_fonts {
+            if !FONTS.read().unwrap().contains(font.as_str()) {
+                FONTS.write().unwrap().insert(font.leak());
+            }
+        }
     }
 
     fn input_event(&mut self, event: rdev::Event) -> Task<Message> {

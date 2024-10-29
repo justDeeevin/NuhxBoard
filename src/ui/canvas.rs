@@ -471,11 +471,14 @@ impl NuhxBoard {
             size: iced::Pixels(current_style.font.size),
             font: iced::Font {
                 family: iced::font::Family::Name(
-                    // Leak is required because Name requires static lifetime
-                    // as opposed to application lifetime.
-                    // I suppose they were just expecting you to pass in a
-                    // literal here... damn you!!
-                    current_style.font.font_family.clone().leak(),
+                    // This takes a static string (I suppose the developers of the library were
+                    // expecting the use of a literal), so to avoid re-leaking the font family
+                    // every frame, I use a static hashset.
+                    FONTS
+                        .read()
+                        .unwrap()
+                        .get(current_style.font.font_family.as_str())
+                        .unwrap(),
                 ),
                 weight: if current_style.font.style & 1 != 0 {
                     iced::font::Weight::Bold
