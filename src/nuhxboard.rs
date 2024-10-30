@@ -368,7 +368,9 @@ impl NuhxBoard {
                 if category.is_empty() {
                     return Task::none();
                 }
-                self.settings.category = category;
+                self.settings.category = category.clone();
+
+                self.text_input.save_keyboard_as_category = category;
 
                 if !self.startup {
                     self.keyboard_choice = None;
@@ -721,6 +723,8 @@ impl NuhxBoard {
         self.style = Style::default();
         self.update_fonts();
 
+        self.text_input.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
+
         let config_file = match File::open(
             self.keyboards_path
                 .join(&self.settings.category)
@@ -875,6 +879,28 @@ impl NuhxBoard {
         }
 
         self.update_fonts();
+
+        self.text_input.save_style_as_name = self.style_options[style].name();
+
+        self.text_input.keyboard_background_image = self
+            .style
+            .background_image_file_name
+            .clone()
+            .unwrap_or_default();
+        self.text_input.default_loose_key_background_image = self
+            .style
+            .default_key_style
+            .loose
+            .background_image_file_name
+            .clone()
+            .unwrap_or_default();
+        self.text_input.default_pressed_key_background_image = self
+            .style
+            .default_key_style
+            .pressed
+            .background_image_file_name
+            .clone()
+            .unwrap_or_default();
 
         Task::none()
     }

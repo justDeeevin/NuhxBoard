@@ -629,19 +629,14 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
         column![
             row![
                 text("Category: "),
-                text_input(
-                    app.settings.category.as_str(),
-                    &app.text_input.save_keyboard_as_category,
-                )
-                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsCategory, v))
+                text_input("", &app.text_input.save_keyboard_as_category,).on_input(|v| {
+                    Message::ChangeTextInput(TextInputType::SaveKeyboardAsCategory, v)
+                })
             ],
             row![
                 text("Name: "),
-                text_input(
-                    &app.keyboard_options[app.keyboard_choice.unwrap()],
-                    &app.text_input.save_keyboard_as_name,
-                )
-                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
+                text_input("", &app.text_input.save_keyboard_as_name,)
+                    .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
             button("Save").on_press(Message::SaveKeyboard(Some(
                 app.keyboards_path
@@ -687,11 +682,8 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
         column![
             row![
                 text("Name: "),
-                text_input(
-                    &app.style_options[app.style_choice.unwrap()].name(),
-                    &app.text_input.save_style_as_name,
-                )
-                .on_input(|v| Message::ChangeTextInput(TextInputType::SaveStyleAsName, v))
+                text_input("", &app.text_input.save_style_as_name,)
+                    .on_input(|v| Message::ChangeTextInput(TextInputType::SaveStyleAsName, v))
             ],
             checkbox("Save as global", app.save_style_as_global)
                 .on_toggle(|_| Message::ToggleSaveStyleAsGlobal),
@@ -756,17 +748,9 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 ),
                 labeled_text_input(
                     "Image: ",
-                    text_input(
-                        app.style
-                            .background_image_file_name
-                            .as_deref()
-                            .unwrap_or(""),
-                        app.text_input.keyboard_background_image.as_str()
+                    text_input("", app.text_input.keyboard_background_image.as_str()).on_input(
+                        |v| Message::ChangeTextInput(TextInputType::KeyboardBackgroundImage, v)
                     )
-                    .on_input(|v| Message::ChangeTextInput(
-                        TextInputType::KeyboardBackgroundImage,
-                        v
-                    ))
                 )
             ])
         ];
@@ -820,12 +804,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 labeled_text_input(
                     "Image: ",
                     text_input(
-                        app.style
-                            .default_key_style
-                            .loose
-                            .background_image_file_name
-                            .as_deref()
-                            .unwrap_or(""),
+                        "",
                         app.text_input.default_loose_key_background_image.as_str()
                     )
                     .on_input(|v| Message::ChangeTextInput(
@@ -887,12 +866,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 labeled_text_input(
                     "Image: ",
                     text_input(
-                        app.style
-                            .default_key_style
-                            .pressed
-                            .background_image_file_name
-                            .as_deref()
-                            .unwrap_or(""),
+                        "",
                         app.text_input.default_pressed_key_background_image.as_str()
                     )
                     .on_input(|v| Message::ChangeTextInput(
