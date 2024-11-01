@@ -117,8 +117,8 @@ fn seperator() -> Quad {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Main;
 impl Window<NuhxBoard, Theme, Message> for Main {
-    fn id(&self) -> &'static str {
-        "main"
+    fn id(&self) -> String {
+        "main".into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -142,13 +142,13 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             let mut menu = vec![
                 context_menu_button("Settings")
                     .on_press_maybe(
-                        (!app.windows.any_of(&SettingsWindow))
+                        (!app.windows.any_of(Box::new(SettingsWindow)))
                             .then_some(Message::Open(Box::new(SettingsWindow))),
                     )
                     .into(),
                 context_menu_button("Load Keyboard")
                     .on_press_maybe(
-                        (!app.windows.any_of(&LoadKeyboard))
+                        (!app.windows.any_of(Box::new(LoadKeyboard)))
                             .then_some(Message::Open(Box::new(LoadKeyboard))),
                     )
                     .into(),
@@ -196,14 +196,14 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                     seperator().into(),
                     context_menu_button("Keyboard Properties")
                         .on_press_maybe(
-                            (!app.windows.any_of(&KeyboardProperties))
+                            (!app.windows.any_of(Box::new(KeyboardProperties)))
                                 .then_some(Message::Open(Box::new(KeyboardProperties))),
                         )
                         .into(),
                     context_menu_button("Element Properties").into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
-                            (!app.windows.any_of(&KeyboardStyle))
+                            (!app.windows.any_of(Box::new(KeyboardStyle)))
                                 .then_some(Message::Open(Box::new(KeyboardStyle))),
                         )
                         .into(),
@@ -266,8 +266,8 @@ impl Window<NuhxBoard, Theme, Message> for Main {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SettingsWindow;
 impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
-    fn id(&self) -> &'static str {
-        "settings"
+    fn id(&self) -> String {
+        "settings".into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -440,8 +440,8 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadKeyboard;
 impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
-    fn id(&self) -> &'static str {
-        "load_keyboard"
+    fn id(&self) -> String {
+        "load_keyboard".into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -514,8 +514,8 @@ pub struct ErrorPopup {
     pub error: Error,
 }
 impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
-    fn id(&self) -> &'static str {
-        "error"
+    fn id(&self) -> String {
+        format!("error_{:?}", self.error)
     }
 
     fn settings(&self) -> window::Settings {
@@ -570,8 +570,8 @@ impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
 impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
-    fn id(&self) -> &'static str {
-        "keyboard_properties"
+    fn id(&self) -> String {
+        "keyboard_properties".into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -613,8 +613,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveDefinitionAs;
 impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
-    fn id(&self) -> &'static str {
-        "save_definition_as"
+    fn id(&self) -> String {
+        "save_definition_as".into()
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
@@ -663,8 +663,8 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveStyleAs;
 impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
-    fn id(&self) -> &'static str {
-        "save_style_as"
+    fn id(&self) -> String {
+        "save_style_as".into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -715,8 +715,8 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
 pub struct KeyboardStyle;
 
 impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
-    fn id(&self) -> &'static str {
-        "keyboard_style"
+    fn id(&self) -> String {
+        "keyboard_style".into()
     }
 
     fn settings(&self) -> window::Settings {
