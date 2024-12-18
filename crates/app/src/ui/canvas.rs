@@ -1,6 +1,8 @@
 use crate::nuhxboard::*;
 use colorgrad::Gradient;
-use geo::{BoundingRect, Coord, EuclideanDistance, LineString, Polygon, Within};
+use geo::{
+    algorithm::line_measures::Euclidean, BoundingRect, Coord, Distance, LineString, Polygon, Within,
+};
 use iced::{
     mouse,
     widget::{
@@ -87,9 +89,10 @@ impl canvas::Program<Message> for NuhxBoard {
                         for (index, element) in self.layout.elements.iter().enumerate() {
                             match element {
                                 BoardElement::MouseSpeedIndicator(def) => {
-                                    if cursor_position
-                                        .euclidean_distance(&Coord::from(def.location.clone()))
-                                        < def.radius
+                                    if Euclidean::distance(
+                                        cursor_position,
+                                        Coord::from(def.location.clone()),
+                                    ) < def.radius
                                     {
                                         if state.hovered_element != Some(index) {
                                             state.hovered_element = Some(index);
