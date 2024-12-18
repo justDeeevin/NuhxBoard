@@ -1,61 +1,12 @@
-[package]
-name = "nuhxboard"
-version = "1.0.0"
-edition = "2021"
-license = "GPL-3.0"
-authors = ["Devin Droddy <devin.droddy@gmail.com>"]
-description = "A cross-platform alternative to NohBoard"
-repository = "https://github.com/justDeeevin/NuhxBoard"
-keywords = ["keyboard", "virtual", "overlay", "linux", "nohboard"]
-categories = ["visualization"]
-readme = "README.md"
-# rust-version = "1.72.0"
-include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md", "NuhxBoard.png"]
-
-[package.metadata.wix]
-upgrade-guid = "531C0F4B-FFE1-4F4C-BD42-A8449DB1E0BD"
-path-guid = "6BCE453A-D71C-4EF5-A85D-B4A43D72A35F"
-license = false
-eula = false
-
-[dependencies]
-iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
-async-std = "1.13.0"
-color-eyre = { version = "0.6.3", default-features = false }
-colorgrad = "0.7.0"
-display-info = "0.5.1"
-eyre = "0.6.12"
-futures = "0.3.30"
-geo = "0.28.0"
-home = "0.5.9"
-iced = { version = "0.13.1", features = [
-  "image",
-  "canvas",
-  "advanced",
-  "async-std",
-] }
-iced_aw = "0.11.0"
-image = { version = "0.25.2", features = ["ico"] }
-reqwest = { version = "0.12.7", features = ["blocking"] }
-serde_json = "1.0.128"
-zip = "2.2.0"
-iced_fonts = "0.1.1"
-types = { path = "types" }
-logic = { path = "logic" }
-rdev = "0.5.3"
-nalgebra = "0.33.0"
-
-[build-dependencies]
-schemars = "0.8.21"
-types = { path = "types" }
-serde_json = "1.0.128"
-
 [workspace]
-members = ["types", "logic"]
+resolver = "2"
+members = ["crates/app", "crates/logic", "crates/types"]
 
-[features]
-grab = ["logic/grab"]
-debug = ["iced/debug"]
+[workspace.metadata.crane]
+name = "nuhxboard"
+
+[workspace.package]
+version = "1.0.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
