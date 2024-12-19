@@ -66,7 +66,9 @@ pub struct TextInput {
     pub save_keyboard_as_name: String,
     pub save_style_as_name: String,
     pub default_loose_key_background_image: String,
+    pub default_loose_key_font_family: String,
     pub default_pressed_key_background_image: String,
+    pub default_pressed_key_font_family: String,
 }
 
 #[derive(Clone, Debug)]
@@ -76,7 +78,9 @@ pub enum TextInputType {
     SaveKeyboardAsName,
     SaveStyleAsName,
     DefaultLooseKeyBackgroundImage,
+    DefaultLooseKeyFontFamily,
     DefaultPressedKeyBackgroundImage,
+    DefaultPressedKeyFontFamily,
 }
 
 #[derive(Default)]
@@ -203,14 +207,15 @@ pub enum Message {
 #[derive(Debug, Clone)]
 pub enum StyleSetting {
     DefaultMouseSpeedIndicatorOutlineWidth(u32),
-    DefaultLooseKeyFontFamily(String),
+    DefaultLooseKeyFontFamily,
     DefaultLooseKeyShowOutline,
     DefaultLooseKeyOutlineWidth(u32),
-    DefaultLooseKeyBackgroundImage(String),
-    DefaultPressedKeyFontFamily(String),
+    DefaultLooseKeyBackgroundImage,
+    DefaultPressedKeyFontFamily,
     DefaultPressedKeyShowOutline,
     DefaultPressedKeyOutlineWidth(u32),
-    DefaultPressedKeyBackgroundImage(String),
+    DefaultPressedKeyBackgroundImage,
+    KeyboardBackgroundImage,
 }
 
 // TODO: Are window resized undoable in NohBoard?
@@ -562,8 +567,14 @@ impl NuhxBoard {
                     TextInputType::DefaultLooseKeyBackgroundImage => {
                         self.text_input.default_loose_key_background_image = value
                     }
+                    TextInputType::DefaultLooseKeyFontFamily => {
+                        self.text_input.default_loose_key_font_family = value
+                    }
                     TextInputType::DefaultPressedKeyBackgroundImage => {
                         self.text_input.default_pressed_key_background_image = value
+                    }
+                    TextInputType::DefaultPressedKeyFontFamily => {
+                        self.text_input.default_pressed_key_font_family = value
                     }
                 }
                 clear_canvas = false;
@@ -572,8 +583,9 @@ impl NuhxBoard {
                 StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
                     self.style.default_mouse_speed_indicator_style.outline_width = width;
                 }
-                StyleSetting::DefaultLooseKeyFontFamily(family) => {
-                    self.style.default_key_style.loose.font.font_family = family;
+                StyleSetting::DefaultLooseKeyFontFamily => {
+                    self.style.default_key_style.loose.font.font_family =
+                        self.text_input.default_loose_key_font_family.clone();
                 }
                 StyleSetting::DefaultLooseKeyShowOutline => {
                     self.style.default_key_style.loose.show_outline =
@@ -582,14 +594,17 @@ impl NuhxBoard {
                 StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
                     self.style.default_key_style.loose.outline_width = width;
                 }
-                StyleSetting::DefaultLooseKeyBackgroundImage(image) => {
+                StyleSetting::DefaultLooseKeyBackgroundImage => {
+                    let image = self.text_input.default_loose_key_background_image.clone();
                     self.style
                         .default_key_style
                         .loose
-                        .background_image_file_name = Some(image);
+                        .background_image_file_name =
+                        if image.is_empty() { None } else { Some(image) };
                 }
-                StyleSetting::DefaultPressedKeyFontFamily(family) => {
-                    self.style.default_key_style.pressed.font.font_family = family;
+                StyleSetting::DefaultPressedKeyFontFamily => {
+                    self.style.default_key_style.pressed.font.font_family =
+                        self.text_input.default_pressed_key_font_family.clone();
                 }
                 StyleSetting::DefaultPressedKeyShowOutline => {
                     self.style.default_key_style.pressed.show_outline =
@@ -598,11 +613,21 @@ impl NuhxBoard {
                 StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
                     self.style.default_key_style.pressed.outline_width = width;
                 }
-                StyleSetting::DefaultPressedKeyBackgroundImage(image) => {
+                StyleSetting::DefaultPressedKeyBackgroundImage => {
+                    let image = self.text_input.default_pressed_key_background_image.clone();
                     self.style
                         .default_key_style
                         .pressed
-                        .background_image_file_name = Some(image);
+                        .background_image_file_name =
+                        if image.is_empty() { None } else { Some(image) };
+                }
+                StyleSetting::KeyboardBackgroundImage => {
+                    let image = self.text_input.keyboard_background_image.clone();
+                    self.change_background_image(Some(if image.is_empty() {
+                        None
+                    } else {
+                        Some(image)
+                    }));
                 }
             },
             Message::ToggleSaveStyleAsGlobal => {
@@ -827,6 +852,37 @@ impl NuhxBoard {
         }
     }
 
+    fn change_background_image(&mut self, new_image: Option<Option<String>>) {
+        if let Some(new_image) = new_image {
+            self.style.background_image_file_name = new_image;
+        }
+        if let Some(name) = &self.style.background_image_file_name {
+            let path = self
+                .keyboards_path
+                .join(&self.settings.category)
+                .join("images")
+                .join(name);
+            if !name.is_empty() && path.exists() {
+                ImageReader::open(path)
+                    .unwrap()
+                    .decode()
+                    .unwrap()
+                    .resize_exact(
+                        self.layout.width as u32,
+                        self.layout.height as u32,
+                        image::imageops::FilterType::Nearest,
+                    )
+                    .save(self.keyboards_path.parent().unwrap().join("background.png"))
+                    .unwrap();
+            } else {
+                let _ =
+                    fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+            }
+        } else {
+            let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+        }
+    }
+
     fn load_style(&mut self, style: usize) -> Task<Message> {
         self.settings.style = style;
 
@@ -866,31 +922,7 @@ impl NuhxBoard {
             };
         }
 
-        if let Some(name) = &self.style.background_image_file_name {
-            let path = self
-                .keyboards_path
-                .join(&self.settings.category)
-                .join("images")
-                .join(name);
-            if !name.is_empty() && path.exists() {
-                ImageReader::open(path)
-                    .unwrap()
-                    .decode()
-                    .unwrap()
-                    .resize_exact(
-                        self.layout.width as u32,
-                        self.layout.height as u32,
-                        image::imageops::FilterType::Nearest,
-                    )
-                    .save(self.keyboards_path.parent().unwrap().join("background.png"))
-                    .unwrap();
-            } else {
-                let _ =
-                    fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
-            }
-        } else {
-            let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
-        }
+        self.change_background_image(None);
 
         self.update_fonts();
 

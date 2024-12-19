@@ -193,9 +193,12 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 ),
                 labeled_text_input(
                     "Image: ",
-                    text_input("", app.text_input.keyboard_background_image.as_str()).on_input(
-                        |v| Message::ChangeTextInput(TextInputType::KeyboardBackgroundImage, v)
-                    )
+                    text_input("", app.text_input.keyboard_background_image.as_str())
+                        .on_input(|v| Message::ChangeTextInput(
+                            TextInputType::KeyboardBackgroundImage,
+                            v
+                        ))
+                        .on_submit(Message::ChangeStyle(StyleSetting::KeyboardBackgroundImage))
                 )
             ])
         ];
@@ -256,6 +259,9 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         TextInputType::DefaultLooseKeyBackgroundImage,
                         v
                     ))
+                    .on_submit(Message::ChangeStyle(
+                        StyleSetting::DefaultLooseKeyBackgroundImage
+                    ))
                 )
             ]),
             text("Text"),
@@ -268,11 +274,14 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 ),
                 labeled_text_input(
                     "Font Family: ",
-                    text_input(
-                        "",
-                        app.style.default_key_style.loose.font.font_family.as_str()
-                    )
-                    .on_input(|v| Message::ChangeStyle(StyleSetting::DefaultLooseKeyFontFamily(v)))
+                    text_input("", app.text_input.default_loose_key_font_family.as_str())
+                        .on_input(|v| Message::ChangeTextInput(
+                            TextInputType::DefaultLooseKeyFontFamily,
+                            v
+                        ))
+                        .on_submit(Message::ChangeStyle(
+                            StyleSetting::DefaultLooseKeyFontFamily
+                        ))
                 )
             ]),
             text("Outline"),
@@ -318,6 +327,9 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         TextInputType::DefaultPressedKeyBackgroundImage,
                         v
                     ))
+                    .on_submit(Message::ChangeStyle(
+                        StyleSetting::DefaultPressedKeyBackgroundImage
+                    ))
                 )
             ]),
             text("Text"),
@@ -330,18 +342,14 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 ),
                 labeled_text_input(
                     "Font Family: ",
-                    text_input(
-                        "",
-                        app.style
-                            .default_key_style
-                            .pressed
-                            .font
-                            .font_family
-                            .as_str()
-                    )
-                    .on_input(|v| Message::ChangeStyle(
-                        StyleSetting::DefaultPressedKeyFontFamily(v)
-                    ))
+                    text_input("", app.text_input.default_pressed_key_font_family.as_str())
+                        .on_input(|v| Message::ChangeTextInput(
+                            TextInputType::DefaultPressedKeyFontFamily,
+                            v
+                        ))
+                        .on_submit(Message::ChangeStyle(
+                            StyleSetting::DefaultPressedKeyFontFamily
+                        ))
                 )
             ]),
             text("Outline"),
