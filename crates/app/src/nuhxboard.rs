@@ -206,9 +206,11 @@ pub enum StyleSetting {
     DefaultLooseKeyFontFamily(String),
     DefaultLooseKeyShowOutline,
     DefaultLooseKeyOutlineWidth(u32),
+    DefaultLooseKeyBackgroundImage(String),
     DefaultPressedKeyFontFamily(String),
     DefaultPressedKeyShowOutline,
     DefaultPressedKeyOutlineWidth(u32),
+    DefaultPressedKeyBackgroundImage(String),
 }
 
 // TODO: Are window resized undoable in NohBoard?
@@ -580,6 +582,12 @@ impl NuhxBoard {
                 StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
                     self.style.default_key_style.loose.outline_width = width;
                 }
+                StyleSetting::DefaultLooseKeyBackgroundImage(image) => {
+                    self.style
+                        .default_key_style
+                        .loose
+                        .background_image_file_name = Some(image);
+                }
                 StyleSetting::DefaultPressedKeyFontFamily(family) => {
                     self.style.default_key_style.pressed.font.font_family = family;
                 }
@@ -589,6 +597,12 @@ impl NuhxBoard {
                 }
                 StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
                     self.style.default_key_style.pressed.outline_width = width;
+                }
+                StyleSetting::DefaultPressedKeyBackgroundImage(image) => {
+                    self.style
+                        .default_key_style
+                        .pressed
+                        .background_image_file_name = Some(image);
                 }
             },
             Message::ToggleSaveStyleAsGlobal => {
