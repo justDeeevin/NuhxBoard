@@ -20,6 +20,7 @@ eula = false
 
 [dependencies]
 iced-multi-window = { git = "https://github.com/justdeeevin/iced-multi-window" }
+# iced-multi-window = { path = "../../../iced-multi-window" }
 async-std = "1.13.0"
 color-eyre = { version = "0.6.3", default-features = false }
 colorgrad = "0.7.0"

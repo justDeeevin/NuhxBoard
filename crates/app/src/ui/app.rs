@@ -142,13 +142,13 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             let mut menu = vec![
                 context_menu_button("Settings")
                     .on_press_maybe(
-                        (!app.windows.any_of(Box::new(SettingsWindow)))
+                        (!app.windows.any_of(&SettingsWindow))
                             .then_some(Message::Open(Box::new(SettingsWindow))),
                     )
                     .into(),
                 context_menu_button("Load Keyboard")
                     .on_press_maybe(
-                        (!app.windows.any_of(Box::new(LoadKeyboard)))
+                        (!app.windows.any_of(&LoadKeyboard))
                             .then_some(Message::Open(Box::new(LoadKeyboard))),
                     )
                     .into(),
@@ -196,14 +196,14 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                     seperator().into(),
                     context_menu_button("Keyboard Properties")
                         .on_press_maybe(
-                            (!app.windows.any_of(Box::new(KeyboardProperties)))
+                            (!app.windows.any_of(&KeyboardProperties))
                                 .then_some(Message::Open(Box::new(KeyboardProperties))),
                         )
                         .into(),
                     context_menu_button("Element Properties").into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
-                            (!app.windows.any_of(Box::new(KeyboardStyle)))
+                            (!app.windows.any_of(&KeyboardStyle))
                                 .then_some(Message::Open(Box::new(KeyboardStyle))),
                         )
                         .into(),

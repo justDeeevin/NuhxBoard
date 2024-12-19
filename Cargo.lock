@@ -2219,7 +2219,7 @@ dependencies = [
 [[package]]
 name = "iced-multi-window"
 version = "1.0.0"
-source = "git+https://github.com/justdeeevin/iced-multi-window#3452942bfb17dfbff7bbd5c8ec84a9906a307cec"
+source = "git+https://github.com/justdeeevin/iced-multi-window#8147c87c32af9cf74f9783cfb3a40f42eab1d280"
 dependencies = [
  "iced",
 ]

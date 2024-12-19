@@ -596,7 +596,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::Open(window) => {
-                if window == Box::new(LoadKeyboard) {
+                if window == LoadKeyboard {
                     self.keyboard_category_options = fs::read_dir(&self.keyboards_path)
                         .unwrap()
                         .map(|r| r.unwrap())
@@ -606,7 +606,7 @@ impl NuhxBoard {
                         .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                         .collect::<Vec<_>>();
                     self.keyboard_category_options.sort();
-                } else if window == Box::new(SaveStyleAs) {
+                } else if window == SaveStyleAs {
                     self.save_style_as_global =
                         self.style_options[self.style_choice.unwrap()].is_global();
                 }
