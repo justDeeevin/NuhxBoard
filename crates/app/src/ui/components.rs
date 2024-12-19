@@ -45,7 +45,7 @@ pub fn picker_button<'a>(
                 .width(Length::Fixed(15.0))
                 .height(Length::Fixed(15.0))
                 .style(move |theme, status| match status {
-                    button::Status::Active => button::Style {
+                    button::Status::Active | button::Status::Hovered => button::Style {
                         background: Some(iced::Background::Color(color)),
                         border: Border {
                             color: Color::BLACK,
