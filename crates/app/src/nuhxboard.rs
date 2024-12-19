@@ -1,4 +1,4 @@
-use crate::ui::app::*;
+use crate::ui::{app::*, popups::*};
 use async_std::task::sleep;
 use display_info::DisplayInfo;
 use iced::{

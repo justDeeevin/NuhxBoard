@@ -1,116 +1,81 @@
+use super::{components::*, popups::*};
 use crate::nuhxboard::*;
 use iced::{
-    border::Radius,
-    font::Weight,
     widget::{
-        button, canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list,
-        radio, row, text, text::IntoFragment, text_input, Button, Container, Image, Row,
-        Scrollable, Stack, Text,
+        canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list, radio,
+        row, text, text_input, Image, Scrollable, Stack,
     },
-    window, Alignment, Background, Border, Color, Element, Font, Length, Renderer, Shadow, Theme,
+    window, Background, Border, Color, Length, Renderer, Theme,
 };
-use iced_aw::{
-    color_picker, number_input, quad::Quad, widgets::InnerBounds, ContextMenu, SelectionList,
-};
+use iced_aw::{number_input, ContextMenu, SelectionList};
 use iced_multi_window::Window;
 use std::sync::Arc;
-use types::{settings::*, style::NohRgb};
+use types::settings::*;
 
 static IMAGE: &[u8] = include_bytes!("../../../../NuhxBoard.png");
 
-fn labeled_text_input<'a>(
-    label: impl IntoFragment<'a>,
-    text_input: iced::widget::TextInput<'a, Message>,
-) -> Row<'a, Message> {
-    row![text(label), text_input].align_y(Alignment::Center)
-}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadKeyboard;
+impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
+    fn id(&self) -> String {
+        "load_keyboard".into()
+    }
 
-fn gray_box<'a>(content: impl Into<Element<'a, Message>>) -> Container<'a, Message> {
-    container(content)
-        .style(move |_| container::Style {
-            background: None,
-            text_color: None,
-            border: Border {
-                color: NohRgb::DEFAULT_GRAY.into(),
-                width: 1.0,
-                radius: Radius::from(0.0),
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            resizable: false,
+            size: iced::Size {
+                width: 300.0,
+                height: 250.0,
             },
-            shadow: Shadow::default(),
-        })
-        .padding(5)
-        .width(Length::Fill)
-        .align_x(Alignment::Center)
-}
+            ..Default::default()
+        }
+    }
 
-fn picker_button<'a>(
-    label: impl IntoFragment<'a>,
-    open: bool,
-    color: Color,
-    picker: ColorPicker,
-) -> Row<'a, Message> {
-    row![
-        color_picker(
-            open,
-            color,
-            button("")
-                .width(Length::Fixed(15.0))
-                .height(Length::Fixed(15.0))
-                .style(move |theme, status| match status {
-                    button::Status::Active => button::Style {
-                        background: Some(iced::Background::Color(color)),
-                        border: Border {
-                            color: Color::BLACK,
-                            width: 1.0,
-                            radius: Radius::new(0)
-                        },
-                        ..button::primary(theme, status)
-                    },
-                    _ => button::primary(theme, status),
-                })
-                .on_press(Message::ToggleColorPicker(picker)),
-            Message::ToggleColorPicker(picker),
-            move |v| Message::ChangeColor(picker, v)
-        ),
-        text(label)
-    ]
-    .align_y(Alignment::Center)
-}
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        column![
+            text("Category:"),
+            pick_list(
+                app.keyboard_category_options.clone(),
+                Some(app.settings.category.clone()),
+                Message::ChangeKeyboardCategory,
+            ),
+            row![
+                column![
+                    text("Keyboard Layout:"),
+                    SelectionList::new_with(
+                        app.keyboard_options.clone().leak(),
+                        |i, _| Message::LoadLayout(i),
+                        12.0,
+                        5.0,
+                        iced_aw::style::selection_list::primary,
+                        app.keyboard_choice,
+                        iced::Font::default(),
+                    )
+                ],
+                column![
+                    text("Keyboard Style:"),
+                    SelectionList::new_with(
+                        app.style_options.clone().leak(),
+                        |i, _| Message::LoadStyle(i),
+                        12.0,
+                        5.0,
+                        iced_aw::style::selection_list::primary,
+                        app.style_choice,
+                        iced::Font::default(),
+                    )
+                ],
+            ]
+        ]
+        .into()
+    }
 
-fn context_menu_button(label: &str) -> Button<Message> {
-    let text = text(label).size(12);
-    button(text)
-        .style(|theme, status| match status {
-            button::Status::Active => button::Style {
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                text_color: iced::Color::BLACK,
-                ..button::primary(theme, status)
-            },
-            button::Status::Hovered => button::Style {
-                border: iced::Border {
-                    color: iced::Color::from_rgb(0.0, 0.0, 1.0),
-                    width: 2.0,
-                    radius: 0.into(),
-                },
-                text_color: iced::Color::BLACK,
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                ..button::primary(theme, status)
-            },
-            button::Status::Disabled => button::Style {
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                text_color: iced::Color::from_rgb(100.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
-                ..button::primary(theme, status)
-            },
-            _ => button::primary(theme, status),
-        })
-        .width(Length::Fill)
-}
+    fn title(&self, _app: &NuhxBoard) -> String {
+        "Load Keyboard".to_string()
+    }
 
-fn seperator() -> Quad {
-    Quad {
-        quad_color: iced::Background::Color(Color::from_rgb8(204, 204, 204)),
-        height: Length::Fixed(5.0),
-        inner_bounds: InnerBounds::Ratio(0.95, 0.2),
-        ..Default::default()
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
+        Theme::Light
     }
 }
 
@@ -433,512 +398,6 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LoadKeyboard;
-impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
-    fn id(&self) -> String {
-        "load_keyboard".into()
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            resizable: false,
-            size: iced::Size {
-                width: 300.0,
-                height: 250.0,
-            },
-            ..Default::default()
-        }
-    }
-
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        column![
-            text("Category:"),
-            pick_list(
-                app.keyboard_category_options.clone(),
-                Some(app.settings.category.clone()),
-                Message::ChangeKeyboardCategory,
-            ),
-            row![
-                column![
-                    text("Keyboard Layout:"),
-                    SelectionList::new_with(
-                        app.keyboard_options.clone().leak(),
-                        |i, _| Message::LoadLayout(i),
-                        12.0,
-                        5.0,
-                        iced_aw::style::selection_list::primary,
-                        app.keyboard_choice,
-                        iced::Font::default(),
-                    )
-                ],
-                column![
-                    text("Keyboard Style:"),
-                    SelectionList::new_with(
-                        app.style_options.clone().leak(),
-                        |i, _| Message::LoadStyle(i),
-                        12.0,
-                        5.0,
-                        iced_aw::style::selection_list::primary,
-                        app.style_choice,
-                        iced::Font::default(),
-                    )
-                ],
-            ]
-        ]
-        .into()
-    }
-
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Load Keyboard".to_string()
-    }
-
-    fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ErrorPopup {
-    // Simple example of the power of using polymorphism for multi-window management. Instead of
-    // having some datastructure dedicated to tracking errors corresponding to window IDs, each
-    // instance of an error popup knows its own error. This is put to much greater use for
-    // individual key styles.
-    // It is important to note, however, that these properties are unable to be changed. I would
-    // argue that mutable per-window state would be problematically complex, but it is nevertheless
-    // a limitation on the versatility of my multi-window system.
-    pub error: Error,
-}
-impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
-    fn id(&self) -> String {
-        format!("error_{:?}", self.error)
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            size: iced::Size {
-                width: 400.0,
-                height: 150.0,
-            },
-            resizable: false,
-            ..Default::default()
-        }
-    }
-
-    fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Error".to_string()
-    }
-
-    fn view<'a>(&self, _app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        let error = &self.error;
-        let kind = match error {
-            Error::ConfigOpen(_) => "Keyboard file could not be opened.",
-            Error::ConfigParse(_) => "Keyboard file could not be parsed.",
-            Error::StyleOpen(_) => "Style file could not be opened.",
-            Error::StyleParse(_) => "Style file could not be parsed.",
-            Error::UnknownKey(_) => "Unknown Key.",
-            Error::UnknownButton(_) => "Unknown Mouse Button.",
-        };
-        let info = match error {
-            Error::ConfigParse(e) => e.clone(),
-            Error::ConfigOpen(e) => e.clone(),
-            Error::StyleParse(e) => e.clone(),
-            Error::StyleOpen(e) => e.clone(),
-            Error::UnknownKey(key) => format!("Key: {:?}", key),
-            Error::UnknownButton(button) => format!("Button: {:?}", button),
-        };
-        container(
-            column![text("Error:"), text(kind), text("More info:"), text(info),]
-                .align_x(iced::Alignment::Center),
-        )
-        .height(iced::Length::Fill)
-        .width(iced::Length::Fill)
-        .align_x(iced::alignment::Horizontal::Center)
-        .align_y(iced::alignment::Vertical::Center)
-        .into()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct KeyboardProperties;
-impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
-    fn id(&self) -> String {
-        "keyboard_properties".into()
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            size: iced::Size {
-                width: 200.0,
-                height: 100.0,
-            },
-            resizable: false,
-            ..Default::default()
-        }
-    }
-
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        column![
-            row![
-                text("Width: "),
-                number_input(app.layout.width, 0.0.., Message::SetWidth)
-            ]
-            .align_y(iced::Alignment::Center),
-            row![
-                text("Height: "),
-                number_input(app.layout.height, 0.0.., Message::SetHeight)
-            ]
-            .align_y(iced::Alignment::Center)
-        ]
-        .into()
-    }
-
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Keyboard Properties".to_string()
-    }
-
-    fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SaveDefinitionAs;
-impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
-    fn id(&self) -> String {
-        "save_definition_as".into()
-    }
-
-    fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Save Definition As".to_string()
-    }
-
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        column![
-            row![
-                text("Category: "),
-                text_input("", &app.text_input.save_keyboard_as_category,).on_input(|v| {
-                    Message::ChangeTextInput(TextInputType::SaveKeyboardAsCategory, v)
-                })
-            ],
-            row![
-                text("Name: "),
-                text_input("", &app.text_input.save_keyboard_as_name,)
-                    .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
-            ],
-            button("Save").on_press(Message::SaveKeyboard(Some(
-                app.keyboards_path
-                    .join(&app.save_keyboard_as_category)
-                    .join(&app.save_keyboard_as_name)
-                    .join("keyboard.json")
-            ))),
-        ]
-        .into()
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            size: iced::Size {
-                width: 400.0,
-                height: 100.0,
-            },
-            resizable: false,
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SaveStyleAs;
-impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
-    fn id(&self) -> String {
-        "save_style_as".into()
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            size: iced::Size {
-                width: 400.0,
-                height: 100.0,
-            },
-            resizable: false,
-            ..Default::default()
-        }
-    }
-
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        column![
-            row![
-                text("Name: "),
-                text_input("", &app.text_input.save_style_as_name,)
-                    .on_input(|v| Message::ChangeTextInput(TextInputType::SaveStyleAsName, v))
-            ],
-            checkbox("Save as global", app.save_style_as_global)
-                .on_toggle(|_| Message::ToggleSaveStyleAsGlobal),
-            button("Save").on_press(Message::SaveStyle(Some(match app.save_style_as_global {
-                true => app
-                    .keyboards_path
-                    .join("global")
-                    .join(format!("{}.style", &app.save_style_as_name)),
-                false => app
-                    .keyboards_path
-                    .join(&app.settings.category)
-                    .join(&app.keyboard_options[app.keyboard_choice.unwrap()])
-                    .join(format!("{}.style", &app.save_style_as_name)),
-            }))),
-        ]
-        .into()
-    }
-
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Save Style As".to_string()
-    }
-
-    fn theme(&self, _app: &NuhxBoard) -> Theme {
-        Theme::Light
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct KeyboardStyle;
-
-impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
-    fn id(&self) -> String {
-        "keyboard_style".into()
-    }
-
-    fn settings(&self) -> window::Settings {
-        window::Settings {
-            ..Default::default()
-        }
-    }
-
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        fn category_label<'a>(label: impl IntoFragment<'a>) -> Text<'a> {
-            text(label)
-                .font(Font {
-                    weight: Weight::Bold,
-                    ..Default::default()
-                })
-                .align_x(Alignment::Center)
-                .width(Length::Fill)
-        }
-
-        let keyboard = column![
-            category_label("Keyboard"),
-            text("Background"),
-            gray_box(column![
-                picker_button(
-                    "Background Color",
-                    app.color_pickers.keyboard_background,
-                    app.style.background_color.into(),
-                    ColorPicker::KeyboardBackground,
-                ),
-                labeled_text_input(
-                    "Image: ",
-                    text_input("", app.text_input.keyboard_background_image.as_str()).on_input(
-                        |v| Message::ChangeTextInput(TextInputType::KeyboardBackgroundImage, v)
-                    )
-                )
-            ])
-        ];
-
-        let mouse_speed_indicator = column![
-            category_label("MouseSpeedIndicator"),
-            text("General"),
-            gray_box(column![
-                picker_button(
-                    "Color 1 (low speed)",
-                    app.color_pickers.default_mouse_speed_indicator_1,
-                    app.style
-                        .default_mouse_speed_indicator_style
-                        .inner_color
-                        .into(),
-                    ColorPicker::DefaultMouseSpeedIndicator1
-                ),
-                picker_button(
-                    "Color 2 (high speed)",
-                    app.color_pickers.default_mouse_speed_indicator_2,
-                    app.style
-                        .default_mouse_speed_indicator_style
-                        .outer_color
-                        .into(),
-                    ColorPicker::DefaultMouseSpeedIndicator2
-                ),
-                row![
-                    number_input(
-                        app.style.default_mouse_speed_indicator_style.outline_width,
-                        1..,
-                        |v| Message::ChangeStyle(
-                            StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(v)
-                        )
-                    ),
-                    text(" Outline Width")
-                ]
-                .align_y(Alignment::Center)
-            ])
-        ];
-
-        let loose_keys = column![
-            category_label("Loose Keys"),
-            text("Background"),
-            gray_box(column![
-                picker_button(
-                    "Background Color",
-                    app.color_pickers.default_loose_background,
-                    app.style.default_key_style.loose.background.into(),
-                    ColorPicker::DefaultLooseBackground
-                ),
-                labeled_text_input(
-                    "Image: ",
-                    text_input(
-                        "",
-                        app.text_input.default_loose_key_background_image.as_str()
-                    )
-                    .on_input(|v| Message::ChangeTextInput(
-                        TextInputType::DefaultLooseKeyBackgroundImage,
-                        v
-                    ))
-                )
-            ]),
-            text("Text"),
-            gray_box(column![
-                picker_button(
-                    "Text Color",
-                    app.color_pickers.default_loose_text,
-                    app.style.default_key_style.loose.text.into(),
-                    ColorPicker::DefaultLooseText
-                ),
-                labeled_text_input(
-                    "Font Family: ",
-                    text_input(
-                        "",
-                        app.style.default_key_style.loose.font.font_family.as_str()
-                    )
-                    .on_input(|v| Message::ChangeStyle(StyleSetting::DefaultLooseKeyFontFamily(v)))
-                )
-            ]),
-            text("Outline"),
-            gray_box(column![
-                picker_button(
-                    "Outline Color",
-                    app.color_pickers.default_loose_outline,
-                    app.style.default_key_style.loose.outline.into(),
-                    ColorPicker::DefaultLooseOutline
-                ),
-                checkbox(
-                    "Show Outline",
-                    app.style.default_key_style.loose.show_outline
-                )
-                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultLooseKeyShowOutline)),
-                row![
-                    number_input(app.style.default_key_style.loose.outline_width, 1.., |v| {
-                        Message::ChangeStyle(StyleSetting::DefaultLooseKeyOutlineWidth(v))
-                    }),
-                    text(" Outline Width")
-                ]
-            ])
-        ]
-        .padding(5);
-
-        let pressed_keys = column![
-            category_label("Pressed Keys"),
-            text("Background"),
-            gray_box(column![
-                picker_button(
-                    "Background Color",
-                    app.color_pickers.default_pressed_background,
-                    app.style.default_key_style.pressed.background.into(),
-                    ColorPicker::DefaultPressedBackground
-                ),
-                labeled_text_input(
-                    "Image: ",
-                    text_input(
-                        "",
-                        app.text_input.default_pressed_key_background_image.as_str()
-                    )
-                    .on_input(|v| Message::ChangeTextInput(
-                        TextInputType::DefaultPressedKeyBackgroundImage,
-                        v
-                    ))
-                )
-            ]),
-            text("Text"),
-            gray_box(column![
-                picker_button(
-                    "Text Color",
-                    app.color_pickers.default_pressed_text,
-                    app.style.default_key_style.pressed.text.into(),
-                    ColorPicker::DefaultPressedText
-                ),
-                labeled_text_input(
-                    "Font Family: ",
-                    text_input(
-                        "",
-                        app.style
-                            .default_key_style
-                            .pressed
-                            .font
-                            .font_family
-                            .as_str()
-                    )
-                    .on_input(|v| Message::ChangeStyle(
-                        StyleSetting::DefaultPressedKeyFontFamily(v)
-                    ))
-                )
-            ]),
-            text("Outline"),
-            gray_box(column![
-                picker_button(
-                    "Outline Color",
-                    app.color_pickers.default_pressed_outline,
-                    app.style.default_key_style.pressed.outline.into(),
-                    ColorPicker::DefaultPressedOutline
-                ),
-                checkbox(
-                    "Show Outline",
-                    app.style.default_key_style.pressed.show_outline
-                )
-                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultPressedKeyShowOutline)),
-                row![
-                    number_input(
-                        app.style.default_key_style.pressed.outline_width,
-                        1..,
-                        |v| {
-                            Message::ChangeStyle(StyleSetting::DefaultPressedKeyOutlineWidth(v))
-                        }
-                    ),
-                    text(" Outline Width")
-                ]
-            ])
-        ]
-        .padding(5);
-
-        row![
-            column![keyboard, mouse_speed_indicator].padding(5),
-            loose_keys,
-            pressed_keys,
-        ]
-        .into()
-    }
-
-    fn title<'a>(&'a self, _app: &'a NuhxBoard) -> String {
-        "Keyboard Style".to_string()
-    }
-
-    fn theme<'a>(&'a self, _app: &'a NuhxBoard) -> Theme {
         Theme::Light
     }
 }
