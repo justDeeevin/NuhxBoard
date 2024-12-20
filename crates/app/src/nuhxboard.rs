@@ -1,6 +1,7 @@
 use crate::ui::{app::*, popups::*};
 use async_std::task::sleep;
 use display_info::DisplayInfo;
+use geo::{Centroid, Coord, LineString, Polygon};
 use iced::{
     advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Color, Renderer,
     Subscription, Task, Theme,
@@ -57,7 +58,29 @@ pub struct NuhxBoard {
     pub save_style_as_global: bool,
     pub color_pickers: ColorPickers,
     pub text_input: TextInput,
+    pub number_input: NumberInput,
+    pub selections: SelectionLists,
     pub hovered_element: Option<usize>,
+}
+
+#[derive(Default, Clone)]
+pub struct SelectionLists {
+    pub boundary: HashMap<usize, usize>,
+    pub keycode: HashMap<usize, usize>,
+}
+
+#[derive(Default, Clone)]
+pub struct NumberInput {
+    pub boundary_x: HashMap<usize, f32>,
+    pub boundary_y: HashMap<usize, f32>,
+    pub keycode: HashMap<usize, u32>,
+}
+
+#[derive(Debug, Clone)]
+pub enum NumberInputType {
+    BoundaryX(usize, f32),
+    BoundaryY(usize, f32),
+    Keycode(usize, u32),
 }
 
 #[derive(Default)]
@@ -187,10 +210,7 @@ pub enum Message {
     ChangeStyle(StyleSetting),
     ClearPressedKeys,
     ToggleEditMode,
-    MoveElement {
-        index: usize,
-        delta: geo::Coord<f32>,
-    },
+    MoveElement { index: usize, delta: Coord<f32> },
     SaveKeyboard(Option<std::path::PathBuf>),
     SaveStyle(Option<std::path::PathBuf>),
     SetHeight(f32),
@@ -203,7 +223,29 @@ pub enum Message {
     ToggleColorPicker(ColorPicker),
     UpdateCanvas,
     ChangeTextInput(TextInputType, String),
+    ChangeNumberInput(NumberInputType),
+    ChangeSelection(usize, SelectionType, usize),
+    SwapBoundaries(usize, usize, usize),
     UpdateHoveredElement(Option<usize>),
+    ChangeElement(usize, ElementProperty),
+    CenterTextPosition(usize),
+}
+
+#[derive(Debug, Clone)]
+pub enum SelectionType {
+    Boundary,
+    Keycode,
+}
+
+#[derive(Debug, Clone)]
+pub enum ElementProperty {
+    Text(String),
+    ShiftText(String),
+    TextPositionX(f32),
+    TextPositionY(f32),
+    FollowCaps,
+    Boundary(usize, Option<SerializablePoint>),
+    Keycode(usize, Option<u32>),
 }
 
 #[derive(Debug, Clone)]
@@ -225,7 +267,7 @@ pub enum StyleSetting {
 pub enum Change {
     MoveElement {
         index: usize,
-        delta: geo::Coord<f32>,
+        delta: Coord<f32>,
         move_text: bool,
     },
 }
@@ -346,6 +388,8 @@ impl NuhxBoard {
                 color_pickers: ColorPickers::default(),
                 text_input: TextInput::default(),
                 hovered_element: None,
+                number_input: NumberInput::default(),
+                selections: SelectionLists::default(),
             },
             Task::batch([
                 Task::perform(async {}, move |_| {
@@ -715,6 +759,87 @@ impl NuhxBoard {
             Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
                 self.hovered_element = hovered_element;
+            }
+            Message::ChangeElement(i, property) => {
+                let element = &mut self.layout.elements[i];
+                match element {
+                    BoardElement::KeyboardKey(def) => match property {
+                        ElementProperty::Text(v) => def.text = v,
+                        ElementProperty::ShiftText(v) => def.shift_text = v,
+                        ElementProperty::TextPositionX(v) => def.text_position.x = v,
+                        ElementProperty::TextPositionY(v) => def.text_position.y = v,
+                        ElementProperty::FollowCaps => def.change_on_caps = !def.change_on_caps,
+                        ElementProperty::Boundary(i, v) => {
+                            if let Some(v) = v {
+                                if i >= def.boundaries.len() {
+                                    def.boundaries.push(v);
+                                } else {
+                                    def.boundaries[i] = v;
+                                }
+                            } else {
+                                def.boundaries.remove(i);
+                            }
+                        }
+                        ElementProperty::Keycode(i, v) => {
+                            if let Some(v) = v {
+                                def.key_codes.push(v);
+                            } else {
+                                def.key_codes.remove(i);
+                            }
+                        }
+                    },
+                    _ => todo!(),
+                }
+            }
+            Message::CenterTextPosition(i) => {
+                let element = &mut self.layout.elements[i];
+                match element {
+                    BoardElement::KeyboardKey(def) => {
+                        let bounds = Polygon::new(
+                            LineString::new(
+                                def.boundaries
+                                    .iter()
+                                    .map(|p| Coord::from(p.clone()))
+                                    .collect::<Vec<_>>(),
+                            ),
+                            vec![],
+                        );
+                        let centroid = bounds.centroid().unwrap();
+
+                        def.text_position.x = centroid.x().trunc();
+                        def.text_position.y = centroid.y().trunc();
+                    }
+                    _ => todo!(),
+                }
+            }
+            Message::ChangeNumberInput(input_type) => match input_type {
+                NumberInputType::BoundaryX(element, v) => {
+                    self.number_input.boundary_x.insert(element, v);
+                }
+                NumberInputType::BoundaryY(element, v) => {
+                    self.number_input.boundary_y.insert(element, v);
+                }
+                NumberInputType::Keycode(element, v) => {
+                    self.number_input.keycode.insert(element, v);
+                }
+            },
+            Message::ChangeSelection(element, selection_type, selection) => match selection_type {
+                SelectionType::Boundary => {
+                    self.selections.boundary.insert(element, selection);
+                }
+                SelectionType::Keycode => {
+                    self.selections.keycode.insert(element, selection);
+                }
+            },
+            Message::SwapBoundaries(element_i, left, right) => {
+                let element = &mut self.layout.elements[element_i];
+                match element {
+                    BoardElement::KeyboardKey(def) => {
+                        def.boundaries.swap(left, right);
+                        self.selections.boundary.insert(element_i, right);
+                    }
+                    _ => todo!(),
+                }
             }
         }
         if clear_canvas {

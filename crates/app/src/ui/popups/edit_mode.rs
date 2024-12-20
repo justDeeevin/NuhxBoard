@@ -7,11 +7,11 @@ use iced::{
         text::{IntoFragment, Text},
         text_input,
     },
-    window, Alignment, Font, Length, Theme,
+    window, Alignment, Font, Length, Padding, Theme,
 };
-use iced_aw::{number_input, selection_list};
+use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
-use types::config::BoardElement;
+use types::config::{BoardElement, SerializablePoint};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
@@ -399,12 +399,12 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElementProperties {
-    pub key: usize,
+    pub index: usize,
 }
 
 impl Window<NuhxBoard, Theme, Message> for ElementProperties {
     fn id(&self) -> String {
-        format!("element_properties_{}", self.key)
+        format!("element_properties_{}", self.index)
     }
 
     fn settings(&self) -> window::Settings {
@@ -418,43 +418,177 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
         }
     }
 
-    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        let element = &app.layout.elements[self.key];
+    fn view<'a>(&'a self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        let element = &app.layout.elements[self.index];
+        let index = self.index;
         match element {
             BoardElement::KeyboardKey(def) => {
                 let column_1 = column![
-                    labeled_text_input("Text: ", text_input("", &def.text)),
-                    labeled_text_input("Shift Text: ", text_input("", &def.shift_text)),
+                    labeled_text_input(
+                        "Text: ",
+                        text_input("", &def.text).on_input(|v| Message::ChangeElement(
+                            self.index,
+                            ElementProperty::Text(v)
+                        ))
+                    ),
+                    labeled_text_input(
+                        "Shift Text: ",
+                        text_input("", &def.shift_text).on_input(|v| Message::ChangeElement(
+                            self.index,
+                            ElementProperty::ShiftText(v)
+                        ))
+                    ),
                     row![
                         text("Text Position: "),
-                        number_input(def.text_position.x, 0.0.., |_| Message::none()),
-                        number_input(def.text_position.y, 0.0.., |_| Message::none()),
-                        button("Center"),
+                        number_input(def.text_position.x, 0.0.., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionX(v))
+                        }),
+                        number_input(def.text_position.y, 0.0.., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionY(v))
+                        }),
+                        button("Center").on_press(Message::CenterTextPosition(index)),
                     ]
                     .align_y(Alignment::Center),
-                    // TODO: two number inputs for x and y
-                    labeled_text_input("Boundaries: ", text_input("", "")),
+                    row![
+                        text("Boundaries: "),
+                        number_input(
+                            *app.number_input.boundary_x.get(&index).unwrap_or(&0.0),
+                            0.0..,
+                            move |v| {
+                                Message::ChangeNumberInput(NumberInputType::BoundaryX(index, v))
+                            }
+                        ),
+                        number_input(
+                            *app.number_input.boundary_y.get(&index).unwrap_or(&0.0),
+                            0.0..,
+                            move |v| {
+                                Message::ChangeNumberInput(NumberInputType::BoundaryY(index, v))
+                            }
+                        ),
+                    ],
                     row![
                         column![
-                            button("Add"),
-                            button("Update"),
-                            button("Remove"),
-                            button("Up"),
-                            button("Down"),
-                            // Rectangle creation popup
+                            button("Add").on_press(Message::ChangeElement(
+                                self.index,
+                                ElementProperty::Boundary(
+                                    def.boundaries.len(),
+                                    Some(SerializablePoint {
+                                        x: *app
+                                            .number_input
+                                            .boundary_x
+                                            .get(&self.index)
+                                            .unwrap_or(&0.0),
+                                        y: *app
+                                            .number_input
+                                            .boundary_y
+                                            .get(&self.index)
+                                            .unwrap_or(&0.0)
+                                    })
+                                )
+                            )),
+                            button("Update").on_press_maybe(
+                                app.selections.boundary.get(&self.index).map(|v| {
+                                    Message::ChangeElement(
+                                        self.index,
+                                        ElementProperty::Boundary(
+                                            *v,
+                                            Some(SerializablePoint {
+                                                x: *app
+                                                    .number_input
+                                                    .boundary_x
+                                                    .get(&self.index)
+                                                    .unwrap_or(&0.0),
+                                                y: *app
+                                                    .number_input
+                                                    .boundary_y
+                                                    .get(&self.index)
+                                                    .unwrap_or(&0.0),
+                                            }),
+                                        ),
+                                    )
+                                })
+                            ),
+                            button("Remove").on_press_maybe(
+                                app.selections.boundary.get(&self.index).map(|v| {
+                                    Message::ChangeElement(
+                                        self.index,
+                                        ElementProperty::Boundary(*v, None),
+                                    )
+                                })
+                            ),
+                            button("Up").on_press_maybe(
+                                app.selections
+                                    .boundary
+                                    .get(&self.index)
+                                    .filter(|v| **v != 0)
+                                    .map(move |v| Message::SwapBoundaries(index, *v, v - 1))
+                            ),
+                            button("Down").on_press_maybe(
+                                app.selections
+                                    .boundary
+                                    .get(&self.index)
+                                    .filter(|v| **v != def.boundaries.len() - 1)
+                                    .map(move |v| Message::SwapBoundaries(index, *v, v + 1))
+                            ),
+                            // TODO: Rectangle creation popup
                             button("Rectangle"),
                         ],
-                        selection_list(&def.boundaries, |_, _| Message::none())
+                        selection_list_with(
+                            &def.boundaries,
+                            move |i, _| {
+                                Message::ChangeSelection(index, SelectionType::Boundary, i)
+                            },
+                            12.0,
+                            Padding {
+                                top: 5.0,
+                                bottom: 5.0,
+                                ..Default::default()
+                            },
+                            iced_aw::style::selection_list::primary,
+                            app.selections.boundary.get(&self.index).copied(),
+                            Font::default()
+                        )
                     ]
                 ];
 
                 let column_2 = column![
-                    checkbox("Change capitalization on Caps Lock key", false),
-                    // TODO: one number input for keycode
-                    row![text("Key codes: "), text_input("", "")],
+                    checkbox("Change capitalization on Caps Lock key", false).on_toggle(
+                        move |_| Message::ChangeElement(index, ElementProperty::FollowCaps)
+                    ),
                     row![
-                        column![button("Add"), button("Remove"), button("Detect")],
-                        selection_list(&def.key_codes, |_, _| Message::none())
+                        text("Key codes: "),
+                        number_input(
+                            *app.number_input.keycode.get(&self.index).unwrap_or(&0),
+                            0..,
+                            move |v| Message::ChangeNumberInput(NumberInputType::Keycode(index, v))
+                        )
+                    ]
+                    .align_y(Alignment::Center),
+                    row![
+                        column![
+                            button("Add").on_press(Message::ChangeElement(
+                                self.index,
+                                ElementProperty::Keycode(
+                                    0,
+                                    Some(*app.number_input.keycode.get(&self.index).unwrap_or(&0))
+                                )
+                            )),
+                            button("Remove").on_press_maybe(
+                                app.selections.keycode.get(&self.index).map(move |v| {
+                                    Message::ChangeElement(
+                                        index,
+                                        ElementProperty::Keycode(*v, None),
+                                    )
+                                })
+                            ),
+                            // TODO
+                            button("Detect")
+                        ],
+                        selection_list(&def.key_codes, move |i, _| Message::ChangeSelection(
+                            index,
+                            SelectionType::Keycode,
+                            i
+                        ))
                     ]
                 ];
 

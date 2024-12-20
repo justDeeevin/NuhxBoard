@@ -92,7 +92,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
 
         window::Settings {
             size: DEFAULT_WINDOW_SIZE,
-            resizable: false,
+            // resizable: false,
             icon: Some(icon),
             ..window::Settings::default()
         }
@@ -168,7 +168,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                     context_menu_button("Element Properties")
                         .on_press_maybe(
                             app.hovered_element
-                                .map(|e| Message::Open(Box::new(ElementProperties { key: e }))),
+                                .map(|e| Message::Open(Box::new(ElementProperties { index: e }))),
                         )
                         .into(),
                     context_menu_button("Keyboard Style")
