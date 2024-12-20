@@ -85,18 +85,6 @@ pub struct CommonDefinition {
     pub keycodes: Vec<u32>,
 }
 
-impl TryFrom<BoardElement> for CommonDefinition {
-    type Error = ();
-    fn try_from(value: BoardElement) -> Result<Self, Self::Error> {
-        match value {
-            BoardElement::KeyboardKey(def) => Ok(def.into()),
-            BoardElement::MouseKey(def) => Ok(def.into()),
-            BoardElement::MouseScroll(def) => Ok(def.into()),
-            BoardElement::MouseSpeedIndicator(_) => Err(()),
-        }
-    }
-}
-
 impl From<KeyboardKeyDefinition> for CommonDefinition {
     fn from(val: KeyboardKeyDefinition) -> Self {
         CommonDefinition {
