@@ -545,24 +545,22 @@ impl NuhxBoard {
             }
             Message::CenterTextPosition(i) => {
                 let element = &mut self.layout.elements[i];
-                match element {
-                    BoardElement::KeyboardKey(def) => {
-                        let bounds = Polygon::new(
-                            LineString::new(
-                                def.boundaries
-                                    .iter()
-                                    .map(|p| Coord::from(p.clone()))
-                                    .collect::<Vec<_>>(),
-                            ),
-                            vec![],
-                        );
-                        let centroid = bounds.centroid().unwrap();
+                let Ok(def) = CommonDefinitionMut::try_from(element) else {
+                    panic!("Cannot center text position of mouse speed indicator");
+                };
+                let bounds = Polygon::new(
+                    LineString::new(
+                        def.boundaries
+                            .iter()
+                            .map(|p| Coord::from(p.clone()))
+                            .collect::<Vec<_>>(),
+                    ),
+                    vec![],
+                );
+                let centroid = bounds.centroid().unwrap();
 
-                        def.text_position.x = centroid.x().trunc();
-                        def.text_position.y = centroid.y().trunc();
-                    }
-                    _ => todo!(),
-                }
+                def.text_position.x = centroid.x().trunc();
+                def.text_position.y = centroid.y().trunc();
             }
             Message::ChangeNumberInput(input_type) => match input_type {
                 NumberInputType::BoundaryX(element, v) => {
@@ -597,13 +595,11 @@ impl NuhxBoard {
             },
             Message::SwapBoundaries(element_i, left, right) => {
                 let element = &mut self.layout.elements[element_i];
-                match element {
-                    BoardElement::KeyboardKey(def) => {
-                        def.boundaries.swap(left, right);
-                        self.selections.boundary.insert(element_i, right);
-                    }
-                    _ => todo!(),
-                }
+                let Ok(def) = CommonDefinitionMut::try_from(element) else {
+                    panic!("Cannot swap boundaries of mouse speed indicator");
+                };
+                def.boundaries.swap(left, right);
+                self.selections.boundary.insert(element_i, right);
             }
             Message::MakeRectangle(element_i) => {}
         }

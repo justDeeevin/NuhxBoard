@@ -107,6 +107,61 @@ impl From<MouseKeyDefinition> for CommonDefinition {
     }
 }
 
+impl TryFrom<BoardElement> for CommonDefinition {
+    type Error = ();
+
+    fn try_from(value: BoardElement) -> Result<Self, ()> {
+        match value {
+            BoardElement::KeyboardKey(key) => Ok(key.into()),
+            BoardElement::MouseKey(key) => Ok(key.into()),
+            BoardElement::MouseScroll(key) => Ok(key.into()),
+            _ => Err(()),
+        }
+    }
+}
+
+pub struct CommonDefinitionMut<'a> {
+    pub id: &'a mut u32,
+    pub text_position: &'a mut SerializablePoint,
+    pub boundaries: &'a mut Vec<SerializablePoint>,
+    pub keycodes: &'a mut Vec<u32>,
+}
+
+impl<'a> From<&'a mut KeyboardKeyDefinition> for CommonDefinitionMut<'a> {
+    fn from(val: &'a mut KeyboardKeyDefinition) -> Self {
+        CommonDefinitionMut {
+            id: &mut val.id,
+            text_position: &mut val.text_position,
+            boundaries: &mut val.boundaries,
+            keycodes: &mut val.key_codes,
+        }
+    }
+}
+
+impl<'a> From<&'a mut MouseKeyDefinition> for CommonDefinitionMut<'a> {
+    fn from(val: &'a mut MouseKeyDefinition) -> Self {
+        CommonDefinitionMut {
+            id: &mut val.id,
+            text_position: &mut val.text_position,
+            boundaries: &mut val.boundaries,
+            keycodes: &mut val.key_codes,
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a mut BoardElement> for CommonDefinitionMut<'a> {
+    type Error = ();
+
+    fn try_from(value: &'a mut BoardElement) -> Result<Self, ()> {
+        match value {
+            BoardElement::KeyboardKey(key) => Ok(key.into()),
+            BoardElement::MouseKey(key) => Ok(key.into()),
+            BoardElement::MouseScroll(key) => Ok(key.into()),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicatorDefinition {
