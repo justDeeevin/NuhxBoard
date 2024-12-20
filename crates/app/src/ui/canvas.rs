@@ -27,7 +27,6 @@ fn captured_message() -> Option<Message> {
 
 #[derive(Default)]
 pub struct CanvasState {
-    hovered_element: Option<usize>,
     held_element: Option<usize>,
     selected_element: Option<usize>,
     interaction: Interaction,
@@ -54,9 +53,8 @@ impl canvas::Program<Message> for NuhxBoard {
     ) -> (canvas::event::Status, Option<Message>) {
         if !self.edit_mode {
             let mut clear_canvas = false;
-            if state.hovered_element.is_some() {
-                state.hovered_element = None;
-                clear_canvas = true;
+            if self.hovered_element.is_some() {
+                return (Status::Captured, Some(Message::UpdateHoveredElement(None)));
             }
             if state.selected_element.is_some() {
                 state.selected_element = None;
@@ -94,8 +92,11 @@ impl canvas::Program<Message> for NuhxBoard {
                                         Coord::from(def.location.clone()),
                                     ) < def.radius
                                     {
-                                        if state.hovered_element != Some(index) {
-                                            state.hovered_element = Some(index);
+                                        if self.hovered_element != Some(index) {
+                                            return (
+                                                Status::Captured,
+                                                Some(Message::UpdateHoveredElement(Some(index))),
+                                            );
                                         }
 
                                         return (Status::Captured, captured_message());
@@ -116,8 +117,11 @@ impl canvas::Program<Message> for NuhxBoard {
                                     let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
                                     if cursor_position.is_within(&bounds) {
-                                        if state.hovered_element != Some(index) {
-                                            state.hovered_element = Some(index);
+                                        if self.hovered_element != Some(index) {
+                                            return (
+                                                Status::Captured,
+                                                Some(Message::UpdateHoveredElement(Some(index))),
+                                            );
                                         }
                                         return (Status::Captured, captured_message());
                                     }
@@ -125,9 +129,8 @@ impl canvas::Program<Message> for NuhxBoard {
                             }
                         }
 
-                        if state.hovered_element.is_some() {
-                            state.hovered_element = None;
-                            return (Status::Captured, captured_message());
+                        if self.hovered_element.is_some() {
+                            return (Status::Captured, Some(Message::UpdateHoveredElement(None)));
                         }
                     }
                     Interaction::Dragging => {
@@ -152,7 +155,7 @@ impl canvas::Program<Message> for NuhxBoard {
                 state.interaction = Interaction::Dragging;
 
                 if state.selected_element.is_none() {
-                    state.held_element = state.hovered_element;
+                    state.held_element = self.hovered_element;
                 } else {
                     state.held_element = state.selected_element;
                     state.selected_element = None;
@@ -173,7 +176,7 @@ impl canvas::Program<Message> for NuhxBoard {
                     state.selected_element = state.held_element;
                     out
                 } else {
-                    state.selected_element = state.hovered_element;
+                    state.selected_element = self.hovered_element;
                     Some(Message::UpdateCanvas)
                 };
 
@@ -334,7 +337,7 @@ impl NuhxBoard {
 
                 // TODO: Still highlight when an element is selected. While the current code is
                 // closer to NohBoard's behavior, I'm not a fan of it.
-                if state.hovered_element == Some(index)
+                if self.hovered_element == Some(index)
                     && state.held_element.is_none()
                     && state.selected_element.is_none()
                 {
@@ -571,7 +574,7 @@ impl NuhxBoard {
             );
         }
 
-        if state.hovered_element == Some(index)
+        if self.hovered_element == Some(index)
             && state.held_element.is_none()
             && state.selected_element.is_none()
         {

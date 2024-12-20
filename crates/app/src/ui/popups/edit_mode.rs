@@ -9,8 +9,9 @@ use iced::{
     },
     window, Alignment, Font, Length, Theme,
 };
-use iced_aw::number_input;
+use iced_aw::{number_input, selection_list};
 use iced_multi_window::Window;
+use types::config::BoardElement;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
@@ -392,6 +393,82 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
     }
 
     fn theme<'a>(&'a self, _app: &'a NuhxBoard) -> Theme {
+        Theme::Light
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ElementProperties {
+    pub key: usize,
+}
+
+impl Window<NuhxBoard, Theme, Message> for ElementProperties {
+    fn id(&self) -> String {
+        format!("element_properties_{}", self.key)
+    }
+
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            // resizable: false,
+            size: iced::Size {
+                width: 400.0,
+                height: 100.0,
+            },
+            ..Default::default()
+        }
+    }
+
+    fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        let element = &app.layout.elements[self.key];
+        match element {
+            BoardElement::KeyboardKey(def) => {
+                let column_1 = column![
+                    labeled_text_input("Text: ", text_input("", &def.text)),
+                    labeled_text_input("Shift Text: ", text_input("", &def.shift_text)),
+                    row![
+                        text("Text Position: "),
+                        number_input(def.text_position.x, 0.0.., |_| Message::none()),
+                        number_input(def.text_position.y, 0.0.., |_| Message::none()),
+                        button("Center"),
+                    ]
+                    .align_y(Alignment::Center),
+                    // TODO: two number inputs for x and y
+                    labeled_text_input("Boundaries: ", text_input("", "")),
+                    row![
+                        column![
+                            button("Add"),
+                            button("Update"),
+                            button("Remove"),
+                            button("Up"),
+                            button("Down"),
+                            // Rectangle creation popup
+                            button("Rectangle"),
+                        ],
+                        selection_list(&def.boundaries, |_, _| Message::none())
+                    ]
+                ];
+
+                let column_2 = column![
+                    checkbox("Change capitalization on Caps Lock key", false),
+                    // TODO: one number input for keycode
+                    row![text("Key codes: "), text_input("", "")],
+                    row![
+                        column![button("Add"), button("Remove"), button("Detect")],
+                        selection_list(&def.key_codes, |_, _| Message::none())
+                    ]
+                ];
+
+                row![column_1, column_2].into()
+            }
+            _ => todo!(),
+        }
+    }
+
+    fn title(&self, _app: &NuhxBoard) -> String {
+        "Keyboard Key Properties".to_string()
+    }
+
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
 }

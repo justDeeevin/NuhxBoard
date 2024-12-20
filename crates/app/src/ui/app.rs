@@ -165,7 +165,12 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                                 .then_some(Message::Open(Box::new(KeyboardProperties))),
                         )
                         .into(),
-                    context_menu_button("Element Properties").into(),
+                    context_menu_button("Element Properties")
+                        .on_press_maybe(
+                            app.hovered_element
+                                .map(|e| Message::Open(Box::new(ElementProperties { key: e }))),
+                        )
+                        .into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
                             (!app.windows.any_of(&KeyboardStyle))

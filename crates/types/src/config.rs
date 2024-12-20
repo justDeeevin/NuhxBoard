@@ -1,4 +1,5 @@
 use iced::Point;
+use ordered_float::OrderedFloat;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -114,7 +115,7 @@ pub struct MouseSpeedIndicatorDefinition {
     pub radius: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct SerializablePoint {
     pub x: f32,
@@ -140,5 +141,20 @@ impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
     fn add_assign(&mut self, rhs: geo::Coord<f32>) {
         self.x += rhs.x;
         self.y += rhs.y;
+    }
+}
+
+impl std::fmt::Display for SerializablePoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+impl Eq for SerializablePoint {}
+
+impl std::hash::Hash for SerializablePoint {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        OrderedFloat(self.x).hash(state);
+        OrderedFloat(self.y).hash(state);
     }
 }

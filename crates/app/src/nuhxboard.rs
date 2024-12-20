@@ -57,6 +57,7 @@ pub struct NuhxBoard {
     pub save_style_as_global: bool,
     pub color_pickers: ColorPickers,
     pub text_input: TextInput,
+    pub hovered_element: Option<usize>,
 }
 
 #[derive(Default)]
@@ -202,6 +203,7 @@ pub enum Message {
     ToggleColorPicker(ColorPicker),
     UpdateCanvas,
     ChangeTextInput(TextInputType, String),
+    UpdateHoveredElement(Option<usize>),
 }
 
 #[derive(Debug, Clone)]
@@ -343,6 +345,7 @@ impl NuhxBoard {
                 save_style_as_global: false,
                 color_pickers: ColorPickers::default(),
                 text_input: TextInput::default(),
+                hovered_element: None,
             },
             Task::batch([
                 Task::perform(async {}, move |_| {
@@ -710,6 +713,9 @@ impl NuhxBoard {
             }
             Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
             Message::UpdateCanvas => {}
+            Message::UpdateHoveredElement(hovered_element) => {
+                self.hovered_element = hovered_element;
+            }
         }
         if clear_canvas {
             self.canvas.clear();
