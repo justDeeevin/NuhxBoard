@@ -399,6 +399,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElementProperties {
+    // An even more powerful example of window state. You can have multiple `ElementProperty`
+    // menus open at once, and they each will remember their associated element.
     pub index: usize,
 }
 
@@ -530,8 +532,15 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                     .filter(|v| **v != def.boundaries.len() - 1)
                                     .map(move |v| Message::SwapBoundaries(index, *v, v + 1))
                             ),
-                            // TODO: Rectangle creation popup
-                            button("Rectangle"),
+                            button("Rectangle").on_press_maybe(
+                                if app.windows.any_of(&RectangleDialog { index: self.index }) {
+                                    None
+                                } else {
+                                    Some(Message::Open(Box::new(RectangleDialog {
+                                        index: self.index,
+                                    })))
+                                }
+                            ),
                         ],
                         selection_list_with(
                             &def.boundaries,
@@ -600,6 +609,41 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
 
     fn title(&self, _app: &NuhxBoard) -> String {
         "Keyboard Key Properties".to_string()
+    }
+
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
+        Theme::Light
+    }
+}
+
+// TODO
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RectangleDialog {
+    pub index: usize,
+}
+
+impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
+    fn id(&self) -> String {
+        format!("rectangle_dialog_{}", self.index)
+    }
+
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            size: iced::Size {
+                width: 400.0,
+                height: 100.0,
+            },
+            // resizable: false,
+            ..Default::default()
+        }
+    }
+
+    fn view<'a>(&'a self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        text("Hi").into()
+    }
+
+    fn title(&self, _app: &NuhxBoard) -> String {
+        "Rectangle Dialog".to_string()
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
