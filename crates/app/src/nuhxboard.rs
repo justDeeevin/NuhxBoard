@@ -447,6 +447,9 @@ impl NuhxBoard {
                 }
                 return self.windows.open(window).1.map(|_| Message::none());
             }
+            Message::Close(window) => {
+                return self.windows.close_all_of(window).map(|_| Message::none());
+            }
             Message::Exit => return window::close(self.main_window),
             Message::Closed(window) => {
                 self.windows.was_closed(window);
@@ -570,6 +573,18 @@ impl NuhxBoard {
                 NumberInputType::Keycode(element, v) => {
                     self.number_input.keycode.insert(element, v);
                 }
+                NumberInputType::RectanglePositionX(element, v) => {
+                    self.number_input.rectangle_position_x.insert(element, v);
+                }
+                NumberInputType::RectanglePositionY(element, v) => {
+                    self.number_input.rectangle_position_y.insert(element, v);
+                }
+                NumberInputType::RectangleSizeX(element, v) => {
+                    self.number_input.rectangle_size_x.insert(element, v);
+                }
+                NumberInputType::RectangleSizeY(element, v) => {
+                    self.number_input.rectangle_size_y.insert(element, v);
+                }
             },
             Message::ChangeSelection(element, selection_type, selection) => match selection_type {
                 SelectionType::Boundary => {
@@ -588,6 +603,7 @@ impl NuhxBoard {
                     panic!("Cannot swap boundaries of mouse speed indicator");
                 }
             }
+            Message::MakeRectangle(element_i) => {}
         }
         if clear_canvas {
             self.canvas.clear();

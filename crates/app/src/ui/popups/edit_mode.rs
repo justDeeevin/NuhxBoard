@@ -410,6 +410,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
+            // TODO: Window size
             // resizable: false,
             size: iced::Size {
                 width: 400.0,
@@ -615,8 +616,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
     }
 }
 
-// TODO
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RectangleDialog {
     pub index: usize,
 }
@@ -628,6 +628,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
+            // TODO: Window size
             size: iced::Size {
                 width: 400.0,
                 height: 100.0,
@@ -638,11 +639,66 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
     }
 
     fn view<'a>(&'a self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        text("Hi").into()
+        let index = self.index;
+        column![
+            row![
+                text("Position: "),
+                number_input(
+                    *app.number_input
+                        .rectangle_position_x
+                        .get(&self.index)
+                        .unwrap_or(&0.0),
+                    0.0..,
+                    move |v| {
+                        Message::ChangeNumberInput(NumberInputType::RectanglePositionX(index, v))
+                    }
+                ),
+                number_input(
+                    *app.number_input
+                        .rectangle_position_y
+                        .get(&self.index)
+                        .unwrap_or(&0.0),
+                    0.0..,
+                    move |v| {
+                        Message::ChangeNumberInput(NumberInputType::RectanglePositionY(index, v))
+                    }
+                ),
+            ]
+            .align_y(Alignment::Center),
+            row![
+                text("Size: "),
+                number_input(
+                    *app.number_input
+                        .rectangle_size_x
+                        .get(&self.index)
+                        .unwrap_or(&0.0),
+                    0.0..,
+                    move |v| {
+                        Message::ChangeNumberInput(NumberInputType::RectangleSizeX(index, v))
+                    }
+                ),
+                number_input(
+                    *app.number_input
+                        .rectangle_size_y
+                        .get(&self.index)
+                        .unwrap_or(&0.0),
+                    0.0..,
+                    move |v| {
+                        Message::ChangeNumberInput(NumberInputType::RectangleSizeY(index, v))
+                    }
+                ),
+            ]
+            .align_y(Alignment::Center),
+            row![
+                button("Cancel").on_press(Message::Close(Box::new(self.clone()))),
+                button("Apply").on_press(Message::MakeRectangle(self.index))
+            ]
+        ]
+        .into()
     }
 
     fn title(&self, _app: &NuhxBoard) -> String {
-        "Rectangle Dialog".to_string()
+        "Rectangle".to_string()
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {

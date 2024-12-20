@@ -11,6 +11,7 @@ use types::{
 #[derive(Clone, Debug)]
 pub enum Message {
     Open(Box<dyn Window<NuhxBoard, Theme, Message>>),
+    Close(Box<dyn Window<NuhxBoard, Theme, Message>>),
     Exit,
     Closed(window::Id),
     Listener(listener::Event),
@@ -41,6 +42,7 @@ pub enum Message {
     UpdateHoveredElement(Option<usize>),
     ChangeElement(usize, ElementProperty),
     CenterTextPosition(usize),
+    MakeRectangle(usize),
 }
 
 #[derive(Debug, Clone)]

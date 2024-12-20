@@ -11,6 +11,10 @@ pub struct NumberInput {
     pub boundary_x: HashMap<usize, f32>,
     pub boundary_y: HashMap<usize, f32>,
     pub keycode: HashMap<usize, u32>,
+    pub rectangle_position_x: HashMap<usize, f32>,
+    pub rectangle_position_y: HashMap<usize, f32>,
+    pub rectangle_size_x: HashMap<usize, f32>,
+    pub rectangle_size_y: HashMap<usize, f32>,
 }
 
 #[derive(Debug, Clone)]
@@ -18,6 +22,10 @@ pub enum NumberInputType {
     BoundaryX(usize, f32),
     BoundaryY(usize, f32),
     Keycode(usize, u32),
+    RectanglePositionX(usize, f32),
+    RectanglePositionY(usize, f32),
+    RectangleSizeX(usize, f32),
+    RectangleSizeY(usize, f32),
 }
 
 #[derive(Default)]
