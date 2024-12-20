@@ -1,4 +1,4 @@
-use crate::nuhxboard::*;
+use crate::{message::*, nuhxboard::*};
 use colorgrad::Gradient;
 use geo::{
     algorithm::line_measures::Euclidean, BoundingRect, Coord, Distance, LineString, Polygon, Within,

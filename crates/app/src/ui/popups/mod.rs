@@ -2,7 +2,7 @@ pub mod edit_mode;
 
 pub use edit_mode::*;
 
-use crate::nuhxboard::*;
+use crate::{message::*, nuhxboard::*, nuhxboard_types::*};
 use iced::{
     widget::{column, container, text},
     window, Theme,

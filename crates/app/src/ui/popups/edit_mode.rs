@@ -1,5 +1,4 @@
-use crate::nuhxboard::*;
-use crate::ui::components::*;
+use crate::{message::*, nuhxboard::*, nuhxboard_types::*, ui::components::*};
 use iced::{
     font::Weight,
     widget::{

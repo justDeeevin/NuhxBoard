@@ -1,4 +1,4 @@
-use crate::nuhxboard::*;
+use crate::{message::*, nuhxboard_types::*};
 use iced::{
     border::Radius,
     widget::{button, container, row, text, text::IntoFragment, Button, Container, Row},

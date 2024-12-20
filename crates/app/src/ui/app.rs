@@ -1,5 +1,5 @@
 use super::{components::*, popups::*};
-use crate::nuhxboard::*;
+use crate::{message::*, nuhxboard::*};
 use iced::{
     widget::{
         canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list, radio,

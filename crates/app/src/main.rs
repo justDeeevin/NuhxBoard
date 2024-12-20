@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod message;
 mod nuhxboard;
+mod nuhxboard_types;
 mod ui;
 
 use nuhxboard::*;
