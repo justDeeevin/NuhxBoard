@@ -65,6 +65,7 @@ pub struct NuhxBoard {
     pub number_input: NumberInput,
     pub selections: SelectionLists,
     pub hovered_element: Option<usize>,
+    pub detecting: Vec<usize>,
 }
 
 pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
@@ -139,6 +140,7 @@ impl NuhxBoard {
                 hovered_element: None,
                 number_input: NumberInput::default(),
                 selections: SelectionLists::default(),
+                detecting: Vec::new(),
             },
             Task::batch([
                 Task::perform(async {}, move |_| {
@@ -512,8 +514,8 @@ impl NuhxBoard {
             Message::UpdateHoveredElement(hovered_element) => {
                 self.hovered_element = hovered_element;
             }
-            Message::ChangeElement(i, property) => {
-                let element = &mut self.layout.elements[i];
+            Message::ChangeElement(element_i, property) => {
+                let element = &mut self.layout.elements[element_i];
                 match element {
                     BoardElement::KeyboardKey(def) => match property {
                         ElementProperty::Text(v) => def.text = v,
@@ -650,6 +652,7 @@ impl NuhxBoard {
                     .close_all_of(Box::new(RectangleDialog { index: element_i }))
                     .map(|_| Message::none());
             }
+            Message::StartDetecting(element) => self.detecting.push(element),
         }
         if clear_canvas {
             self.canvas.clear();
@@ -928,6 +931,8 @@ impl NuhxBoard {
     }
 
     fn input_event(&mut self, event: rdev::Event) -> Task<Message> {
+        let mut captured_key = None;
+        let mut out = Task::none();
         match event.event_type {
             rdev::EventType::KeyPress(key) => {
                 if key == rdev::Key::CapsLock {
@@ -940,6 +945,7 @@ impl NuhxBoard {
                     return self.error(Error::UnknownKey(key));
                 };
                 self.pressed_keys.insert(key, Instant::now());
+                captured_key = Some(key);
             }
             rdev::EventType::KeyRelease(key) => {
                 let Ok(key_num) = keycode_convert(key) else {
@@ -982,6 +988,7 @@ impl NuhxBoard {
                 };
 
                 self.pressed_mouse_buttons.insert(button, Instant::now());
+                captured_key = Some(button);
             }
             rdev::EventType::ButtonRelease(button) => {
                 let Ok(button_num) = mouse_button_code_convert(button) else {
@@ -1034,10 +1041,11 @@ impl NuhxBoard {
                     .entry(button)
                     .and_modify(|v| *v += 1)
                     .or_insert(1);
+                captured_key = Some(button);
 
                 self.canvas.clear();
 
-                return Task::perform(
+                out = Task::perform(
                     sleep(std::time::Duration::from_millis(
                         self.settings.scroll_hold_time,
                     )),
@@ -1084,6 +1092,35 @@ impl NuhxBoard {
             }
         }
 
-        Task::none()
+        if let Some(key) = captured_key {
+            let mut removed = HashSet::new();
+            for i in &self.detecting {
+                let element = &mut self.layout.elements[*i];
+                match element {
+                    BoardElement::KeyboardKey(def) => {
+                        if matches!(event.event_type, rdev::EventType::KeyPress(_)) {
+                            def.key_codes.push(key);
+                            removed.insert(*i);
+                        }
+                    }
+                    BoardElement::MouseKey(def) => {
+                        if matches!(event.event_type, rdev::EventType::ButtonPress(_)) {
+                            def.key_codes.push(key);
+                            removed.insert(*i);
+                        }
+                    }
+                    BoardElement::MouseScroll(def) => {
+                        if matches!(event.event_type, rdev::EventType::Wheel { .. }) {
+                            def.key_codes.push(key);
+                            removed.insert(*i);
+                        }
+                    }
+                    BoardElement::MouseSpeedIndicator(_) => {}
+                }
+            }
+            self.detecting.retain(|i| !removed.contains(i));
+        }
+
+        out
     }
 }

@@ -43,6 +43,7 @@ pub enum Message {
     ChangeElement(usize, ElementProperty),
     CenterTextPosition(usize),
     MakeRectangle(usize),
+    StartDetecting(usize),
 }
 
 #[derive(Debug, Clone)]

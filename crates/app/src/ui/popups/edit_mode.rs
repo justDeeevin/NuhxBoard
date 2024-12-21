@@ -614,8 +614,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                     )
                                 })
                             ),
-                            // TODO
-                            button("Detect")
+                            button("Detect").on_press_maybe(
+                                (!app.detecting.contains(&self.index))
+                                    .then_some(Message::StartDetecting(self.index))
+                            )
                         ],
                         selection_list(&def.key_codes, move |i, _| Message::ChangeSelection(
                             index,
