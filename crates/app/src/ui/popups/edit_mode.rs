@@ -573,9 +573,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                 ];
 
                 let column_2 = column![
-                    checkbox("Change capitalization on Caps Lock key", false).on_toggle(
-                        move |_| Message::ChangeElement(index, ElementProperty::FollowCaps)
-                    ),
+                    checkbox("Change capitalization on Caps Lock key", def.change_on_caps)
+                        .on_toggle(move |_| Message::ChangeElement(
+                            index,
+                            ElementProperty::FollowCaps
+                        )),
                     row![
                         text("Key codes: "),
                         number_input(
