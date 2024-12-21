@@ -530,6 +530,7 @@ impl NuhxBoard {
                                 }
                             } else {
                                 def.boundaries.remove(i);
+                                self.selections.boundary.remove(&element_i);
                             }
                         }
                         ElementProperty::Keycode(i, v) => {
@@ -537,6 +538,7 @@ impl NuhxBoard {
                                 def.key_codes.push(v);
                             } else {
                                 def.key_codes.remove(i);
+                                self.selections.keycode.remove(&element_i);
                             }
                         }
                     },
