@@ -150,3 +150,95 @@ pub enum Error {
     UnknownKey(rdev::Key),
     UnknownButton(rdev::Button),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MouseKey {
+    Left,
+    Middle,
+    Right,
+    Forward,
+    Back,
+}
+
+impl std::fmt::Display for MouseKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MouseKey::Left => write!(f, "Left"),
+            MouseKey::Middle => write!(f, "Middle"),
+            MouseKey::Right => write!(f, "Right"),
+            MouseKey::Forward => write!(f, "Forward"),
+            MouseKey::Back => write!(f, "Back"),
+        }
+    }
+}
+
+impl From<MouseKey> for u32 {
+    fn from(key: MouseKey) -> Self {
+        match key {
+            MouseKey::Left => 0,
+            MouseKey::Middle => 2,
+            MouseKey::Right => 1,
+            MouseKey::Forward => 4,
+            MouseKey::Back => 3,
+        }
+    }
+}
+
+impl TryFrom<u32> for MouseKey {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, ()> {
+        match value {
+            0 => Ok(MouseKey::Left),
+            2 => Ok(MouseKey::Middle),
+            1 => Ok(MouseKey::Right),
+            4 => Ok(MouseKey::Forward),
+            3 => Ok(MouseKey::Back),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MouseScroll {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl std::fmt::Display for MouseScroll {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MouseScroll::Up => write!(f, "Up"),
+            MouseScroll::Down => write!(f, "Down"),
+            MouseScroll::Left => write!(f, "Left"),
+            MouseScroll::Right => write!(f, "Right"),
+        }
+    }
+}
+
+impl From<MouseScroll> for u32 {
+    fn from(key: MouseScroll) -> Self {
+        match key {
+            MouseScroll::Up => 0,
+            MouseScroll::Down => 1,
+            MouseScroll::Left => 3,
+            MouseScroll::Right => 2,
+        }
+    }
+}
+
+impl TryFrom<u32> for MouseScroll {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, ()> {
+        match value {
+            0 => Ok(MouseScroll::Up),
+            1 => Ok(MouseScroll::Down),
+            3 => Ok(MouseScroll::Left),
+            2 => Ok(MouseScroll::Right),
+            _ => Err(()),
+        }
+    }
+}

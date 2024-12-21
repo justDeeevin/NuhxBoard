@@ -516,19 +516,22 @@ impl NuhxBoard {
             }
             Message::ChangeElement(element_i, property) => {
                 let element = &mut self.layout.elements[element_i];
-                match element {
-                    BoardElement::KeyboardKey(def) => match property {
-                        ElementProperty::Text(v) => def.text = v,
-                        ElementProperty::ShiftText(v) => def.shift_text = v,
+                let mouse_key = matches!(
+                    element,
+                    BoardElement::MouseKey(_) | BoardElement::MouseScroll(_)
+                );
+                let mut handeled = true;
+                if let Ok(def) = CommonDefinitionMut::try_from(&mut *element) {
+                    match property {
+                        ElementProperty::Text(ref v) => *def.text = v.clone(),
                         ElementProperty::TextPositionX(v) => def.text_position.x = v,
                         ElementProperty::TextPositionY(v) => def.text_position.y = v,
-                        ElementProperty::FollowCaps => def.change_on_caps = !def.change_on_caps,
-                        ElementProperty::Boundary(i, v) => {
+                        ElementProperty::Boundary(i, ref v) => {
                             if let Some(v) = v {
                                 if i >= def.boundaries.len() {
-                                    def.boundaries.push(v);
+                                    def.boundaries.push(v.clone());
                                 } else {
-                                    def.boundaries[i] = v;
+                                    def.boundaries[i] = v.clone();
                                 }
                             } else {
                                 def.boundaries.remove(i);
@@ -537,14 +540,31 @@ impl NuhxBoard {
                         }
                         ElementProperty::Keycode(i, v) => {
                             if let Some(v) = v {
-                                def.key_codes.push(v);
+                                if mouse_key {
+                                    def.key_codes[0] = v;
+                                } else {
+                                    def.key_codes.push(v);
+                                }
                             } else {
                                 def.key_codes.remove(i);
                                 self.selections.keycode.remove(&element_i);
                             }
                         }
-                    },
-                    _ => todo!(),
+                        _ => handeled = false,
+                    }
+                }
+                if !handeled {
+                    match element {
+                        BoardElement::KeyboardKey(def) => match property {
+                            ElementProperty::ShiftText(v) => def.shift_text = v,
+                            ElementProperty::FollowCaps => def.change_on_caps = !def.change_on_caps,
+                            _ => panic!("Invalid property for selected element"),
+                        },
+                        BoardElement::MouseKey(_) | BoardElement::MouseScroll(_) => {
+                            panic!("Invalid property for selected element")
+                        }
+                        _ => todo!(),
+                    }
                 }
             }
             Message::CenterTextPosition(i) => {

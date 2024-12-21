@@ -2,7 +2,7 @@ use crate::{message::*, nuhxboard::*, nuhxboard_types::*, ui::components::*};
 use iced::{
     font::Weight,
     widget::{
-        button, checkbox, column, row, text,
+        button, checkbox, column, pick_list, row, text,
         text::{IntoFragment, Text},
         text_input,
     },
@@ -10,7 +10,7 @@ use iced::{
 };
 use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
-use types::config::{BoardElement, SerializablePoint};
+use types::config::{BoardElement, CommonDefinitionRef, SerializablePoint};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
@@ -628,6 +628,156 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                 ];
 
                 row![column_1, column_2].into()
+            }
+            BoardElement::MouseKey(_) | BoardElement::MouseScroll(_) => {
+                let def = CommonDefinitionRef::try_from(element).unwrap();
+                column![
+                    match element {
+                        BoardElement::MouseKey(_) => row![
+                            text("Button: "),
+                            pick_list(
+                                {
+                                    use MouseKey::*;
+                                    [Left, Middle, Right, Forward, Back]
+                                },
+                                Some::<MouseKey>(def.key_codes[0].try_into().unwrap()),
+                                move |v| Message::ChangeElement(
+                                    self.index,
+                                    ElementProperty::Keycode(0, Some(v.into()))
+                                )
+                            )
+                        ],
+                        BoardElement::MouseScroll(_) => row![
+                            text("Scroll Direction: "),
+                            pick_list(
+                                {
+                                    use MouseScroll::*;
+                                    [Up, Down, Left, Right]
+                                },
+                                Some::<MouseScroll>(def.key_codes[0].try_into().unwrap()),
+                                move |v| Message::ChangeElement(
+                                    self.index,
+                                    ElementProperty::Keycode(0, Some(v.into()))
+                                )
+                            )
+                        ],
+                        _ => unreachable!(),
+                    }
+                    .align_y(Alignment::Center),
+                    labeled_text_input(
+                        "Text: ",
+                        text_input("", def.text).on_input(move |v| Message::ChangeElement(
+                            index,
+                            ElementProperty::Text(v)
+                        ))
+                    ),
+                    row![
+                        text("Text Position: "),
+                        number_input(def.text_position.x, 0.0.., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionX(v))
+                        }),
+                        number_input(def.text_position.y, 0.0.., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionY(v))
+                        }),
+                        button("Center").on_press(Message::CenterTextPosition(index)),
+                    ]
+                    .align_y(Alignment::Center),
+                    row![
+                        column![
+                            button("Add").on_press(Message::ChangeElement(
+                                self.index,
+                                ElementProperty::Boundary(
+                                    def.boundaries.len(),
+                                    Some(SerializablePoint {
+                                        x: app
+                                            .number_input
+                                            .boundary_x
+                                            .get(&self.index)
+                                            .copied()
+                                            .unwrap_or_default(),
+                                        y: app
+                                            .number_input
+                                            .boundary_y
+                                            .get(&self.index)
+                                            .copied()
+                                            .unwrap_or_default()
+                                    })
+                                )
+                            )),
+                            button("Update").on_press_maybe(
+                                app.selections.boundary.get(&self.index).map(|v| {
+                                    Message::ChangeElement(
+                                        self.index,
+                                        ElementProperty::Boundary(
+                                            *v,
+                                            Some(SerializablePoint {
+                                                x: app
+                                                    .number_input
+                                                    .boundary_x
+                                                    .get(&self.index)
+                                                    .copied()
+                                                    .unwrap_or_default(),
+                                                y: app
+                                                    .number_input
+                                                    .boundary_y
+                                                    .get(&self.index)
+                                                    .copied()
+                                                    .unwrap_or_default(),
+                                            }),
+                                        ),
+                                    )
+                                })
+                            ),
+                            button("Remove").on_press_maybe(
+                                app.selections.boundary.get(&self.index).map(|v| {
+                                    Message::ChangeElement(
+                                        self.index,
+                                        ElementProperty::Boundary(*v, None),
+                                    )
+                                })
+                            ),
+                            button("Up").on_press_maybe(
+                                app.selections
+                                    .boundary
+                                    .get(&self.index)
+                                    .filter(|v| **v != 0)
+                                    .map(move |v| Message::SwapBoundaries(index, *v, v - 1))
+                            ),
+                            button("Down").on_press_maybe(
+                                app.selections
+                                    .boundary
+                                    .get(&self.index)
+                                    .filter(|v| **v != def.boundaries.len() - 1)
+                                    .map(move |v| Message::SwapBoundaries(index, *v, v + 1))
+                            ),
+                            button("Rectangle").on_press_maybe(
+                                if app.windows.any_of(&RectangleDialog { index: self.index }) {
+                                    None
+                                } else {
+                                    Some(Message::Open(Box::new(RectangleDialog {
+                                        index: self.index,
+                                    })))
+                                }
+                            ),
+                        ],
+                        selection_list_with(
+                            def.boundaries,
+                            move |i, _| {
+                                Message::ChangeSelection(index, SelectionType::Boundary, i)
+                            },
+                            12.0,
+                            Padding {
+                                top: 5.0,
+                                bottom: 5.0,
+                                ..Default::default()
+                            },
+                            iced_aw::style::selection_list::primary,
+                            app.selections.boundary.get(&self.index).copied(),
+                            Font::default()
+                        )
+                    ]
+                ]
+                .into()
             }
             _ => todo!(),
         }

@@ -460,7 +460,7 @@ impl NuhxBoard {
         };
 
         let pressed = pressed_button_list
-            .difference(&HashSet::from_iter(def.keycodes))
+            .difference(&HashSet::from_iter(def.key_codes))
             .cloned()
             .collect::<HashSet<_>>()
             != pressed_button_list;
