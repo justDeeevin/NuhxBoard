@@ -454,14 +454,22 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     row![
                         text("Boundaries: "),
                         number_input(
-                            *app.number_input.boundary_x.get(&index).unwrap_or(&0.0),
+                            app.number_input
+                                .boundary_x
+                                .get(&index)
+                                .copied()
+                                .unwrap_or_default(),
                             0.0..,
                             move |v| {
                                 Message::ChangeNumberInput(NumberInputType::BoundaryX(index, v))
                             }
                         ),
                         number_input(
-                            *app.number_input.boundary_y.get(&index).unwrap_or(&0.0),
+                            app.number_input
+                                .boundary_y
+                                .get(&index)
+                                .copied()
+                                .unwrap_or_default(),
                             0.0..,
                             move |v| {
                                 Message::ChangeNumberInput(NumberInputType::BoundaryY(index, v))
@@ -475,16 +483,18 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                 ElementProperty::Boundary(
                                     def.boundaries.len(),
                                     Some(SerializablePoint {
-                                        x: *app
+                                        x: app
                                             .number_input
                                             .boundary_x
                                             .get(&self.index)
-                                            .unwrap_or(&0.0),
-                                        y: *app
+                                            .copied()
+                                            .unwrap_or_default(),
+                                        y: app
                                             .number_input
                                             .boundary_y
                                             .get(&self.index)
-                                            .unwrap_or(&0.0)
+                                            .copied()
+                                            .unwrap_or_default()
                                     })
                                 )
                             )),
@@ -495,16 +505,18 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                         ElementProperty::Boundary(
                                             *v,
                                             Some(SerializablePoint {
-                                                x: *app
+                                                x: app
                                                     .number_input
                                                     .boundary_x
                                                     .get(&self.index)
-                                                    .unwrap_or(&0.0),
-                                                y: *app
+                                                    .copied()
+                                                    .unwrap_or_default(),
+                                                y: app
                                                     .number_input
                                                     .boundary_y
                                                     .get(&self.index)
-                                                    .unwrap_or(&0.0),
+                                                    .copied()
+                                                    .unwrap_or_default(),
                                             }),
                                         ),
                                     )
@@ -567,7 +579,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     row![
                         text("Key codes: "),
                         number_input(
-                            *app.number_input.keycode.get(&self.index).unwrap_or(&0),
+                            app.number_input
+                                .keycode
+                                .get(&self.index)
+                                .copied()
+                                .unwrap_or_default(),
                             0..,
                             move |v| Message::ChangeNumberInput(NumberInputType::Keycode(index, v))
                         )
@@ -579,7 +595,13 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                 self.index,
                                 ElementProperty::Keycode(
                                     0,
-                                    Some(*app.number_input.keycode.get(&self.index).unwrap_or(&0))
+                                    Some(
+                                        app.number_input
+                                            .keycode
+                                            .get(&self.index)
+                                            .copied()
+                                            .unwrap_or_default()
+                                    )
                                 )
                             )),
                             button("Remove").on_press_maybe(
@@ -644,20 +666,22 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
             row![
                 text("Position: "),
                 number_input(
-                    *app.number_input
+                    app.number_input
                         .rectangle_position_x
                         .get(&self.index)
-                        .unwrap_or(&0.0),
+                        .copied()
+                        .unwrap_or_default(),
                     0.0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectanglePositionX(index, v))
                     }
                 ),
                 number_input(
-                    *app.number_input
+                    app.number_input
                         .rectangle_position_y
                         .get(&self.index)
-                        .unwrap_or(&0.0),
+                        .copied()
+                        .unwrap_or_default(),
                     0.0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectanglePositionY(index, v))
@@ -668,20 +692,22 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
             row![
                 text("Size: "),
                 number_input(
-                    *app.number_input
+                    app.number_input
                         .rectangle_size_x
                         .get(&self.index)
-                        .unwrap_or(&0.0),
+                        .copied()
+                        .unwrap_or_default(),
                     0.0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectangleSizeX(index, v))
                     }
                 ),
                 number_input(
-                    *app.number_input
+                    app.number_input
                         .rectangle_size_y
                         .get(&self.index)
-                        .unwrap_or(&0.0),
+                        .copied()
+                        .unwrap_or_default(),
                     0.0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectangleSizeY(index, v))
@@ -690,7 +716,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
             ]
             .align_y(Alignment::Center),
             row![
-                button("Cancel").on_press(Message::Close(Box::new(self.clone()))),
+                button("Cancel").on_press(Message::CloseAllOf(Box::new(self.clone()))),
                 button("Apply").on_press(Message::MakeRectangle(self.index))
             ]
         ]

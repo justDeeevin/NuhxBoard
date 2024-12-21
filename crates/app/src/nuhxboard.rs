@@ -5,7 +5,7 @@ use crate::{
 };
 use async_std::task::sleep;
 use display_info::DisplayInfo;
-use geo::{Centroid, Coord, LineString, Polygon};
+use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
     advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Renderer, Subscription, Task,
     Theme,
@@ -447,7 +447,7 @@ impl NuhxBoard {
                 }
                 return self.windows.open(window).1.map(|_| Message::none());
             }
-            Message::Close(window) => {
+            Message::CloseAllOf(window) => {
                 return self.windows.close_all_of(window).map(|_| Message::none());
             }
             Message::Exit => return window::close(self.main_window),
@@ -601,7 +601,53 @@ impl NuhxBoard {
                 def.boundaries.swap(left, right);
                 self.selections.boundary.insert(element_i, right);
             }
-            Message::MakeRectangle(element_i) => {}
+            Message::MakeRectangle(element_i) => {
+                let element = &mut self.layout.elements[element_i];
+                let Ok(def) = CommonDefinitionMut::try_from(element) else {
+                    panic!("Cannot make rectangle of mouse speed indicator");
+                };
+                def.boundaries.clear();
+                let top_left = Coord {
+                    x: self
+                        .number_input
+                        .rectangle_position_x
+                        .get(&element_i)
+                        .copied()
+                        .unwrap_or_default(),
+                    y: self
+                        .number_input
+                        .rectangle_position_y
+                        .get(&element_i)
+                        .copied()
+                        .unwrap_or_default(),
+                };
+                let rect = Rect::new(
+                    top_left,
+                    top_left
+                        + Coord {
+                            x: self
+                                .number_input
+                                .rectangle_size_x
+                                .get(&element_i)
+                                .copied()
+                                .unwrap_or_default(),
+                            y: self
+                                .number_input
+                                .rectangle_size_y
+                                .get(&element_i)
+                                .copied()
+                                .unwrap_or_default(),
+                        },
+                );
+                rect.exterior_coords_iter().for_each(|point| {
+                    def.boundaries.push(point.into());
+                });
+
+                return self
+                    .windows
+                    .close_all_of(Box::new(RectangleDialog { index: element_i }))
+                    .map(|_| Message::none());
+            }
         }
         if clear_canvas {
             self.canvas.clear();

@@ -11,7 +11,7 @@ use types::{
 #[derive(Clone, Debug)]
 pub enum Message {
     Open(Box<dyn Window<NuhxBoard, Theme, Message>>),
-    Close(Box<dyn Window<NuhxBoard, Theme, Message>>),
+    CloseAllOf(Box<dyn Window<NuhxBoard, Theme, Message>>),
     Exit,
     Closed(window::Id),
     Listener(listener::Event),

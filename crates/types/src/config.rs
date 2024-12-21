@@ -192,6 +192,15 @@ impl From<SerializablePoint> for geo::Coord<f32> {
     }
 }
 
+impl From<geo::Coord<f32>> for SerializablePoint {
+    fn from(value: geo::Coord<f32>) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+        }
+    }
+}
+
 impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
     fn add_assign(&mut self, rhs: geo::Coord<f32>) {
         self.x += rhs.x;
