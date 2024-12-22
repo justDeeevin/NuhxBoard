@@ -726,6 +726,7 @@ impl NuhxBoard {
     }
 
     fn load_layout(&mut self, keyboard: usize) -> Task<Message> {
+        self.edit_mode = false;
         self.settings.keyboard = keyboard;
 
         self.keyboard_choice = Some(keyboard);
