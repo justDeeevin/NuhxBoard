@@ -805,8 +805,13 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
         }
     }
 
-    fn title(&self, _app: &NuhxBoard) -> String {
-        "Keyboard Key Properties".to_string()
+    fn title(&self, app: &NuhxBoard) -> String {
+        match app.layout.elements[self.index] {
+            BoardElement::KeyboardKey(_) => "Keyboard Key Properties".to_string(),
+            BoardElement::MouseKey(_) => "Mouse Key Properties".to_string(),
+            BoardElement::MouseScroll(_) => "Mouse Scroll Properties".to_string(),
+            BoardElement::MouseSpeedIndicator(_) => "Mouse Speed Indicator Properties".to_string(),
+        }
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
