@@ -61,6 +61,9 @@ pub enum ElementProperty {
     FollowCaps,
     Boundary(usize, Option<SerializablePoint>),
     Keycode(usize, Option<u32>),
+    MouseSpeedIndicatorPositionX(f32),
+    MouseSpeedIndicatorPositionY(f32),
+    MouseSpeedIndicatorRadius(f32),
 }
 
 #[derive(Debug, Clone)]

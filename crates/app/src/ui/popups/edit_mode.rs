@@ -779,7 +779,29 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                 ]
                 .into()
             }
-            _ => todo!(),
+            BoardElement::MouseSpeedIndicator(def) => column![
+                row![
+                    text("Location: "),
+                    number_input(def.location.x, 0.0.., move |v| Message::ChangeElement(
+                        index,
+                        ElementProperty::MouseSpeedIndicatorPositionX(v)
+                    )),
+                    number_input(def.location.y, 0.0.., move |v| Message::ChangeElement(
+                        index,
+                        ElementProperty::MouseSpeedIndicatorPositionY(v)
+                    ))
+                ]
+                .align_y(Alignment::Center),
+                row![
+                    text("Radius: "),
+                    number_input(def.radius, 0.0.., move |v| Message::ChangeElement(
+                        index,
+                        ElementProperty::MouseSpeedIndicatorRadius(v)
+                    ))
+                ]
+                .align_y(Alignment::Center)
+            ]
+            .into(),
         }
     }
 

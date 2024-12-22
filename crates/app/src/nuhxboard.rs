@@ -552,6 +552,8 @@ impl NuhxBoard {
                         }
                         _ => handeled = false,
                     }
+                } else {
+                    handeled = false;
                 }
                 if !handeled {
                     match element {
@@ -563,7 +565,12 @@ impl NuhxBoard {
                         BoardElement::MouseKey(_) | BoardElement::MouseScroll(_) => {
                             panic!("Invalid property for selected element")
                         }
-                        _ => todo!(),
+                        BoardElement::MouseSpeedIndicator(def) => match property {
+                            ElementProperty::MouseSpeedIndicatorPositionX(v) => def.location.x = v,
+                            ElementProperty::MouseSpeedIndicatorPositionY(v) => def.location.y = v,
+                            ElementProperty::MouseSpeedIndicatorRadius(v) => def.radius = v,
+                            _ => panic!("Invalid property for selected element"),
+                        },
                     }
                 }
             }
