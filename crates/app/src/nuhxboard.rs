@@ -1121,32 +1121,13 @@ impl NuhxBoard {
         }
 
         if let Some(key) = captured_key {
-            let mut removed = HashSet::new();
             for i in &self.detecting {
-                let element = &mut self.layout.elements[*i];
-                match element {
-                    BoardElement::KeyboardKey(def) => {
-                        if matches!(event.event_type, rdev::EventType::KeyPress(_)) {
-                            def.key_codes.push(key);
-                            removed.insert(*i);
-                        }
-                    }
-                    BoardElement::MouseKey(def) => {
-                        if matches!(event.event_type, rdev::EventType::ButtonPress(_)) {
-                            def.key_codes.push(key);
-                            removed.insert(*i);
-                        }
-                    }
-                    BoardElement::MouseScroll(def) => {
-                        if matches!(event.event_type, rdev::EventType::Wheel { .. }) {
-                            def.key_codes.push(key);
-                            removed.insert(*i);
-                        }
-                    }
-                    BoardElement::MouseSpeedIndicator(_) => {}
-                }
+                let BoardElement::KeyboardKey(def) = &mut self.layout.elements[*i] else {
+                    continue;
+                };
+                def.key_codes.push(key);
             }
-            self.detecting.retain(|i| !removed.contains(i));
+            self.detecting.clear();
         }
 
         out
