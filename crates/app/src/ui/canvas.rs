@@ -28,6 +28,8 @@ fn captured_message() -> Option<Message> {
 #[derive(Default)]
 pub struct CanvasState {
     held_element: Option<usize>,
+    hovered_face: Option<usize>,
+    hovered_vertex: Option<usize>,
     selected_element: Option<usize>,
     interaction: Interaction,
     previous_cursor_position: Coord<f32>,
@@ -103,20 +105,55 @@ impl canvas::Program<Message> for NuhxBoard {
                                     }
                                 }
                                 _ => {
-                                    let mut vertices = match element {
-                                        BoardElement::KeyboardKey(def) => def.boundaries.clone(),
-                                        BoardElement::MouseKey(def) => def.boundaries.clone(),
-                                        BoardElement::MouseScroll(def) => def.boundaries.clone(),
-                                        BoardElement::MouseSpeedIndicator(_) => {
-                                            unreachable!()
-                                        }
-                                    };
+                                    let mut vertices = CommonDefinitionRef::try_from(element)
+                                        .unwrap()
+                                        .boundaries
+                                        .clone();
 
                                     vertices.push(vertices[0].clone());
 
                                     let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
                                     if cursor_position.is_within(&bounds) {
+                                        if !bounds
+                                            // I love iterators -_-
+                                            .exterior()
+                                            .lines()
+                                            .collect::<Vec<_>>()
+                                            .as_slice()
+                                            .windows(2)
+                                            .enumerate()
+                                            .any(|(i, window)| {
+                                                let left = window[0];
+                                                let right = window[1];
+
+                                                if Euclidean::distance(cursor_position, &left)
+                                                    <= 5.0
+                                                    && Euclidean::distance(cursor_position, &right)
+                                                        <= 5.0
+                                                {
+                                                    state.hovered_vertex = Some(i + 1);
+                                                    state.hovered_face = None;
+                                                } else if Euclidean::distance(
+                                                    cursor_position,
+                                                    &left,
+                                                ) <= 5.0
+                                                {
+                                                    state.hovered_face = Some(i);
+                                                } else if Euclidean::distance(
+                                                    cursor_position,
+                                                    &right,
+                                                ) <= 5.0
+                                                {
+                                                    state.hovered_face = Some(i + 1);
+                                                } else {
+                                                    return false;
+                                                }
+                                                true
+                                            })
+                                        {
+                                            state.hovered_face = None;
+                                        }
                                         if self.hovered_element != Some(index) {
                                             return (
                                                 Status::Captured,
@@ -515,6 +552,9 @@ impl NuhxBoard {
             }
             builder.close();
         });
+        let mut boundaries = def.boundaries.clone();
+        boundaries.push(boundaries[0].clone());
+        let shape = Polygon::new(LineString::from(boundaries), vec![]);
 
         if let Some(name) = &current_style.background_image_file_name {
             let path = self
@@ -524,9 +564,6 @@ impl NuhxBoard {
                 .join(name);
 
             if !name.is_empty() && path.exists() {
-                let mut boundaries = def.boundaries.clone();
-                boundaries.push(boundaries[0].clone());
-                let shape = Polygon::new(LineString::from(boundaries), vec![]);
                 let rect = shape.bounding_rect().unwrap();
                 let width = rect.width();
                 let height = rect.height();
@@ -597,6 +634,40 @@ impl NuhxBoard {
                     ..Default::default()
                 },
             );
+        }
+        if let Some(face) = state.hovered_face {
+            let face = shape.exterior().lines().collect::<Vec<_>>()[face];
+            let path = Path::line(
+                iced::Point {
+                    x: face.start.x,
+                    y: face.start.y,
+                },
+                iced::Point {
+                    x: face.end.x,
+                    y: face.end.y,
+                },
+            );
+            if state.selected_element == Some(index) {
+                frame.stroke(
+                    &path,
+                    canvas::Stroke {
+                        // #FF4500
+                        style: canvas::Style::Solid(Color::from_rgb(1.0, 45.0 / 255.0, 0.0)),
+                        width: 10.0,
+                        ..Default::default()
+                    },
+                );
+            } else if self.hovered_element == Some(index) {
+                frame.stroke(
+                    &path,
+                    canvas::Stroke {
+                        // #FF4500
+                        style: canvas::Style::Solid(Color::BLACK),
+                        width: 20.0,
+                        ..Default::default()
+                    },
+                );
+            }
         }
     }
 }
