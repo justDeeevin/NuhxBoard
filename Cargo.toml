@@ -8,7 +8,23 @@ authors.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
-readme.workspace = true
+readme = "README.md"
+exclude = [
+  "keyboards",
+  ".github",
+  "NuhxBoard.xcf",
+  "README.adoc",
+  "deny.toml",
+  "dist-workspace.toml",
+  "flake.*",
+  "justfile",
+  "keyboards.zip",
+  "media",
+  "schemas",
+  "wix",
+  "CHANGELOG.md",
+  "KEYCODES.adoc",
+]
 
 [package.metadata.wix]
 upgrade-guid = "531C0F4B-FFE1-4F4C-BD42-A8449DB1E0BD"
@@ -64,7 +80,6 @@ authors = ["Devin Droddy <devin.droddy@gmail.com>"]
 repository = "https://github.com/justDeeevin/NuhxBoard"
 keywords = ["keyboard", "streaming", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
-readme = "README.md"
 
 [workspace.dependencies]
 geo = "0.29.3"
