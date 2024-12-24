@@ -1,4 +1,4 @@
-use crate::{message::*, nuhxboard_types::*};
+use crate::{message::*, types::*};
 use iced::{
     border::Radius,
     font::Weight,
@@ -6,7 +6,7 @@ use iced::{
     Alignment, Border, Color, Element, Font, Length, Shadow,
 };
 use iced_aw::{color_picker, widget::InnerBounds, Quad};
-use types::style::NohRgb;
+use nuhxboard_types::style::NohRgb;
 
 pub fn labeled_text_input<'a>(
     label: impl IntoFragment<'a>,

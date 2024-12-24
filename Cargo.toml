@@ -38,18 +38,18 @@ reqwest = { version = "0.12.7", features = ["blocking"] }
 serde_json.workspace = true
 zip = "2.2.0"
 iced_fonts = "0.1.1"
-types = { path = "crates/types", version = "0.6.0" }
-logic = { path = "crates/logic", version = "0.6.0" }
+nuhxboard-types = { path = "crates/types", version = "0.6.0" }
+nuhxboard-logic = { path = "crates/logic", version = "0.6.0" }
 rdev.workspace = true
 nalgebra = "0.33.0"
 
 [build-dependencies]
 schemars.workspace = true
-types = { path = "crates/types", version = "0.6.0" }
+nuhxboard-types = { path = "crates/types", version = "0.6.0" }
 serde_json = "1.0.128"
 
 [features]
-grab = ["logic/grab"]
+grab = ["nuhxboard-logic/grab"]
 debug = ["iced/debug"]
 
 [workspace]

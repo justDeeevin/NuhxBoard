@@ -1,9 +1,9 @@
-use crate::{nuhxboard::*, nuhxboard_types::*};
+use crate::{nuhxboard::*, types::*};
 use geo::Coord;
 use iced::{window, Color, Theme};
 use iced_multi_window::Window;
-use logic::listener;
-use types::{
+use nuhxboard_logic::listener;
+use nuhxboard_types::{
     config::SerializablePoint,
     settings::{Capitalization, DisplayChoice},
 };

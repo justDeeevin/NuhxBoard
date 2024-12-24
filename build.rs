@@ -1,9 +1,9 @@
+use nuhxboard_types::{config::Layout, style::Style};
 use schemars::schema_for;
 use std::{
     fs::{self, File},
     path::Path,
 };
-use types::{config::Layout, style::Style};
 
 /// Automatically generates the JSON schemas for the config files.
 fn main() {

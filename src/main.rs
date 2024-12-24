@@ -2,15 +2,15 @@
 
 mod message;
 mod nuhxboard;
-mod nuhxboard_types;
+mod types;
 mod ui;
 
 use nuhxboard::*;
+use nuhxboard_types::settings::Settings;
 use std::{
     fs::{self, File},
     io::{self, prelude::*},
 };
-use types::settings::Settings;
 
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;

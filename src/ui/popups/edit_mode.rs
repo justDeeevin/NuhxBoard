@@ -1,4 +1,4 @@
-use crate::{message::*, nuhxboard::*, nuhxboard_types::*, ui::components::*};
+use crate::{message::*, nuhxboard::*, types::*, ui::components::*};
 use iced::{
     font::Family,
     widget::{button, checkbox, column, pick_list, rich_text, row, span, text, text_input},
@@ -6,7 +6,7 @@ use iced::{
 };
 use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
-use types::{
+use nuhxboard_types::{
     config::{BoardElement, CommonDefinitionRef, SerializablePoint},
     style,
 };

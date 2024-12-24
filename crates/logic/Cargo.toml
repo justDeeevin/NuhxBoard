@@ -1,5 +1,5 @@
 [package]
-name = "logic"
+name = "nuhxboard-logic"
 description = "Input listener for NuhxBoard"
 version.workspace = true
 edition.workspace = true

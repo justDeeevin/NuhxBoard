@@ -1,5 +1,5 @@
 [package]
-name = "types"
+name = "nuhxboard-types"
 description = "Types for NuhxBoard configuration"
 version.workspace = true
 edition.workspace = true

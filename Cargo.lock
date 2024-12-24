@@ -2923,15 +2923,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "logic"
-version = "0.6.0"
-dependencies = [
- "futures",
- "iced",
- "rdev",
-]
-
-[[package]]
 name = "loop9"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3279,14 +3270,36 @@ dependencies = [
  "iced_aw",
  "iced_fonts",
  "image 0.25.5",
- "logic",
  "nalgebra",
+ "nuhxboard-logic",
+ "nuhxboard-types",
  "rdev",
  "reqwest",
  "schemars",
  "serde_json",
- "types",
  "zip",
+]
+
+[[package]]
+name = "nuhxboard-logic"
+version = "0.6.0"
+dependencies = [
+ "futures",
+ "iced",
+ "rdev",
+]
+
+[[package]]
+name = "nuhxboard-types"
+version = "0.6.0"
+dependencies = [
+ "display-info",
+ "geo",
+ "iced",
+ "ordered-float",
+ "schemars",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5284,19 +5297,6 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
-
-[[package]]
-name = "types"
-version = "0.6.0"
-dependencies = [
- "display-info",
- "geo",
- "iced",
- "ordered-float",
- "schemars",
- "serde",
- "serde_json",
-]
 
 [[package]]
 name = "uds_windows"

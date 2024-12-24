@@ -1,6 +1,6 @@
 use crate::{
     message::*,
-    nuhxboard_types::*,
+    types::*,
     ui::{app::*, popups::*},
 };
 use async_std::task::sleep;
@@ -12,17 +12,17 @@ use iced::{
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
-use logic::{code_convert::*, listener};
+use nuhxboard_logic::{code_convert::*, listener};
+use nuhxboard_types::{
+    config::*,
+    settings::*,
+    style::{self, *},
+};
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
     sync::{LazyLock, RwLock},
     time::Instant,
-};
-use types::{
-    config::*,
-    settings::*,
-    style::{self, *},
 };
 
 // See canvas.rs:478

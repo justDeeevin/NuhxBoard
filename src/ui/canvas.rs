@@ -12,10 +12,10 @@ use iced::{
     Color, Rectangle, Renderer, Theme,
 };
 use image::ImageReader;
-use logic::code_convert::*;
 use nalgebra::{Vector2, Vector3};
+use nuhxboard_logic::code_convert::*;
+use nuhxboard_types::{config::*, settings::*, style::*};
 use std::collections::HashSet;
-use types::{config::*, settings::*, style::*};
 
 fn captured_message() -> Option<Message> {
     if cfg!(target_os = "linux") && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {

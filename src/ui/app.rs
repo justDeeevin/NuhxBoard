@@ -9,8 +9,8 @@ use iced::{
 };
 use iced_aw::{number_input, ContextMenu, SelectionList};
 use iced_multi_window::Window;
+use nuhxboard_types::settings::*;
 use std::sync::Arc;
-use types::settings::*;
 
 static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
 
