@@ -11,7 +11,7 @@ fn main() {
     let layout_schema = schema_for!(Layout);
     let style_schema = schema_for!(Style);
 
-    let schema_dir = Path::new("schemas");
+    let schema_dir = Path::new("../../schemas");
 
     fs::create_dir_all(schema_dir).unwrap();
 
