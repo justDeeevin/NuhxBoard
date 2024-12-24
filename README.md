@@ -1,10 +1,10 @@
-# image:https://github.com/justDeeevin/NuhxBoard/raw/main/NuhxBoard.png[The NuhxBoard logo, 34] NuhxBoard
+# <img src="https://github.com/justDeeevin/NuhxBoard/raw/main/NuhxBoard.png" alt="The NuhxBoard logo" width="34" > NuhxBoard
 
 ![Crates.io version](https://img.shields.io/crates/v/nuhxboard)
 ![Crates.io license](https://img.shields.io/crates/l/nuhxboard)
 ![Crates.io downloads](https://img.shields.io/crates/d/nuhxboard)
 
-![The Iced logo](https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg)
+<a href="https://github.com/iced-rs/iced"><img alt="The Iced logo" src="https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg" width="130"></a>
 
 ## Goals
 
@@ -20,14 +20,14 @@ Keyboard layouts are grouped into categories, and styles (aside from global ones
 
 Keyboards are located in `~/.local/share/NuhxBoard/keyboards`. Here’s the general structure of that directory:
 
-* keyboards/
-  * [CATEGORY NAME]/
-    * images/
-    * [KEYBOARD NAME]/
-      * keyboard.json
-      * [STYLE NAME].style
-    * global/
-      * [STYLE NAME].style
+- keyboards/
+  - [CATEGORY NAME]/
+    - images/
+    - [KEYBOARD NAME]/
+      - keyboard.json
+      - [STYLE NAME].style
+    - global/
+      - [STYLE NAME].style
 
 This folder will be populated on first run with some example keyboards and categories. You can inspect it yourself to get a good idea of how this looks in practice.
 
@@ -100,14 +100,14 @@ If you can make sense of that, then good for you! Otherwise, here’s an actual 
 
 All points are represented as an object with an `X` and `Y` property.
 
-* **Version**\
-No actual meaning. Kept for parity with NohBoard layout files.
-* **Width**\
-Width of the window in pixels.
-* **Height**\
-Height of the window in pixels.
-* **Elements**\
-Array of elements in the layout.
+- **Version**\
+  No actual meaning. Kept for parity with NohBoard layout files.
+- **Width**\
+  Width of the window in pixels.
+- **Height**\
+  Height of the window in pixels.
+- **Elements**\
+  Array of elements in the layout.
 
 #### Elements
 
@@ -119,16 +119,16 @@ There are four kinds of elements: KeyboardKeys, MouseKeys, MouseScrolls, and Mou
 
 These properties are shared by KeyboardKeys, MouseKeys, and MouseScrolls.
 
-* **Id**\
-Each element has a unique Id. Style files can apply styles to specific keys by referring to their Id.
-* **Boundaries**\
-Elements' shapes are defined by an array of points, their vertices. When no image is specified for an element, it is drawn by connecting lines between each point in the order they appear in the list (including closing the shape by connecting the last vertex to the first), then filling the polygon formed. Even if an element has an image specified, the boundaries are used for the graphical layout editor to know when your cursor is hovering over an element.
-* **TextPosition**\
-The point where the top-left corner of the element’s text is to be. Technically, this can be anywhere in the window.
-* **KeyCodes**\
-An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! In a future release, there will be a tool in the element properties menu of the graphical layout editor that will help to figure out which key corresponds to which keycode. For the time being, you can check [this document](KEYCODES.adoc) for conversion.
-* **Text**\
-The text to display on the key.
+- **Id**\
+  Each element has a unique Id. Style files can apply styles to specific keys by referring to their Id.
+- **Boundaries**\
+  Elements' shapes are defined by an array of points, their vertices. When no image is specified for an element, it is drawn by connecting lines between each point in the order they appear in the list (including closing the shape by connecting the last vertex to the first), then filling the polygon formed. Even if an element has an image specified, the boundaries are used for the graphical layout editor to know when your cursor is hovering over an element.
+- **TextPosition**\
+  The point where the top-left corner of the element’s text is to be. Technically, this can be anywhere in the window.
+- **KeyCodes**\
+  An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! NuhxBoard can automatically detect the proper keycode in edit mode, but [this document](https://github.com/justDeeevin/NuhxBoard/blob/main/KEYCODES.adoc) can be used for reference.
+- **Text**\
+  The text to display on the key.
 
 ---
 
@@ -136,10 +136,10 @@ The text to display on the key.
 
 In addition to the shared properties, KeyboardKeys have the following properties:
 
-* **ShiftText**\
-The text to display when shift is held.
-* **ChangeOnCaps**\
-Whether or not to follow the state of caps lock (generally, this is `true` for letters and `false` for symbols).
+- **ShiftText**\
+  The text to display when shift is held.
+- **ChangeOnCaps**\
+  Whether or not to follow the state of caps lock (generally, this is `true` for letters and `false` for symbols).
 
 ---
 
@@ -151,10 +151,10 @@ MouseSpeedIndicators are made up of a filled inner circle and an unfilled outer 
 
 ![MouseSpeedIndicator example](media/mousespeedindicator.png)
 
-* **Location**\
-The center of the circle
-* **Radius**\
-The radius of the outer ring. The inner ring is 20% of this radius.
+- **Location**\
+  The center of the circle
+- **Radius**\
+  The radius of the outer ring. The inner ring is 20% of this radius.
 
 ---
 
@@ -241,16 +241,16 @@ All images are stored in the `images` directory in the **category**. Images are 
 
 All colors are represented as an object with three properties: `Red`, `Green`, and `Blue`. Each is an integer between 0 and 255.
 
-* **BackgroundColor**\
-The color of the background. Will be overriden by a background image if one is specified.
-* **BackgroundImageFileName**\
-The name of the image file to use as the background. This is optional.
-* **DefaultKeyStyle**\
-The default style to use for all "keys" (every element besides MouseSpeedIndicators). This _must be specified_.
-* **DefaultMouseSpeedIndicatorStyle**\
-The default style to use for all MouseSpeedIndicators. This _must be specified_.
-* **ElementStyles**\
-An array of ElementStyle objects. Each ElementStyle object has a `Key` property, which is the Id of the element to which the style should be applied, and a `Value` property, which is either a KeyStyle or a MouseSpeedIndicatorStyle. Again, each item indicates its type with the `__type` property.
+- **BackgroundColor**\
+  The color of the background. Will be overriden by a background image if one is specified.
+- **BackgroundImageFileName**\
+  The name of the image file to use as the background. This is optional.
+- **DefaultKeyStyle**\
+  The default style to use for all "keys" (every element besides MouseSpeedIndicators). This _must be specified_.
+- **DefaultMouseSpeedIndicatorStyle**\
+  The default style to use for all MouseSpeedIndicators. This _must be specified_.
+- **ElementStyles**\
+  An array of ElementStyle objects. Each ElementStyle object has a `Key` property, which is the Id of the element to which the style should be applied, and a `Value` property, which is either a KeyStyle or a MouseSpeedIndicatorStyle. Again, each item indicates its type with the `__type` property.
 
 ---
 
@@ -258,42 +258,42 @@ An array of ElementStyle objects. Each ElementStyle object has a `Key` property,
 
 KeyStyles just list which style to use for when a key is `Pressed` or `Loose` (not pressed). The actual style is defined in the KeySubStyle object, with these properties:
 
-* **Background**\
-The color of the key.
-* **Text**\
-The color of the text on the key.
-* **Outline**\
-The color of the outline around the key.
-* **ShowOutline**\
-Whether or not to draw an outline around the key.
-* **OutlineWidth**\
-The width of the outline in pixels.
-* **Font**\
-The font to use for the text on the key. See [Fonts](#fonts) for more information.
-* **BackgroundImageFileName**\
-The name of the image file to use as the background of the key.
+- **Background**\
+  The color of the key.
+- **Text**\
+  The color of the text on the key.
+- **Outline**\
+  The color of the outline around the key.
+- **ShowOutline**\
+  Whether or not to draw an outline around the key.
+- **OutlineWidth**\
+  The width of the outline in pixels.
+- **Font**\
+  The font to use for the text on the key. See [Fonts](#fonts) for more information.
+- **BackgroundImageFileName**\
+  The name of the image file to use as the background of the key.
 
 ---
 
 #### MouseSpeedIndicatorStyle
 
-* **InnerColor**\
-The color of the filled inner circle.
-* **OuterColor**\
-The color of the outer ring.
-* **OutlineWidth**\
-The width of the outer ring.
+- **InnerColor**\
+  The color of the filled inner circle.
+- **OuterColor**\
+  The color of the outer ring.
+- **OutlineWidth**\
+  The width of the outer ring.
 
 ---
 
 #### Fonts
 
-* **FontFamily**\
-The name of the font to use. This is the name of the font as it appears in the system’s font list.
-* **Size**\
-The size of the font in pixels.
-* **Style**\
-A bitfield representing the style of the font. From least to most significant, the first bit is bold, the second italic, the third underline, and the fourth strikethrough. These effects can be combined. As an example, if I wanted bold and italicized text, I would set style to `3`, which is `0011` in binary.
+- **FontFamily**\
+  The name of the font to use. This is the name of the font as it appears in the system’s font list.
+- **Size**\
+  The size of the font in pixels.
+- **Style**\
+  A bitfield representing the style of the font. From least to most significant, the first bit is bold, the second italic, the third underline, and the fourth strikethrough. These effects can be combined. As an example, if I wanted bold and italicized text, I would set style to `3`, which is `0011` in binary.
 
 ---
 
@@ -301,19 +301,33 @@ A bitfield representing the style of the font. From least to most significant, t
 
 In the global context menu, there is a "Settings" button, which opens a window with the following options:
 
-* **Mouse sensitivity**\
-The sensitivity of the MouseSpeedIndicator.
-* **Scroll hold time (ms)**\
-Time in milliseconts to highlight a mouse scroll key when a scroll is detected.
-* **Calculate mouse speed from center of screen**\
-Some games recenter the mouse every frame. If you find that you’re looking around ingame but the MouseSpeedIndicator is behaving strangely, try turning this option on.
-* **Display to use**\
-The ID of the display to use for the above option. The primary monitor is marked as such, but if you have many monitors, you’ll probably have to use trial and error to determine which is which.
-* **Show keypresses for at least _ ms**\
-A key will stay highlighted for this many milliseconds after it is released.
-* **Window title**
-* **Follow Caps-Lock and Shift**\
-These three radio buttons allow you to fine-tune capitalization behavior. With the last two options selected, caps lock will be ignored everywhere, and instead all keys will either be capitalized or lowercase depending upon your selection. The two checkboxes to the right allow you to still follow shift for certain keys. Think of this as allowing you to force caps lock to be either on or off for all keys. For instance, when NuhxBoard is configured to show all buttons capitalized but still follow shift for all keys, when shift is held, all keys will be lowercase, similar to if shift were held while caps lock was followed and enabled.
+- **Mouse sensitivity**\
+  The sensitivity of the MouseSpeedIndicator.
+- **Scroll hold time (ms)**\
+  Time in milliseconts to highlight a mouse scroll key when a scroll is detected.
+- **Calculate mouse speed from center of screen**\
+  Some games recenter the mouse every frame. If you find that you’re looking around ingame but the MouseSpeedIndicator is behaving strangely, try turning this option on.
+- **Display to use**\
+  The ID of the display to use for the above option. The primary monitor is marked as such, but if you have many monitors, you’ll probably have to use trial and error to determine which is which.
+- **Show keypresses for at least \_ ms**\
+  A key will stay highlighted for this many milliseconds after it is released.
+- **Window title**
+- **Follow Caps-Lock and Shift**\
+  These three radio buttons allow you to fine-tune capitalization behavior. With the last two options selected, caps lock will be ignored everywhere, and instead all keys will either be capitalized or lowercase depending upon your selection. The two checkboxes to the right allow you to still follow shift for certain keys. Think of this as allowing you to force caps lock to be either on or off for all keys. For instance, when NuhxBoard is configured to show all buttons capitalized but still follow shift for all keys, when shift is held, all keys will be lowercase, similar to if shift were held while caps lock was followed and enabled.
+
+### Edit Mode
+
+You can graphically manipulate every part of a keyboard layout and style. In the global context menu, press "Start Editing" to enter edit mode. In this mode, you can
+
+- Drag to move elements around
+- Change the size of the window with the "Keyboard Properties" button in the edit mode context menu
+- Change the style of the window and default element styles with the "Keyborad Style" button in the edit mode context menu
+- Change various properties of the currently-hovered element with the "Element Properties" button in the edit mode context menu
+- Change the color of the currently-hovered element with the "Element Style" button in the edit mode context menu
+
+Most fields will instantly update as you change them. The exception is font families and images. In order to apply your changes to these fields, you must press Enter while the text box has focus.
+
+You can use CTRL+Z to undo element movements, and CTRL+SHIFT+Z to redo them.
 
 ## Caveats
 
@@ -332,10 +346,10 @@ NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). 
 
 NuhxBoard will detect if any app files are missing and replace them automatically. This includes
 
-* **The main settings**\
-If the `NuhxBoard.json` file containing app settings and saved state doesn’t exist, it’ll be populated with defaults.
-* **Installed keyboards**\
-If the `keyboards` directory is empty or doesn’t exist, then nuhxboard will download a pack of example keyboards to use.
+- **The main settings**\
+  If the `NuhxBoard.json` file containing app settings and saved state doesn’t exist, it’ll be populated with defaults.
+- **Installed keyboards**\
+  If the `keyboards` directory is empty or doesn’t exist, then nuhxboard will download a pack of example keyboards to use.
 
 ## Demo
 
