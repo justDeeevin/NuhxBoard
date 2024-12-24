@@ -182,9 +182,10 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
-                width: 400.0,
-                height: 100.0,
+                width: 800.0,
+                height: 350.0,
             },
+            resizable: false,
             ..Default::default()
         }
     }
