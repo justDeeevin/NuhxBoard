@@ -178,6 +178,7 @@
 
         packages = with pkgs; [
           cargo-dist
+          cargo-release
         ];
 
         LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath commonArgs.buildInputs}";

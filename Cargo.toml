@@ -1,12 +1,70 @@
+[package]
+name = "nuhxboard"
+description = "Cross-platform input visualizer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme.workspace = true
+
+[package.metadata.wix]
+upgrade-guid = "531C0F4B-FFE1-4F4C-BD42-A8449DB1E0BD"
+path-guid = "6BCE453A-D71C-4EF5-A85D-B4A43D72A35F"
+license = false
+eula = false
+
+[dependencies]
+iced-multi-window = "1.0.0"
+async-std = "1.13.0"
+color-eyre = { version = "0.6.3", default-features = false }
+colorgrad = "0.7.0"
+display-info.workspace = true
+eyre = "0.6.12"
+futures.workspace = true
+geo.workspace = true
+home = "0.5.9"
+iced = { workspace = true, features = [
+  "image",
+  "canvas",
+  "advanced",
+  "async-std",
+] }
+iced_aw = "0.11.0"
+image = { version = "0.25.2", features = ["ico"] }
+reqwest = { version = "0.12.7", features = ["blocking"] }
+serde_json.workspace = true
+zip = "2.2.0"
+iced_fonts = "0.1.1"
+types = { path = "crates/types", version = "0.6.0" }
+logic = { path = "crates/logic", version = "0.6.0" }
+rdev.workspace = true
+nalgebra = "0.33.0"
+
+[build-dependencies]
+schemars.workspace = true
+types = { path = "crates/types", version = "0.6.0" }
+serde_json = "1.0.128"
+
+[features]
+grab = ["logic/grab"]
+debug = ["iced/debug"]
+
 [workspace]
 resolver = "2"
-members = ["crates/app", "crates/logic", "crates/types"]
-
-[workspace.metadata.crane]
-name = "nuhxboard"
+members = ["crates/logic", "crates/types"]
 
 [workspace.package]
-version = "1.0.0"
+version = "0.6.0"
+edition = "2021"
+license = "GPL-3.0"
+authors = ["Devin Droddy <devin.droddy@gmail.com>"]
+repository = "https://github.com/justDeeevin/NuhxBoard"
+keywords = ["keyboard", "streaming", "overlay", "linux", "nohboard"]
+categories = ["visualization"]
+readme = "README.md"
 
 [workspace.dependencies]
 geo = "0.29.3"
@@ -16,25 +74,9 @@ futures = "0.3.31"
 rdev = "0.5.3"
 display-info = "0.5.2"
 schemars = "0.8.21"
+# rust-version = "1.72.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-# Config for 'cargo dist'
-[workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.22.1"
-# CI backends to support
-ci = "github"
-# The installers to generate for each app
-installers = ["msi"]
-# Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
-# Which actions to run on pull requests
-pr-run-mode = "plan"
-
-[workspace.metadata.dist.dependencies.apt]
-libxi-dev = '*'
-libxtst-dev = '*'

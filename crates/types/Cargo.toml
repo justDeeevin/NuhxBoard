@@ -1,7 +1,13 @@
 [package]
 name = "types"
-version = "1.0.0"
-edition = "2021"
+description = "Types for NuhxBoard configuration"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
 
 [dependencies]
 display-info.workspace = true

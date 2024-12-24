@@ -1,9 +1,8 @@
+use schemars::schema_for;
 use std::{
     fs::{self, File},
     path::Path,
 };
-
-use schemars::schema_for;
 use types::{config::Layout, style::Style};
 
 /// Automatically generates the JSON schemas for the config files.

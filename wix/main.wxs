@@ -69,7 +69,7 @@
 
         <Package Id='*'
             Keywords='Installer'
-            Description='A cross-platform alternative to NohBoard'
+            Description='Cross-platform input visualizer'
             Manufacturer='Devin Droddy'
             InstallerVersion='450'
             Languages='1033'
