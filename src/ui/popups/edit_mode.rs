@@ -181,6 +181,10 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
+            size: iced::Size {
+                width: 400.0,
+                height: 100.0,
+            },
             ..Default::default()
         }
     }
@@ -419,11 +423,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
-            // TODO: Window size
-            // resizable: false,
+            resizable: false,
             size: iced::Size {
-                width: 400.0,
-                height: 100.0,
+                width: 900.0,
+                height: 500.0,
             },
             ..Default::default()
         }
@@ -844,12 +847,11 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
-            // TODO: Window size
+            resizable: false,
             size: iced::Size {
                 width: 400.0,
                 height: 100.0,
             },
-            // resizable: false,
             ..Default::default()
         }
     }
@@ -942,11 +944,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
 
     fn settings(&self) -> window::Settings {
         window::Settings {
-            // TODO: Window size
-            // resizable: false,
+            resizable: false,
             size: iced::Size {
-                width: 400.0,
-                height: 100.0,
+                width: 500.0,
+                height: 400.0,
             },
             ..Default::default()
         }
