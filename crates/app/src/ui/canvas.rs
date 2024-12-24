@@ -331,24 +331,17 @@ impl NuhxBoard {
                 let inner = Path::circle(def.location.clone().into(), def.radius / 5.0);
                 let outer = Path::circle(def.location.clone().into(), def.radius);
 
-                let element_style = &self
+                let style = self
                     .style
                     .element_styles
-                    .iter()
-                    .find(|style| style.key == def.id);
-
-                let style: &MouseSpeedIndicatorStyle;
-
-                let default_style = &self.style.default_mouse_speed_indicator_style;
-
-                if let Some(s) = element_style {
-                    style = match &s.value {
-                        ElementStyleUnion::KeyStyle(_) => unreachable!(),
-                        ElementStyleUnion::MouseSpeedIndicatorStyle(style) => style,
-                    };
-                } else {
-                    style = default_style;
-                }
+                    .get(&def.id)
+                    .map(|v| {
+                        let ElementStyle::MouseSpeedIndicatorStyle(ref style) = v else {
+                            unreachable!()
+                        };
+                        style
+                    })
+                    .unwrap_or(&self.style.default_mouse_speed_indicator_style);
 
                 frame.fill(
                     &inner,
@@ -482,16 +475,12 @@ impl NuhxBoard {
         pressed_button_list: HashSet<u32>,
         index: usize,
     ) {
-        let element_style = &self
-            .style
-            .element_styles
-            .iter()
-            .find(|style| style.key == def.id);
+        let element_style = &self.style.element_styles.get(&def.id);
 
         let style = match element_style {
-            Some(s) => match &s.value {
-                ElementStyleUnion::KeyStyle(i_s) => i_s,
-                ElementStyleUnion::MouseSpeedIndicatorStyle(_) => unreachable!(),
+            Some(s) => match s {
+                ElementStyle::KeyStyle(i_s) => i_s,
+                ElementStyle::MouseSpeedIndicatorStyle(_) => unreachable!(),
             },
             None => &self.style.default_key_style,
         };

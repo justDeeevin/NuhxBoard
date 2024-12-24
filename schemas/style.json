@@ -25,31 +25,17 @@
       "$ref": "#/definitions/MouseSpeedIndicatorStyle"
     },
     "ElementStyles": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/ElementStyle"
-      }
+      "$ref": "#/definitions/CustomMap"
     }
   },
   "definitions": {
-    "ElementStyle": {
-      "type": "object",
-      "required": [
-        "Key",
-        "Value"
-      ],
-      "properties": {
-        "Key": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "Value": {
-          "$ref": "#/definitions/ElementStyleUnion"
-        }
+    "CustomMap": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/KeyValue"
       }
     },
-    "ElementStyleUnion": {
+    "ElementStyle": {
       "oneOf": [
         {
           "type": "object",
@@ -176,6 +162,23 @@
         },
         "Text": {
           "$ref": "#/definitions/NohRgb"
+        }
+      }
+    },
+    "KeyValue": {
+      "type": "object",
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "properties": {
+        "Key": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "Value": {
+          "$ref": "#/definitions/ElementStyle"
         }
       }
     },

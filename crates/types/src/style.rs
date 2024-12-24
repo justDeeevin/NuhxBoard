@@ -1,5 +1,10 @@
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{
+    de::Deserializer,
+    ser::{SerializeSeq, Serializer},
+    Deserialize, Serialize,
+};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
@@ -8,7 +13,54 @@ pub struct Style {
     pub background_image_file_name: Option<String>,
     pub default_key_style: KeyStyle,
     pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
-    pub element_styles: Vec<ElementStyle>,
+    #[serde(with = "CustomMap")]
+    pub element_styles: HashMap<u32, ElementStyle>,
+}
+
+// This allows `HashMap<u32, ElementStyle>` to be serialized as a list of `{Key: u32, Value: ElementStyle}`
+struct CustomMap;
+impl CustomMap {
+    pub fn serialize<S>(map: &HashMap<u32, ElementStyle>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(map.len()))?;
+        for (key, value) in map {
+            seq.serialize_element(&KeyValue {
+                key: *key,
+                value: value.clone(),
+            })?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<HashMap<u32, ElementStyle>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let vec = Vec::<KeyValue>::deserialize(deserializer)?;
+        let mut map = HashMap::new();
+        for item in vec {
+            map.insert(item.key, item.value);
+        }
+        Ok(map)
+    }
+}
+impl schemars::JsonSchema for CustomMap {
+    fn schema_name() -> String {
+        "CustomMap".to_string()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        gen.subschema_for::<Vec<KeyValue>>()
+    }
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
+struct KeyValue {
+    key: u32,
+    value: ElementStyle,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema)]
@@ -79,10 +131,15 @@ pub struct KeySubStyle {
 pub struct Font {
     pub font_family: String,
     pub size: f32,
+    // This is a bitfield
+    // 0b0001 = bold
+    // 0b0010 = italic
+    // 0b0100 = underline
+    // 0b1000 = strikethrough
     pub style: u8,
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicatorStyle {
     pub inner_color: NohRgb,
@@ -90,16 +147,9 @@ pub struct MouseSpeedIndicatorStyle {
     pub outline_width: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
-#[serde(rename_all = "PascalCase")]
-pub struct ElementStyle {
-    pub key: u32,
-    pub value: ElementStyleUnion,
-}
-
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
 #[serde(tag = "__type")]
-pub enum ElementStyleUnion {
+pub enum ElementStyle {
     KeyStyle(KeyStyle),
     MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
 }
@@ -154,7 +204,7 @@ impl Default for Style {
                 outer_color: NohRgb::WHITE,
                 outline_width: 1,
             },
-            element_styles: vec![],
+            element_styles: HashMap::new(),
         }
     }
 }

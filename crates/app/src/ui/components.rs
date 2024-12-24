@@ -1,8 +1,9 @@
 use crate::{message::*, nuhxboard_types::*};
 use iced::{
     border::Radius,
-    widget::{button, container, row, text, text::IntoFragment, Button, Container, Row},
-    Alignment, Border, Color, Element, Length, Shadow,
+    font::Weight,
+    widget::{button, container, row, text, text::IntoFragment, Button, Container, Row, Text},
+    Alignment, Border, Color, Element, Font, Length, Shadow,
 };
 use iced_aw::{color_picker, widget::InnerBounds, Quad};
 use types::style::NohRgb;
@@ -36,6 +37,7 @@ pub fn picker_button<'a>(
     open: bool,
     color: Color,
     picker: ColorPicker,
+    id: u32,
 ) -> Row<'a, Message> {
     row![
         color_picker(
@@ -56,9 +58,9 @@ pub fn picker_button<'a>(
                     },
                     _ => button::primary(theme, status),
                 })
-                .on_press(Message::ToggleColorPicker(picker)),
-            Message::ToggleColorPicker(picker),
-            move |v| Message::ChangeColor(picker, v)
+                .on_press(Message::ToggleColorPicker(picker, id)),
+            Message::ToggleColorPicker(picker, id),
+            move |v| Message::ChangeColor(picker, v, id)
         ),
         text(label)
     ]
@@ -101,4 +103,13 @@ pub fn seperator() -> Quad {
         inner_bounds: InnerBounds::Ratio(0.95, 0.2),
         ..Default::default()
     }
+}
+pub fn category_label<'a>(label: impl IntoFragment<'a>) -> Text<'a> {
+    text(label)
+        .font(Font {
+            weight: Weight::Bold,
+            ..Default::default()
+        })
+        .align_x(Alignment::Center)
+        .width(Length::Fill)
 }

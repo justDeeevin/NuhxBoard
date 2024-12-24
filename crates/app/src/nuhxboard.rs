@@ -1,7 +1,10 @@
 use crate::{
     message::*,
     nuhxboard_types::*,
-    ui::{app::*, popups::*},
+    ui::{
+        app::*,
+        popups::{self, *},
+    },
 };
 use async_std::task::sleep;
 use display_info::DisplayInfo;
@@ -10,7 +13,7 @@ use iced::{
     advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Renderer, Subscription, Task,
     Theme,
 };
-use iced_multi_window::WindowManager;
+use iced_multi_window::{Window, WindowManager};
 use image::ImageReader;
 use logic::{code_convert::*, listener};
 use std::{
@@ -19,7 +22,11 @@ use std::{
     sync::{LazyLock, RwLock},
     time::Instant,
 };
-use types::{config::*, settings::*, style::*};
+use types::{
+    config::*,
+    settings::*,
+    style::{self, *},
+};
 
 // See canvas.rs:478
 pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
@@ -477,8 +484,30 @@ impl NuhxBoard {
 
                 clear_canvas = false;
             }
-            Message::ChangeColor(picker, color) => {
-                self.color_pickers.toggle(picker);
+            Message::ChangeColor(picker, color, id) => {
+                // I love macros!
+                macro_rules! element_style_change {
+                    ($name:ident, $block:block) => {
+                        if let Some($name) = self
+                            .style
+                            .element_styles
+                            .get_mut(&id)
+                            .map(|v| {
+                                let style::ElementStyle::KeyStyle(ref mut key) = v else {
+                                    panic!()
+                                };
+                                key
+                            })
+                        {
+                            $block
+                        } else {
+                            let mut $name = self.style.default_key_style.clone();
+                            $block
+                            self.style.element_styles.insert(id, style::ElementStyle::KeyStyle($name));
+                        }
+                    }
+                }
+                self.color_pickers.toggle(picker, id);
                 match picker {
                     ColorPicker::KeyboardBackground => {
                         self.style.background_color = color.into();
@@ -507,9 +536,27 @@ impl NuhxBoard {
                     ColorPicker::DefaultMouseSpeedIndicator2 => {
                         self.style.default_mouse_speed_indicator_style.outer_color = color.into();
                     }
+                    ColorPicker::LooseBackground => {
+                        element_style_change!(style, { style.loose.background = color.into() });
+                    }
+                    ColorPicker::LooseText => {
+                        element_style_change!(style, { style.loose.text = color.into() });
+                    }
+                    ColorPicker::LooseOutline => {
+                        element_style_change!(style, { style.loose.outline = color.into() });
+                    }
+                    ColorPicker::PressedBackground => {
+                        element_style_change!(style, { style.pressed.background = color.into() });
+                    }
+                    ColorPicker::PressedText => {
+                        element_style_change!(style, { style.pressed.text = color.into() });
+                    }
+                    ColorPicker::PressedOutline => {
+                        element_style_change!(style, { style.pressed.outline = color.into() });
+                    }
                 }
             }
-            Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
+            Message::ToggleColorPicker(picker, id) => self.color_pickers.toggle(picker, id),
             Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
                 self.hovered_element = hovered_element;
@@ -938,15 +985,15 @@ impl NuhxBoard {
             self.style
                 .element_styles
                 .iter()
-                .filter_map(|style| match &style.value {
-                    ElementStyleUnion::KeyStyle(key_style) => Some(
+                .filter_map(|(_, style)| match style {
+                    style::ElementStyle::KeyStyle(key_style) => Some(
                         [
                             key_style.loose.font.font_family.clone(),
                             key_style.pressed.font.font_family.clone(),
                         ]
                         .into_iter(),
                     ),
-                    ElementStyleUnion::MouseSpeedIndicatorStyle(_) => None,
+                    style::ElementStyle::MouseSpeedIndicatorStyle(_) => None,
                 })
                 .flatten(),
         );

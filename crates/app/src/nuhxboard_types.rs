@@ -63,10 +63,16 @@ pub struct ColorPickers {
     pub default_pressed_background: bool,
     pub default_pressed_text: bool,
     pub default_pressed_outline: bool,
+    pub loose_background: HashMap<u32, bool>,
+    pub loose_text: HashMap<u32, bool>,
+    pub loose_outline: HashMap<u32, bool>,
+    pub pressed_background: HashMap<u32, bool>,
+    pub pressed_text: HashMap<u32, bool>,
+    pub pressed_outline: HashMap<u32, bool>,
 }
 
 impl ColorPickers {
-    pub fn get_mut(&mut self, picker: ColorPicker) -> &mut bool {
+    pub fn get_mut(&mut self, picker: ColorPicker, id: u32) -> &mut bool {
         match picker {
             ColorPicker::KeyboardBackground => &mut self.keyboard_background,
             ColorPicker::DefaultMouseSpeedIndicator1 => &mut self.default_mouse_speed_indicator_1,
@@ -77,11 +83,17 @@ impl ColorPickers {
             ColorPicker::DefaultPressedBackground => &mut self.default_pressed_background,
             ColorPicker::DefaultPressedText => &mut self.default_pressed_text,
             ColorPicker::DefaultPressedOutline => &mut self.default_pressed_outline,
+            ColorPicker::LooseBackground => self.loose_background.entry(id).or_insert(false),
+            ColorPicker::LooseText => self.loose_text.entry(id).or_insert(false),
+            ColorPicker::LooseOutline => self.loose_outline.entry(id).or_insert(false),
+            ColorPicker::PressedBackground => self.pressed_background.entry(id).or_insert(false),
+            ColorPicker::PressedText => self.pressed_text.entry(id).or_insert(false),
+            ColorPicker::PressedOutline => self.pressed_outline.entry(id).or_insert(false),
         }
     }
 
-    pub fn toggle(&mut self, picker: ColorPicker) {
-        let picker = self.get_mut(picker);
+    pub fn toggle(&mut self, picker: ColorPicker, id: u32) {
+        let picker = self.get_mut(picker, id);
         *picker = !*picker;
     }
 }
@@ -97,6 +109,12 @@ pub enum ColorPicker {
     DefaultPressedBackground,
     DefaultPressedText,
     DefaultPressedOutline,
+    LooseBackground,
+    LooseText,
+    LooseOutline,
+    PressedBackground,
+    PressedText,
+    PressedOutline,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]

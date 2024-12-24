@@ -10,15 +10,19 @@ use iced::{
 use iced_aw::{number_input, ContextMenu, SelectionList};
 use iced_multi_window::Window;
 use std::sync::Arc;
-use types::settings::*;
+use types::{config::get_id, settings::*};
 
 static IMAGE: &[u8] = include_bytes!("../../../../NuhxBoard.png");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadKeyboard;
 impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
+    fn class(&self) -> &'static str {
+        "load_keyboard"
+    }
+
     fn id(&self) -> String {
-        "load_keyboard".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -82,8 +86,12 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Main;
 impl Window<NuhxBoard, Theme, Message> for Main {
+    fn class(&self) -> &'static str {
+        "main"
+    }
+
     fn id(&self) -> String {
-        "main".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -166,10 +174,13 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                         )
                         .into(),
                     context_menu_button("Element Properties")
-                        .on_press_maybe(
-                            app.hovered_element
-                                .map(|e| Message::Open(Box::new(ElementProperties { index: e }))),
-                        )
+                        .on_press_maybe(if let Some(index) = app.hovered_element {
+                            let window = ElementProperties { index };
+                            (!app.windows.any_of(&window))
+                                .then_some(Message::Open(Box::new(window)))
+                        } else {
+                            None
+                        })
                         .into(),
                     context_menu_button("Keyboard Style")
                         .on_press_maybe(
@@ -177,7 +188,16 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                                 .then_some(Message::Open(Box::new(KeyboardStyle))),
                         )
                         .into(),
-                    context_menu_button("Element Style").into(),
+                    context_menu_button("Element Style")
+                        .on_press_maybe(if let Some(index) = app.hovered_element {
+                            let id = get_id(&app.layout.elements[index]);
+                            let window = ElementStyle { id };
+                            (!app.windows.any_of(&window))
+                                .then_some(Message::Open(Box::new(window)))
+                        } else {
+                            None
+                        })
+                        .into(),
                 ]);
             }
 
@@ -236,8 +256,12 @@ impl Window<NuhxBoard, Theme, Message> for Main {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SettingsWindow;
 impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
+    fn class(&self) -> &'static str {
+        "settings"
+    }
+
     fn id(&self) -> String {
-        "settings".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -329,11 +353,9 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 false => None,
             };
 
-        let follow_for_caps_insensitive_function =
-            match app.settings.capitalization != Capitalization::Follow {
-                true => Some(|_: bool| Message::ChangeSetting(Setting::FollowForCapsInsensitive)),
-                false => None,
-            };
+        let follow_for_caps_insensitive_function = (app.settings.capitalization
+            != Capitalization::Follow)
+            .then_some(|_: bool| Message::ChangeSetting(Setting::FollowForCapsInsensitive));
 
         let capitalization = row![
             column![

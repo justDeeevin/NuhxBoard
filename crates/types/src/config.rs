@@ -3,6 +3,17 @@ use ordered_float::OrderedFloat;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub fn get_id(element: &BoardElement) -> u32 {
+    if let Ok(def) = CommonDefinitionRef::try_from(element) {
+        *def.id
+    } else {
+        let BoardElement::MouseSpeedIndicator(def) = element else {
+            unreachable!()
+        };
+        def.id
+    }
+}
+
 #[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct Layout {

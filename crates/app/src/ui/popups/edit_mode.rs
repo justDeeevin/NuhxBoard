@@ -1,22 +1,25 @@
 use crate::{message::*, nuhxboard::*, nuhxboard_types::*, ui::components::*};
 use iced::{
-    font::Weight,
-    widget::{
-        button, checkbox, column, pick_list, row, text,
-        text::{IntoFragment, Text},
-        text_input,
-    },
-    window, Alignment, Font, Length, Padding, Theme,
+    font::Family,
+    widget::{button, checkbox, column, pick_list, rich_text, row, span, text, text_input},
+    window, Alignment, Font, Padding, Theme,
 };
 use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
-use types::config::{BoardElement, CommonDefinitionRef, SerializablePoint};
+use types::{
+    config::{get_id, BoardElement, CommonDefinitionRef, SerializablePoint},
+    style,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
 impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
+    fn class(&self) -> &'static str {
+        "keyboard_properties"
+    }
+
     fn id(&self) -> String {
-        "keyboard_properties".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -58,8 +61,12 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveDefinitionAs;
 impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
+    fn class(&self) -> &'static str {
+        "save_definition_as"
+    }
+
     fn id(&self) -> String {
-        "save_definition_as".into()
+        self.class().into()
     }
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
@@ -108,8 +115,12 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveStyleAs;
 impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
+    fn class(&self) -> &'static str {
+        "save_style_as"
+    }
+
     fn id(&self) -> String {
-        "save_style_as".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -160,8 +171,12 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
 pub struct KeyboardStyle;
 
 impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
+    fn class(&self) -> &'static str {
+        "keyboard_style"
+    }
+
     fn id(&self) -> String {
-        "keyboard_style".into()
+        self.class().into()
     }
 
     fn settings(&self) -> window::Settings {
@@ -171,16 +186,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
     }
 
     fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        fn category_label<'a>(label: impl IntoFragment<'a>) -> Text<'a> {
-            text(label)
-                .font(Font {
-                    weight: Weight::Bold,
-                    ..Default::default()
-                })
-                .align_x(Alignment::Center)
-                .width(Length::Fill)
-        }
-
         let keyboard = column![
             category_label("Keyboard"),
             text("Background"),
@@ -190,6 +195,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.keyboard_background,
                     app.style.background_color.into(),
                     ColorPicker::KeyboardBackground,
+                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -214,7 +220,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         .default_mouse_speed_indicator_style
                         .inner_color
                         .into(),
-                    ColorPicker::DefaultMouseSpeedIndicator1
+                    ColorPicker::DefaultMouseSpeedIndicator1,
+                    0
                 ),
                 picker_button(
                     "Color 2 (high speed)",
@@ -223,7 +230,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         .default_mouse_speed_indicator_style
                         .outer_color
                         .into(),
-                    ColorPicker::DefaultMouseSpeedIndicator2
+                    ColorPicker::DefaultMouseSpeedIndicator2,
+                    0
                 ),
                 row![
                     number_input(
@@ -247,7 +255,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Background Color",
                     app.color_pickers.default_loose_background,
                     app.style.default_key_style.loose.background.into(),
-                    ColorPicker::DefaultLooseBackground
+                    ColorPicker::DefaultLooseBackground,
+                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -270,7 +279,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Text Color",
                     app.color_pickers.default_loose_text,
                     app.style.default_key_style.loose.text.into(),
-                    ColorPicker::DefaultLooseText
+                    ColorPicker::DefaultLooseText,
+                    0
                 ),
                 labeled_text_input(
                     "Font Family: ",
@@ -290,7 +300,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Outline Color",
                     app.color_pickers.default_loose_outline,
                     app.style.default_key_style.loose.outline.into(),
-                    ColorPicker::DefaultLooseOutline
+                    ColorPicker::DefaultLooseOutline,
+                    0
                 ),
                 checkbox(
                     "Show Outline",
@@ -315,7 +326,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Background Color",
                     app.color_pickers.default_pressed_background,
                     app.style.default_key_style.pressed.background.into(),
-                    ColorPicker::DefaultPressedBackground
+                    ColorPicker::DefaultPressedBackground,
+                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -338,7 +350,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Text Color",
                     app.color_pickers.default_pressed_text,
                     app.style.default_key_style.pressed.text.into(),
-                    ColorPicker::DefaultPressedText
+                    ColorPicker::DefaultPressedText,
+                    0
                 ),
                 labeled_text_input(
                     "Font Family: ",
@@ -358,7 +371,8 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     "Outline Color",
                     app.color_pickers.default_pressed_outline,
                     app.style.default_key_style.pressed.outline.into(),
-                    ColorPicker::DefaultPressedOutline
+                    ColorPicker::DefaultPressedOutline,
+                    0
                 ),
                 checkbox(
                     "Show Outline",
@@ -404,8 +418,12 @@ pub struct ElementProperties {
 }
 
 impl Window<NuhxBoard, Theme, Message> for ElementProperties {
+    fn class(&self) -> &'static str {
+        "element_properties"
+    }
+
     fn id(&self) -> String {
-        format!("element_properties_{}", self.index)
+        format!("{}_{}", self.class(), self.index)
     }
 
     fn settings(&self) -> window::Settings {
@@ -825,8 +843,12 @@ pub struct RectangleDialog {
 }
 
 impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
+    fn class(&self) -> &'static str {
+        "rectangle_dialog"
+    }
+
     fn id(&self) -> String {
-        format!("rectangle_dialog_{}", self.index)
+        format!("{}_{}", self.class(), self.index)
     }
 
     fn settings(&self) -> window::Settings {
@@ -910,5 +932,240 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
 
     fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ElementStyle {
+    pub id: u32,
+}
+
+impl Window<NuhxBoard, Theme, Message> for ElementStyle {
+    fn class(&self) -> &'static str {
+        "element_style"
+    }
+
+    fn id(&self) -> String {
+        format!("{}_{}", self.class(), self.id)
+    }
+
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            // TODO: Window size
+            // resizable: false,
+            size: iced::Size {
+                width: 400.0,
+                height: 100.0,
+            },
+            ..Default::default()
+        }
+    }
+
+    fn title(&self, app: &NuhxBoard) -> String {
+        "Style".into()
+    }
+
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
+        Theme::Light
+    }
+
+    fn view<'a>(&'a self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        match app
+            .layout
+            .elements
+            .iter()
+            .find(|e| get_id(e) == self.id)
+            .unwrap()
+        {
+            BoardElement::KeyboardKey(_) => {
+                let style = app
+                    .style
+                    .element_styles
+                    .get(&self.id)
+                    .map(|v| {
+                        let style::ElementStyle::KeyStyle(ref key) = v else {
+                            panic!()
+                        };
+                        key
+                    })
+                    .unwrap_or(&app.style.default_key_style);
+                let column_1 = column![
+                    category_label("Loose"),
+                    text("Background"),
+                    gray_box(column![
+                        picker_button(
+                            "Background Color",
+                            app.color_pickers
+                                .loose_background
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.loose.background.into(),
+                            ColorPicker::LooseBackground,
+                            self.id
+                        ),
+                        labeled_text_input("Image", text_input("", "")),
+                    ]),
+                    text("Text"),
+                    gray_box(column![
+                        picker_button(
+                            "Text Color",
+                            app.color_pickers
+                                .loose_text
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.loose.text.into(),
+                            ColorPicker::LooseText,
+                            self.id
+                        ),
+                        {
+                            let font = &style.loose.font;
+                            rich_text![span("Pick a font")
+                                .font(Font {
+                                    family: Family::Name(
+                                        FONTS
+                                            .read()
+                                            .unwrap()
+                                            .get(font.font_family.as_str())
+                                            .unwrap()
+                                    ),
+                                    stretch: iced::font::Stretch::Normal,
+                                    weight: if font.style & 1 != 0 {
+                                        iced::font::Weight::Bold
+                                    } else {
+                                        iced::font::Weight::Normal
+                                    },
+                                    style: if font.style & 0b10 != 0 {
+                                        iced::font::Style::Italic
+                                    } else {
+                                        iced::font::Style::Normal
+                                    },
+                                })
+                                .underline(font.style & 0b0100 != 0)
+                                .strikethrough(font.style & 0b1000 != 0)]
+                        },
+                        row![
+                            checkbox("Bold", style.loose.font.style & 1 != 0),
+                            checkbox("Italic", style.loose.font.style & 0b10 != 0),
+                        ],
+                        row![
+                            checkbox("Underline", style.loose.font.style & 0b100 != 0),
+                            checkbox("Strikethrough", style.loose.font.style & 0b1000 != 0),
+                        ]
+                    ]),
+                    text("Outline"),
+                    gray_box(column![
+                        picker_button(
+                            "Outline Color",
+                            app.color_pickers
+                                .loose_outline
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.loose.outline.into(),
+                            ColorPicker::LooseOutline,
+                            self.id
+                        ),
+                        checkbox("Show Outline", style.loose.show_outline),
+                        row![
+                            number_input(style.loose.outline_width, 1.., |_| Message::none()),
+                            text(" Outline Width"),
+                        ]
+                    ]),
+                    checkbox("Overwrite default style", true)
+                ];
+
+                let column_2 = column![
+                    category_label("Pressed"),
+                    text("Background"),
+                    gray_box(column![
+                        picker_button(
+                            "Background Color",
+                            app.color_pickers
+                                .pressed_background
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.pressed.background.into(),
+                            ColorPicker::PressedBackground,
+                            self.id
+                        ),
+                        labeled_text_input("Image", text_input("", "")),
+                    ]),
+                    text("Text"),
+                    gray_box(column![
+                        picker_button(
+                            "Text Color",
+                            app.color_pickers
+                                .pressed_text
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.pressed.text.into(),
+                            ColorPicker::PressedText,
+                            self.id
+                        ),
+                        {
+                            let font = &style.pressed.font;
+                            rich_text![span("Pick a font")
+                                .font(Font {
+                                    family: Family::Name(
+                                        FONTS
+                                            .read()
+                                            .unwrap()
+                                            .get(font.font_family.as_str())
+                                            .unwrap()
+                                    ),
+                                    stretch: iced::font::Stretch::Normal,
+                                    weight: if font.style & 1 != 0 {
+                                        iced::font::Weight::Bold
+                                    } else {
+                                        iced::font::Weight::Normal
+                                    },
+                                    style: if font.style & 0b10 != 0 {
+                                        iced::font::Style::Italic
+                                    } else {
+                                        iced::font::Style::Normal
+                                    },
+                                })
+                                .underline(font.style & 0b0100 != 0)
+                                .strikethrough(font.style & 0b1000 != 0)]
+                        },
+                        row![
+                            checkbox("Bold", style.pressed.font.style & 1 != 0),
+                            checkbox("Italic", style.pressed.font.style & 0b10 != 0),
+                        ],
+                        row![
+                            checkbox("Underline", style.pressed.font.style & 0b100 != 0),
+                            checkbox("Strikethrough", style.pressed.font.style & 0b1000 != 0),
+                        ]
+                    ]),
+                    text("Outline"),
+                    gray_box(column![
+                        picker_button(
+                            "Outline Color",
+                            app.color_pickers
+                                .pressed_outline
+                                .get(&self.id)
+                                .copied()
+                                .unwrap_or(false),
+                            style.pressed.outline.into(),
+                            ColorPicker::PressedOutline,
+                            self.id
+                        ),
+                        checkbox("Show Outline", style.pressed.show_outline),
+                        row![
+                            number_input(style.pressed.outline_width, 1.., |_| Message::none()),
+                            text(" Outline Width"),
+                        ]
+                    ]),
+                    checkbox("Overwrite default style", true)
+                ];
+
+                row![column_1, column_2].into()
+            }
+            _ => todo!(),
+        }
     }
 }
