@@ -33,11 +33,10 @@ pub fn gray_box<'a>(content: impl Into<Element<'a, Message>>) -> Container<'a, M
 }
 
 pub fn picker_button<'a>(
-    label: impl IntoFragment<'a>,
+    label: impl std::fmt::Display,
     open: bool,
     color: Color,
     picker: ColorPicker,
-    id: u32,
 ) -> Row<'a, Message> {
     row![
         color_picker(
@@ -58,11 +57,11 @@ pub fn picker_button<'a>(
                     },
                     _ => button::primary(theme, status),
                 })
-                .on_press(Message::ToggleColorPicker(picker, id)),
-            Message::ToggleColorPicker(picker, id),
-            move |v| Message::ChangeColor(picker, v, id)
+                .on_press(Message::ToggleColorPicker(picker)),
+            Message::ToggleColorPicker(picker),
+            move |v| Message::ChangeColor(picker, v)
         ),
-        text(label)
+        text(format!(" {}", label))
     ]
     .align_y(Alignment::Center)
 }

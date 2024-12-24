@@ -640,6 +640,21 @@ impl NuhxBoard {
                             id
                         );
                     }
+                    StyleSetting::MouseSpeedIndicatorOutlineWidth { id, width } => {
+                        let mut style = self.style.default_mouse_speed_indicator_style.clone();
+                        style.outline_width = width;
+                        self.style
+                            .element_styles
+                            .entry(id)
+                            .and_modify(|v| {
+                                let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) = v
+                                else {
+                                    panic!()
+                                };
+                                key.outline_width = width;
+                            })
+                            .or_insert(style::ElementStyle::MouseSpeedIndicatorStyle(style));
+                    }
                 }
             }
             Message::ToggleSaveStyleAsGlobal => {
@@ -691,14 +706,14 @@ impl NuhxBoard {
 
                 clear_canvas = false;
             }
-            Message::ChangeColor(picker, color, id) => {
+            Message::ChangeColor(picker, color) => {
                 // I love macros!
-                macro_rules! element_style_change {
-                    ($name:ident, $block:block) => {
+                macro_rules! key_style_change {
+                    ($name:ident, $block:block, $id:ident) => {
                         if let Some($name) = self
                             .style
                             .element_styles
-                            .get_mut(&id)
+                            .get_mut(&$id)
                             .map(|v| {
                                 let style::ElementStyle::KeyStyle(ref mut key) = v else {
                                     panic!()
@@ -710,11 +725,36 @@ impl NuhxBoard {
                         } else {
                             let mut $name = self.style.default_key_style.clone();
                             $block
-                            self.style.element_styles.insert(id, style::ElementStyle::KeyStyle($name));
+                            self.style.element_styles.insert($id, style::ElementStyle::KeyStyle($name));
                         }
                     }
                 }
-                self.color_pickers.toggle(picker, id);
+                macro_rules! mouse_speed_indicator_style_change {
+                    ($name:ident, $block:block, $id:ident) => {
+                        if let Some($name) = self
+                            .style
+                            .element_styles
+                            .get_mut(&$id)
+                            .map(|v| {
+                                let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) =
+                                    v else {
+                                        panic!()
+                                    };
+                                key
+                            })
+                        {
+                            $block
+                        } else {
+                            let mut $name = self.style.default_mouse_speed_indicator_style.clone();
+                            $block
+                            self.style.element_styles.insert(
+                                $id,
+                                style::ElementStyle::MouseSpeedIndicatorStyle($name),
+                            );
+                        }
+                    }
+                }
+                self.color_pickers.toggle(picker);
                 match picker {
                     ColorPicker::KeyboardBackground => {
                         self.style.background_color = color.into();
@@ -743,27 +783,41 @@ impl NuhxBoard {
                     ColorPicker::DefaultMouseSpeedIndicator2 => {
                         self.style.default_mouse_speed_indicator_style.outer_color = color.into();
                     }
-                    ColorPicker::LooseBackground => {
-                        element_style_change!(style, { style.loose.background = color.into() });
+                    ColorPicker::LooseBackground(id) => {
+                        key_style_change!(style, { style.loose.background = color.into() }, id);
                     }
-                    ColorPicker::LooseText => {
-                        element_style_change!(style, { style.loose.text = color.into() });
+                    ColorPicker::LooseText(id) => {
+                        key_style_change!(style, { style.loose.text = color.into() }, id);
                     }
-                    ColorPicker::LooseOutline => {
-                        element_style_change!(style, { style.loose.outline = color.into() });
+                    ColorPicker::LooseOutline(id) => {
+                        key_style_change!(style, { style.loose.outline = color.into() }, id);
                     }
-                    ColorPicker::PressedBackground => {
-                        element_style_change!(style, { style.pressed.background = color.into() });
+                    ColorPicker::PressedBackground(id) => {
+                        key_style_change!(style, { style.pressed.background = color.into() }, id);
                     }
-                    ColorPicker::PressedText => {
-                        element_style_change!(style, { style.pressed.text = color.into() });
+                    ColorPicker::PressedText(id) => {
+                        key_style_change!(style, { style.pressed.text = color.into() }, id);
                     }
-                    ColorPicker::PressedOutline => {
-                        element_style_change!(style, { style.pressed.outline = color.into() });
+                    ColorPicker::PressedOutline(id) => {
+                        key_style_change!(style, { style.pressed.outline = color.into() }, id);
+                    }
+                    ColorPicker::MouseSpeedIndicator1(id) => {
+                        mouse_speed_indicator_style_change!(
+                            style,
+                            { style.inner_color = color.into() },
+                            id
+                        );
+                    }
+                    ColorPicker::MouseSpeedIndicator2(id) => {
+                        mouse_speed_indicator_style_change!(
+                            style,
+                            { style.outer_color = color.into() },
+                            id
+                        );
                     }
                 }
             }
-            Message::ToggleColorPicker(picker, id) => self.color_pickers.toggle(picker, id),
+            Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
             Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
                 self.hovered_element = hovered_element;

@@ -195,7 +195,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.keyboard_background,
                     app.style.background_color.into(),
                     ColorPicker::KeyboardBackground,
-                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -221,7 +220,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         .inner_color
                         .into(),
                     ColorPicker::DefaultMouseSpeedIndicator1,
-                    0
                 ),
                 picker_button(
                     "Color 2 (high speed)",
@@ -231,7 +229,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                         .outer_color
                         .into(),
                     ColorPicker::DefaultMouseSpeedIndicator2,
-                    0
                 ),
                 row![
                     number_input(
@@ -256,7 +253,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_loose_background,
                     app.style.default_key_style.loose.background.into(),
                     ColorPicker::DefaultLooseBackground,
-                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -280,7 +276,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_loose_text,
                     app.style.default_key_style.loose.text.into(),
                     ColorPicker::DefaultLooseText,
-                    0
                 ),
                 labeled_text_input(
                     "Font Family: ",
@@ -301,7 +296,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_loose_outline,
                     app.style.default_key_style.loose.outline.into(),
                     ColorPicker::DefaultLooseOutline,
-                    0
                 ),
                 checkbox(
                     "Show Outline",
@@ -327,7 +321,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_pressed_background,
                     app.style.default_key_style.pressed.background.into(),
                     ColorPicker::DefaultPressedBackground,
-                    0
                 ),
                 labeled_text_input(
                     "Image: ",
@@ -351,7 +344,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_pressed_text,
                     app.style.default_key_style.pressed.text.into(),
                     ColorPicker::DefaultPressedText,
-                    0
                 ),
                 labeled_text_input(
                     "Font Family: ",
@@ -372,7 +364,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     app.color_pickers.default_pressed_outline,
                     app.style.default_key_style.pressed.outline.into(),
                     ColorPicker::DefaultPressedOutline,
-                    0
                 ),
                 checkbox(
                     "Show Outline",
@@ -1025,8 +1016,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.loose.background.into(),
-                            ColorPicker::LooseBackground,
-                            self.id
+                            ColorPicker::LooseBackground(self.id),
                         ),
                         labeled_text_input(
                             "Image",
@@ -1056,8 +1046,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.loose.text.into(),
-                            ColorPicker::LooseText,
-                            self.id
+                            ColorPicker::LooseText(self.id),
                         ),
                         {
                             let font = &style.loose.font;
@@ -1104,7 +1093,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             )))
                         ),
                         row![
-                            checkbox("Bold", style.loose.font.style & 1 != 0).on_toggle(
+                            checkbox("Bold ", style.loose.font.style & 1 != 0).on_toggle(
                                 move |_| Message::ChangeStyle(StyleSetting::LooseKeyBold(id))
                             ),
                             checkbox("Italic", style.loose.font.style & 0b10 != 0).on_toggle(
@@ -1112,7 +1101,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             ),
                         ],
                         row![
-                            checkbox("Underline", style.loose.font.style & 0b100 != 0).on_toggle(
+                            checkbox("Underline ", style.loose.font.style & 0b100 != 0).on_toggle(
                                 move |_| Message::ChangeStyle(StyleSetting::LooseKeyUnderline(id))
                             ),
                             checkbox("Strikethrough", style.loose.font.style & 0b1000 != 0)
@@ -1131,8 +1120,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.loose.outline.into(),
-                            ColorPicker::LooseOutline,
-                            self.id
+                            ColorPicker::LooseOutline(self.id),
                         ),
                         checkbox("Show Outline", style.loose.show_outline).on_toggle(move |_| {
                             Message::ChangeStyle(StyleSetting::LooseKeyShowOutline(id))
@@ -1161,8 +1149,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.pressed.background.into(),
-                            ColorPicker::PressedBackground,
-                            self.id
+                            ColorPicker::PressedBackground(self.id),
                         ),
                         labeled_text_input(
                             "Image",
@@ -1195,8 +1182,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.pressed.text.into(),
-                            ColorPicker::PressedText,
-                            self.id
+                            ColorPicker::PressedText(self.id),
                         ),
                         {
                             let font = &style.pressed.font;
@@ -1240,7 +1226,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             StyleSetting::PressedKeyFontFamily(self.id)
                         )),
                         row![
-                            checkbox("Bold", style.pressed.font.style & 1 != 0).on_toggle(
+                            checkbox("Bold ", style.pressed.font.style & 1 != 0).on_toggle(
                                 move |_| Message::ChangeStyle(StyleSetting::PressedKeyBold(id))
                             ),
                             checkbox("Italic", style.pressed.font.style & 0b10 != 0).on_toggle(
@@ -1248,11 +1234,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             ),
                         ],
                         row![
-                            checkbox("Underline", style.pressed.font.style & 0b100 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::PressedKeyUnderline(
-                                    id
-                                ))
-                            ),
+                            checkbox("Underline ", style.pressed.font.style & 0b100 != 0)
+                                .on_toggle(move |_| Message::ChangeStyle(
+                                    StyleSetting::PressedKeyUnderline(id)
+                                )),
                             checkbox("Strikethrough", style.pressed.font.style & 0b1000 != 0)
                                 .on_toggle(move |_| Message::ChangeStyle(
                                     StyleSetting::PressedKeyStrikethrough(id)
@@ -1269,8 +1254,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .copied()
                                 .unwrap_or(false),
                             style.pressed.outline.into(),
-                            ColorPicker::PressedOutline,
-                            self.id
+                            ColorPicker::PressedOutline(self.id),
                         ),
                         checkbox("Show Outline", style.pressed.show_outline).on_toggle(move |_| {
                             Message::ChangeStyle(StyleSetting::PressedKeyShowOutline(id))
@@ -1289,7 +1273,39 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
 
                 row![column_1, column_2].into()
             }
-            style::ElementStyle::MouseSpeedIndicatorStyle(_) => text("Temp").into(),
+            style::ElementStyle::MouseSpeedIndicatorStyle(style) => column![
+                picker_button(
+                    "Color 1 (low speed)",
+                    app.color_pickers
+                        .mouse_speed_indicator_1
+                        .get(&self.id)
+                        .copied()
+                        .unwrap_or(false),
+                    style.inner_color.into(),
+                    ColorPicker::MouseSpeedIndicator1(self.id)
+                ),
+                picker_button(
+                    "Color 2 (high speed)",
+                    app.color_pickers
+                        .mouse_speed_indicator_2
+                        .get(&self.id)
+                        .copied()
+                        .unwrap_or(false),
+                    style.outer_color.into(),
+                    ColorPicker::MouseSpeedIndicator2(self.id)
+                ),
+                row![
+                    number_input(style.outline_width, 0.., move |v| {
+                        Message::ChangeStyle(StyleSetting::MouseSpeedIndicatorOutlineWidth {
+                            id,
+                            width: v,
+                        })
+                    }),
+                    text(" Outline Width")
+                ]
+                .align_y(Alignment::Center)
+            ]
+            .into(),
         }
     }
 }

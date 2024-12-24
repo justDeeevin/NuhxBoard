@@ -77,10 +77,12 @@ pub struct ColorPickers {
     pub pressed_background: HashMap<u32, bool>,
     pub pressed_text: HashMap<u32, bool>,
     pub pressed_outline: HashMap<u32, bool>,
+    pub mouse_speed_indicator_1: HashMap<u32, bool>,
+    pub mouse_speed_indicator_2: HashMap<u32, bool>,
 }
 
 impl ColorPickers {
-    pub fn get_mut(&mut self, picker: ColorPicker, id: u32) -> &mut bool {
+    pub fn get_mut(&mut self, picker: ColorPicker) -> &mut bool {
         match picker {
             ColorPicker::KeyboardBackground => &mut self.keyboard_background,
             ColorPicker::DefaultMouseSpeedIndicator1 => &mut self.default_mouse_speed_indicator_1,
@@ -91,17 +93,25 @@ impl ColorPickers {
             ColorPicker::DefaultPressedBackground => &mut self.default_pressed_background,
             ColorPicker::DefaultPressedText => &mut self.default_pressed_text,
             ColorPicker::DefaultPressedOutline => &mut self.default_pressed_outline,
-            ColorPicker::LooseBackground => self.loose_background.entry(id).or_insert(false),
-            ColorPicker::LooseText => self.loose_text.entry(id).or_insert(false),
-            ColorPicker::LooseOutline => self.loose_outline.entry(id).or_insert(false),
-            ColorPicker::PressedBackground => self.pressed_background.entry(id).or_insert(false),
-            ColorPicker::PressedText => self.pressed_text.entry(id).or_insert(false),
-            ColorPicker::PressedOutline => self.pressed_outline.entry(id).or_insert(false),
+            ColorPicker::LooseBackground(id) => self.loose_background.entry(id).or_insert(false),
+            ColorPicker::LooseText(id) => self.loose_text.entry(id).or_insert(false),
+            ColorPicker::LooseOutline(id) => self.loose_outline.entry(id).or_insert(false),
+            ColorPicker::PressedBackground(id) => {
+                self.pressed_background.entry(id).or_insert(false)
+            }
+            ColorPicker::PressedText(id) => self.pressed_text.entry(id).or_insert(false),
+            ColorPicker::PressedOutline(id) => self.pressed_outline.entry(id).or_insert(false),
+            ColorPicker::MouseSpeedIndicator1(id) => {
+                self.mouse_speed_indicator_1.entry(id).or_insert(false)
+            }
+            ColorPicker::MouseSpeedIndicator2(id) => {
+                self.mouse_speed_indicator_2.entry(id).or_insert(false)
+            }
         }
     }
 
-    pub fn toggle(&mut self, picker: ColorPicker, id: u32) {
-        let picker = self.get_mut(picker, id);
+    pub fn toggle(&mut self, picker: ColorPicker) {
+        let picker = self.get_mut(picker);
         *picker = !*picker;
     }
 }
@@ -117,12 +127,14 @@ pub enum ColorPicker {
     DefaultPressedBackground,
     DefaultPressedText,
     DefaultPressedOutline,
-    LooseBackground,
-    LooseText,
-    LooseOutline,
-    PressedBackground,
-    PressedText,
-    PressedOutline,
+    LooseBackground(u32),
+    LooseText(u32),
+    LooseOutline(u32),
+    PressedBackground(u32),
+    PressedText(u32),
+    PressedOutline(u32),
+    MouseSpeedIndicator1(u32),
+    MouseSpeedIndicator2(u32),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]

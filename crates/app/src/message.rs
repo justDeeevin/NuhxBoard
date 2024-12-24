@@ -32,8 +32,8 @@ pub enum Message {
     Undo,
     Redo,
     ToggleSaveStyleAsGlobal,
-    ChangeColor(ColorPicker, Color, u32),
-    ToggleColorPicker(ColorPicker, u32),
+    ChangeColor(ColorPicker, Color),
+    ToggleColorPicker(ColorPicker),
     UpdateCanvas,
     ChangeTextInput(TextInputType, String),
     ChangeNumberInput(NumberInputType),
@@ -94,9 +94,9 @@ pub enum StyleSetting {
     PressedKeyItalic(u32),
     PressedKeyUnderline(u32),
     PressedKeyStrikethrough(u32),
+    MouseSpeedIndicatorOutlineWidth { id: u32, width: u32 },
 }
 
-// TODO: Are window resized undoable in NohBoard?
 #[derive(Debug, Clone)]
 pub enum Change {
     MoveElement {
