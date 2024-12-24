@@ -313,6 +313,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     }),
                     text(" Outline Width")
                 ]
+                .align_y(Alignment::Center)
             ])
         ]
         .padding(5);
@@ -385,6 +386,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     ),
                     text(" Outline Width")
                 ]
+                .align_y(Alignment::Center)
             ])
         ]
         .padding(5);
