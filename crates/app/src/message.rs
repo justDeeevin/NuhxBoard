@@ -78,6 +78,22 @@ pub enum StyleSetting {
     DefaultPressedKeyOutlineWidth(u32),
     DefaultPressedKeyBackgroundImage,
     KeyboardBackgroundImage,
+    LooseKeyFontFamily(u32),
+    LooseKeyShowOutline(u32),
+    LooseKeyOutlineWidth { id: u32, width: u32 },
+    LooseKeyBackgroundImage(u32),
+    LooseKeyBold(u32),
+    LooseKeyItalic(u32),
+    LooseKeyUnderline(u32),
+    LooseKeyStrikethrough(u32),
+    PressedKeyFontFamily(u32),
+    PressedKeyShowOutline(u32),
+    PressedKeyOutlineWidth { id: u32, width: u32 },
+    PressedKeyBackgroundImage(u32),
+    PressedKeyBold(u32),
+    PressedKeyItalic(u32),
+    PressedKeyUnderline(u32),
+    PressedKeyStrikethrough(u32),
 }
 
 // TODO: Are window resized undoable in NohBoard?

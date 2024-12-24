@@ -38,6 +38,10 @@ pub struct TextInput {
     pub default_loose_key_font_family: String,
     pub default_pressed_key_background_image: String,
     pub default_pressed_key_font_family: String,
+    pub loose_background_image: HashMap<u32, String>,
+    pub loose_font_family: HashMap<u32, String>,
+    pub pressed_background_image: HashMap<u32, String>,
+    pub pressed_font_family: HashMap<u32, String>,
 }
 
 #[derive(Clone, Debug)]
@@ -50,6 +54,10 @@ pub enum TextInputType {
     DefaultLooseKeyFontFamily,
     DefaultPressedKeyBackgroundImage,
     DefaultPressedKeyFontFamily,
+    LooseBackgroundImage(u32),
+    LooseFontFamily(u32),
+    PressedBackgroundImage(u32),
+    PressedFontFamily(u32),
 }
 
 #[derive(Default)]

@@ -1,10 +1,7 @@
 use crate::{
     message::*,
     nuhxboard_types::*,
-    ui::{
-        app::*,
-        popups::{self, *},
-    },
+    ui::{app::*, popups::*},
 };
 use async_std::task::sleep;
 use display_info::DisplayInfo;
@@ -13,7 +10,7 @@ use iced::{
     advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Renderer, Subscription, Task,
     Theme,
 };
-use iced_multi_window::{Window, WindowManager};
+use iced_multi_window::WindowManager;
 use image::ImageReader;
 use logic::{code_convert::*, listener};
 use std::{
@@ -361,80 +358,290 @@ impl NuhxBoard {
                 match input {
                     TextInputType::SaveStyleAsName => self.text_input.save_style_as_name = value,
                     TextInputType::SaveKeyboardAsName => {
-                        self.text_input.save_keyboard_as_name = value
+                        self.text_input.save_keyboard_as_name = value;
                     }
                     TextInputType::SaveKeyboardAsCategory => {
-                        self.text_input.save_keyboard_as_category = value
+                        self.text_input.save_keyboard_as_category = value;
                     }
                     TextInputType::KeyboardBackgroundImage => {
-                        self.text_input.keyboard_background_image = value
+                        self.text_input.keyboard_background_image = value;
                     }
                     TextInputType::DefaultLooseKeyBackgroundImage => {
-                        self.text_input.default_loose_key_background_image = value
+                        self.text_input.default_loose_key_background_image = value;
                     }
                     TextInputType::DefaultLooseKeyFontFamily => {
-                        self.text_input.default_loose_key_font_family = value
+                        self.text_input.default_loose_key_font_family = value;
                     }
                     TextInputType::DefaultPressedKeyBackgroundImage => {
-                        self.text_input.default_pressed_key_background_image = value
+                        self.text_input.default_pressed_key_background_image = value;
                     }
                     TextInputType::DefaultPressedKeyFontFamily => {
-                        self.text_input.default_pressed_key_font_family = value
+                        self.text_input.default_pressed_key_font_family = value;
+                    }
+                    TextInputType::LooseBackgroundImage(id) => {
+                        self.text_input.loose_background_image.insert(id, value);
+                    }
+                    TextInputType::LooseFontFamily(id) => {
+                        self.text_input.loose_font_family.insert(id, value);
+                    }
+                    TextInputType::PressedBackgroundImage(id) => {
+                        self.text_input.pressed_background_image.insert(id, value);
+                    }
+                    TextInputType::PressedFontFamily(id) => {
+                        self.text_input.pressed_font_family.insert(id, value);
                     }
                 }
                 clear_canvas = false;
             }
-            Message::ChangeStyle(style) => match style {
-                StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
-                    self.style.default_mouse_speed_indicator_style.outline_width = width;
+            Message::ChangeStyle(style) => {
+                macro_rules! key_style_change {
+                    ($name:ident, $block:block, $id:ident) => {
+                        let mut $name = self.style.default_key_style.clone();
+                        $block
+                        self.style
+                            .element_styles
+                            .entry($id)
+                            .and_modify(|$name| {
+                                let style::ElementStyle::KeyStyle(ref mut $name) = $name else {
+                                    panic!()
+                                };
+                                $block
+                            })
+                            .or_insert(style::ElementStyle::KeyStyle($name));
+                    }
                 }
-                StyleSetting::DefaultLooseKeyFontFamily => {
-                    self.style.default_key_style.loose.font.font_family =
-                        self.text_input.default_loose_key_font_family.clone();
+                match style {
+                    StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
+                        self.style.default_mouse_speed_indicator_style.outline_width = width;
+                    }
+                    StyleSetting::DefaultLooseKeyFontFamily => {
+                        let new_font = self.text_input.default_loose_key_font_family.clone();
+                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        self.style.default_key_style.loose.font.font_family = new_font;
+                    }
+                    StyleSetting::DefaultLooseKeyShowOutline => {
+                        self.style.default_key_style.loose.show_outline =
+                            !self.style.default_key_style.loose.show_outline;
+                    }
+                    StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
+                        self.style.default_key_style.loose.outline_width = width;
+                    }
+                    StyleSetting::DefaultLooseKeyBackgroundImage => {
+                        let image = self.text_input.default_loose_key_background_image.clone();
+                        self.style
+                            .default_key_style
+                            .loose
+                            .background_image_file_name =
+                            if image.is_empty() { None } else { Some(image) };
+                    }
+                    StyleSetting::DefaultPressedKeyFontFamily => {
+                        let new_font = self.text_input.default_pressed_key_font_family.clone();
+                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        self.style.default_key_style.pressed.font.font_family = new_font;
+                    }
+                    StyleSetting::DefaultPressedKeyShowOutline => {
+                        self.style.default_key_style.pressed.show_outline =
+                            !self.style.default_key_style.pressed.show_outline;
+                    }
+                    StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
+                        self.style.default_key_style.pressed.outline_width = width;
+                    }
+                    StyleSetting::DefaultPressedKeyBackgroundImage => {
+                        let image = self.text_input.default_pressed_key_background_image.clone();
+                        self.style
+                            .default_key_style
+                            .pressed
+                            .background_image_file_name =
+                            if image.is_empty() { None } else { Some(image) };
+                    }
+                    StyleSetting::KeyboardBackgroundImage => {
+                        let image = self.text_input.keyboard_background_image.clone();
+                        self.change_background_image(Some(if image.is_empty() {
+                            None
+                        } else {
+                            Some(image)
+                        }));
+                    }
+                    StyleSetting::LooseKeyFontFamily(id) => {
+                        let new_font = self
+                            .text_input
+                            .loose_font_family
+                            .get(&id)
+                            .cloned()
+                            .unwrap_or_default();
+                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.font.font_family = new_font.clone();
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyShowOutline(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.show_outline = !style.loose.show_outline;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyOutlineWidth { id, width } => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.outline_width = width;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyBackgroundImage(id) => {
+                        let image = self
+                            .text_input
+                            .loose_background_image
+                            .get(&id)
+                            .cloned()
+                            .unwrap_or_default();
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.background_image_file_name = if image.is_empty() {
+                                    None
+                                } else {
+                                    Some(image.clone())
+                                };
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyFontFamily(id) => {
+                        let new_font = self
+                            .text_input
+                            .pressed_font_family
+                            .get(&id)
+                            .cloned()
+                            .unwrap_or_default();
+                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.font.font_family = new_font.clone();
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyShowOutline(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.show_outline = !style.pressed.show_outline;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyOutlineWidth { id, width } => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.outline_width = width;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyBackgroundImage(id) => {
+                        let image = self
+                            .text_input
+                            .pressed_background_image
+                            .get(&id)
+                            .cloned()
+                            .unwrap_or_default();
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.background_image_file_name = if image.is_empty() {
+                                    None
+                                } else {
+                                    Some(image.clone())
+                                };
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyBold(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.font.style ^= 1 << 0;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyItalic(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.font.style ^= 1 << 1;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyUnderline(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.font.style ^= 1 << 2;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::LooseKeyStrikethrough(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.loose.font.style ^= 1 << 3;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyBold(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.font.style ^= 1 << 0;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyItalic(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.font.style ^= 1 << 1;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyUnderline(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.font.style ^= 1 << 2;
+                            },
+                            id
+                        );
+                    }
+                    StyleSetting::PressedKeyStrikethrough(id) => {
+                        key_style_change!(
+                            style,
+                            {
+                                style.pressed.font.style ^= 1 << 3;
+                            },
+                            id
+                        );
+                    }
                 }
-                StyleSetting::DefaultLooseKeyShowOutline => {
-                    self.style.default_key_style.loose.show_outline =
-                        !self.style.default_key_style.loose.show_outline;
-                }
-                StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
-                    self.style.default_key_style.loose.outline_width = width;
-                }
-                StyleSetting::DefaultLooseKeyBackgroundImage => {
-                    let image = self.text_input.default_loose_key_background_image.clone();
-                    self.style
-                        .default_key_style
-                        .loose
-                        .background_image_file_name =
-                        if image.is_empty() { None } else { Some(image) };
-                }
-                StyleSetting::DefaultPressedKeyFontFamily => {
-                    self.style.default_key_style.pressed.font.font_family =
-                        self.text_input.default_pressed_key_font_family.clone();
-                }
-                StyleSetting::DefaultPressedKeyShowOutline => {
-                    self.style.default_key_style.pressed.show_outline =
-                        !self.style.default_key_style.pressed.show_outline;
-                }
-                StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
-                    self.style.default_key_style.pressed.outline_width = width;
-                }
-                StyleSetting::DefaultPressedKeyBackgroundImage => {
-                    let image = self.text_input.default_pressed_key_background_image.clone();
-                    self.style
-                        .default_key_style
-                        .pressed
-                        .background_image_file_name =
-                        if image.is_empty() { None } else { Some(image) };
-                }
-                StyleSetting::KeyboardBackgroundImage => {
-                    let image = self.text_input.keyboard_background_image.clone();
-                    self.change_background_image(Some(if image.is_empty() {
-                        None
-                    } else {
-                        Some(image)
-                    }));
-                }
-            },
+            }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
                 clear_canvas = false;

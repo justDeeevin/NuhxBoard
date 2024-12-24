@@ -10,7 +10,7 @@ use iced::{
 use iced_aw::{number_input, ContextMenu, SelectionList};
 use iced_multi_window::Window;
 use std::sync::Arc;
-use types::{config::get_id, settings::*};
+use types::settings::*;
 
 static IMAGE: &[u8] = include_bytes!("../../../../NuhxBoard.png");
 
@@ -190,7 +190,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                         .into(),
                     context_menu_button("Element Style")
                         .on_press_maybe(if let Some(index) = app.hovered_element {
-                            let id = get_id(&app.layout.elements[index]);
+                            let id = app.layout.elements[index].id();
                             let window = ElementStyle { id };
                             (!app.windows.any_of(&window))
                                 .then_some(Message::Open(Box::new(window)))
