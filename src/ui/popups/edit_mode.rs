@@ -14,14 +14,6 @@ use nuhxboard_types::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyboardProperties;
 impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
-    fn class(&self) -> &'static str {
-        "keyboard_properties"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -61,14 +53,6 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveDefinitionAs;
 impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
-    fn class(&self) -> &'static str {
-        "save_definition_as"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn theme(&self, _app: &NuhxBoard) -> Theme {
         Theme::Light
     }
@@ -115,14 +99,6 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SaveStyleAs;
 impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
-    fn class(&self) -> &'static str {
-        "save_style_as"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -171,14 +147,6 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
 pub struct KeyboardStyle;
 
 impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
-    fn class(&self) -> &'static str {
-        "keyboard_style"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {
@@ -416,14 +384,6 @@ pub struct ElementProperties {
 }
 
 impl Window<NuhxBoard, Theme, Message> for ElementProperties {
-    fn class(&self) -> &'static str {
-        "element_properties"
-    }
-
-    fn id(&self) -> String {
-        format!("{}_{}", self.class(), self.index)
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
@@ -840,14 +800,6 @@ pub struct RectangleDialog {
 }
 
 impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
-    fn class(&self) -> &'static str {
-        "rectangle_dialog"
-    }
-
-    fn id(&self) -> String {
-        format!("{}_{}", self.class(), self.index)
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
@@ -937,14 +889,6 @@ pub struct ElementStyle {
 }
 
 impl Window<NuhxBoard, Theme, Message> for ElementStyle {
-    fn class(&self) -> &'static str {
-        "element_style"
-    }
-
-    fn id(&self) -> String {
-        format!("{}_{}", self.class(), self.id)
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,

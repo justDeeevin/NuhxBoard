@@ -21,14 +21,6 @@ pub struct ErrorPopup {
     pub error: Error,
 }
 impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
-    fn class(&self) -> &'static str {
-        "error"
-    }
-
-    fn id(&self) -> String {
-        format!("{}_{:?}", self.class(), self.error)
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             size: iced::Size {

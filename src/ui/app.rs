@@ -17,14 +17,6 @@ static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadKeyboard;
 impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
-    fn class(&self) -> &'static str {
-        "load_keyboard"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
@@ -86,14 +78,6 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Main;
 impl Window<NuhxBoard, Theme, Message> for Main {
-    fn class(&self) -> &'static str {
-        "main"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         let icon_image = image::load_from_memory(IMAGE).unwrap();
         let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256).unwrap();
@@ -256,14 +240,6 @@ impl Window<NuhxBoard, Theme, Message> for Main {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SettingsWindow;
 impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
-    fn class(&self) -> &'static str {
-        "settings"
-    }
-
-    fn id(&self) -> String {
-        self.class().into()
-    }
-
     fn settings(&self) -> window::Settings {
         window::Settings {
             resizable: false,
