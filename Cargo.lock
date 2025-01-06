@@ -2218,8 +2218,9 @@ dependencies = [
 
 [[package]]
 name = "iced-multi-window"
-version = "1.0.0"
-source = "git+https://github.com/justDeeevin/iced-multi-window#4cf5ff7829a589aadd940ab48c8ff8b91aecc1df"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "290bf4891b9ada38f6da0f168df958b1d4397cac985f096f4dfa68dce29c02a7"
 dependencies = [
  "dyn-clone",
  "iced",
@@ -3254,7 +3255,7 @@ checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
 
 [[package]]
 name = "nuhxboard"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "async-std",
  "color-eyre",
@@ -3281,7 +3282,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard-logic"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "futures",
  "iced",
@@ -3290,7 +3291,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard-types"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "display-info",
  "geo",
