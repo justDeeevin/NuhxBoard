@@ -33,7 +33,7 @@ license = false
 eula = false
 
 [dependencies]
-iced-multi-window = { version = "1.1.0", git = "https://github.com/justDeeevin/iced-multi-window" }
+iced-multi-window = "1.1.0"
 async-std = "1.13.0"
 color-eyre = { version = "0.6.3", default-features = false }
 colorgrad = "0.7.0"
