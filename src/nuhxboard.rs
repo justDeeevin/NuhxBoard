@@ -23,7 +23,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
     sync::{LazyLock, RwLock},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 // See canvas.rs:478
@@ -1297,20 +1297,13 @@ impl NuhxBoard {
                     .unwrap()
                     .elapsed()
                     .as_millis()
-                    < self.settings.min_press_time
+                    < self.settings.min_press_time.into()
                 {
                     return Task::perform(
-                        sleep(std::time::Duration::from_millis(
-                            (self.settings.min_press_time
-                                - self
-                                    .pressed_keys
-                                    .get(&key_num)
-                                    .unwrap()
-                                    .elapsed()
-                                    .as_millis())
-                            .try_into()
-                            .unwrap(),
-                        )),
+                        sleep(
+                            Duration::from_millis(self.settings.min_press_time)
+                                - self.pressed_keys.get(&key_num).unwrap().elapsed(),
+                        ),
                         move |_| Message::key_release(key),
                     );
                 }
@@ -1343,20 +1336,17 @@ impl NuhxBoard {
                     .unwrap()
                     .elapsed()
                     .as_millis()
-                    < self.settings.min_press_time
+                    < self.settings.min_press_time.into()
                 {
                     return Task::perform(
-                        sleep(std::time::Duration::from_millis(
-                            (self.settings.min_press_time
+                        sleep(
+                            Duration::from_millis(self.settings.min_press_time)
                                 - self
                                     .pressed_mouse_buttons
                                     .get(&button_num)
                                     .unwrap()
-                                    .elapsed()
-                                    .as_millis())
-                            .try_into()
-                            .unwrap(),
-                        )),
+                                    .elapsed(),
+                        ),
                         move |_| Message::button_release(button),
                     );
                 }

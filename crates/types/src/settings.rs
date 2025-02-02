@@ -12,7 +12,7 @@ pub struct Settings {
     pub style: usize,
     pub mouse_from_center: bool,
     pub mouse_sensitivity: f32,
-    pub min_press_time: u128,
+    pub min_press_time: u64,
     pub scroll_hold_time: u64,
     pub window_title: String,
     pub display_choice: DisplayChoice,

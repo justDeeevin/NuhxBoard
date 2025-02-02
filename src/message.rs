@@ -113,7 +113,7 @@ pub enum Setting {
     ScrollHoldTime(u64),
     CenterMouse,
     DisplayChoice(DisplayChoice),
-    MinPressTime(u128),
+    MinPressTime(u64),
     WindowTitle(String),
     Capitalization(Capitalization),
     FollowForCapsSensitive,
