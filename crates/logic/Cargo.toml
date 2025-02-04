@@ -13,6 +13,8 @@ keywords.workspace = true
 futures.workspace = true
 iced.workspace = true
 rdev.workspace = true
+async-stream = "0.3.6"
+async-std.workspace = true
 
 [features]
 grab = ["rdev/unstable_grab"]

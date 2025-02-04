@@ -34,7 +34,7 @@ eula = false
 
 [dependencies]
 iced-multi-window = "1.1.0"
-async-std = "1.13.0"
+async-std.workspace = true
 color-eyre = { version = "0.6.3", default-features = false }
 colorgrad = "0.7.0"
 display-info.workspace = true
@@ -89,6 +89,7 @@ futures = "0.3.31"
 rdev = "0.5.3"
 display-info = "0.5.2"
 schemars = "0.8.21"
+async-std = "1.13.0"
 # rust-version = "1.72.0"
 
 # The profile that 'cargo dist' will build with

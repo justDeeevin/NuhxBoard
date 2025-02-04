@@ -2,11 +2,11 @@ use crate::{nuhxboard::*, types::*};
 use geo::Coord;
 use iced::{window, Color, Theme};
 use iced_multi_window::Window;
-use nuhxboard_logic::listener;
 use nuhxboard_types::{
     config::SerializablePoint,
     settings::{Capitalization, DisplayChoice},
 };
+use rdev::Event;
 
 #[derive(Clone, Debug)]
 pub enum Message {
@@ -14,7 +14,7 @@ pub enum Message {
     CloseAllOf(Box<dyn Window<NuhxBoard, Theme, Message>>),
     Exit,
     Closed(window::Id),
-    Listener(listener::Event),
+    Listener(Event),
     ReleaseScroll(u32),
     LoadStyle(usize),
     ChangeKeyboardCategory(String),
@@ -44,6 +44,7 @@ pub enum Message {
     CenterTextPosition(usize),
     MakeRectangle(usize),
     StartDetecting(usize),
+    None,
 }
 
 #[derive(Debug, Clone)]
@@ -122,22 +123,18 @@ pub enum Setting {
 
 impl Message {
     pub fn key_release(key: rdev::Key) -> Self {
-        Message::Listener(listener::Event::KeyReceived(rdev::Event {
+        Message::Listener(rdev::Event {
             event_type: rdev::EventType::KeyRelease(key),
             time: std::time::SystemTime::now(),
             name: None,
-        }))
+        })
     }
 
     pub fn button_release(button: rdev::Button) -> Self {
-        Message::Listener(listener::Event::KeyReceived(rdev::Event {
+        Message::Listener(rdev::Event {
             event_type: rdev::EventType::ButtonRelease(button),
             time: std::time::SystemTime::now(),
             name: None,
-        }))
-    }
-
-    pub fn none() -> Self {
-        Message::Listener(listener::Event::None)
+        })
     }
 }

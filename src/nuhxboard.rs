@@ -7,12 +7,13 @@ use async_std::task::sleep;
 use display_info::DisplayInfo;
 use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
-    advanced::graphics::core::SmolStr, widget::canvas::Cache, window, Renderer, Subscription, Task,
-    Theme,
+    advanced::{graphics::core::SmolStr, subscription},
+    widget::canvas::Cache,
+    window, Renderer, Subscription, Task, Theme,
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
-use nuhxboard_logic::{code_convert::*, listener};
+use nuhxboard_logic::{code_convert::*, listener::RdevSubscriber};
 use nuhxboard_types::{
     config::*,
     settings::*,
@@ -150,7 +151,7 @@ impl NuhxBoard {
                 Task::perform(async {}, move |_| {
                     Message::ChangeKeyboardCategory(category.clone())
                 }),
-                window_open_task.map(|_| Message::none()),
+                window_open_task.map(|_| Message::None),
             ]),
         )
     }
@@ -158,11 +159,11 @@ impl NuhxBoard {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let mut clear_canvas = true;
         match message {
-            Message::Listener(listener::Event::KeyReceived(event)) => {
+            Message::Listener(event) => {
                 self.canvas.clear();
                 return self.input_event(event);
             }
-            Message::Listener(_) => clear_canvas = false,
+            Message::None => clear_canvas = false,
             Message::ReleaseScroll(button) => {
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
                     1 => {
@@ -676,10 +677,10 @@ impl NuhxBoard {
                     self.save_style_as_global =
                         self.style_options[self.style_choice.unwrap()].is_global();
                 }
-                return self.windows.open(window).1.map(|_| Message::none());
+                return self.windows.open(window).1.map(|_| Message::None);
             }
             Message::CloseAllOf(window) => {
-                return self.windows.close_all_of(window).map(|_| Message::none());
+                return self.windows.close_all_of(window).map(|_| Message::None);
             }
             Message::Exit => return window::close(self.main_window),
             Message::Closed(window) => {
@@ -696,7 +697,7 @@ impl NuhxBoard {
                     if self.windows.empty() {
                         return iced::exit();
                     } else {
-                        return self.windows.close_all().map(|_| Message::none());
+                        return self.windows.close_all().map(|_| Message::None);
                     }
                 }
 
@@ -985,7 +986,7 @@ impl NuhxBoard {
                 return self
                     .windows
                     .close_all_of(Box::new(RectangleDialog { index: element_i }))
-                    .map(|_| Message::none());
+                    .map(|_| Message::None);
             }
             Message::StartDetecting(element) => self.detecting.push(element),
         }
@@ -1009,7 +1010,7 @@ impl NuhxBoard {
 
     pub fn subscription(&self) -> Subscription<Message> {
         Subscription::batch([
-            Subscription::run(listener::bind).map(Message::Listener),
+            subscription::from_recipe(RdevSubscriber).map(Message::Listener),
             iced::keyboard::on_key_press(|key, modifiers| {
                 if key == iced::keyboard::Key::Character(SmolStr::new("z"))
                     && ((std::env::consts::OS == "macos" && modifiers.command())
@@ -1030,7 +1031,7 @@ impl NuhxBoard {
 
     fn error(&mut self, error: Error) -> iced::Task<Message> {
         let (_, command) = self.windows.open(Box::new(ErrorPopup { error }));
-        command.map(|_| Message::none())
+        command.map(|_| Message::None)
     }
 
     fn load_layout(&mut self, keyboard: usize) -> Task<Message> {
