@@ -310,7 +310,7 @@ impl NuhxBoard {
             BoardElement::MouseKey(def) => {
                 self.draw_key(
                     state,
-                    def.clone().into(),
+                    def.clone(),
                     frame,
                     def.text.clone(),
                     self.pressed_mouse_buttons.keys().cloned().collect(),
@@ -320,7 +320,7 @@ impl NuhxBoard {
             BoardElement::MouseScroll(def) => {
                 self.draw_key(
                     state,
-                    def.clone().into(),
+                    def.clone(),
                     frame,
                     def.text.clone(),
                     self.pressed_scroll_buttons.keys().cloned().collect(),

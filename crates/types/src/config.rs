@@ -20,18 +20,19 @@ pub struct Layout {
 /// Union for different element types
 pub enum BoardElement {
     KeyboardKey(KeyboardKeyDefinition),
-    MouseKey(MouseKeyDefinition),
-    MouseScroll(MouseKeyDefinition),
+    MouseKey(CommonDefinition),
+    MouseScroll(CommonDefinition),
     MouseSpeedIndicator(MouseSpeedIndicatorDefinition),
 }
 
 impl BoardElement {
     pub fn id(&self) -> u32 {
-        match self {
-            BoardElement::KeyboardKey(key) => key.id,
-            BoardElement::MouseKey(key) => key.id,
-            BoardElement::MouseScroll(key) => key.id,
-            BoardElement::MouseSpeedIndicator(key) => key.id,
+        if let Ok(def) = CommonDefinitionRef::try_from(self) {
+            *def.id
+        } else if let Self::MouseSpeedIndicator(def) = self {
+            def.id
+        } else {
+            unreachable!()
         }
     }
 
@@ -41,24 +42,12 @@ impl BoardElement {
                 key.location += delta;
             }
             _ => {
-                let boundaries = match self {
-                    BoardElement::KeyboardKey(key) => &mut key.boundaries,
-                    BoardElement::MouseKey(key) => &mut key.boundaries,
-                    BoardElement::MouseScroll(key) => &mut key.boundaries,
-                    _ => unreachable!(),
-                };
-                for boundary in boundaries {
+                let common = CommonDefinitionMut::try_from(self).unwrap();
+                for boundary in common.boundaries {
                     *boundary += delta;
                 }
                 if move_text {
-                    let text_position = match self {
-                        BoardElement::KeyboardKey(key) => &mut key.text_position,
-                        BoardElement::MouseKey(key) => &mut key.text_position,
-                        BoardElement::MouseScroll(key) => &mut key.text_position,
-                        _ => unreachable!(),
-                    };
-
-                    *text_position += delta;
+                    *common.text_position += delta;
                 }
             }
         }
@@ -79,36 +68,16 @@ pub struct KeyboardKeyDefinition {
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
-pub struct MouseKeyDefinition {
-    pub id: u32,
-    pub boundaries: Vec<SerializablePoint>,
-    pub text_position: SerializablePoint,
-    pub key_codes: Vec<u32>,
-    pub text: String,
-}
-
 pub struct CommonDefinition {
     pub id: u32,
-    pub text: String,
-    pub text_position: SerializablePoint,
     pub boundaries: Vec<SerializablePoint>,
+    pub text_position: SerializablePoint,
     pub key_codes: Vec<u32>,
+    pub text: String,
 }
 
 impl From<KeyboardKeyDefinition> for CommonDefinition {
     fn from(val: KeyboardKeyDefinition) -> Self {
-        CommonDefinition {
-            id: val.id,
-            text: val.text,
-            text_position: val.text_position,
-            boundaries: val.boundaries,
-            key_codes: val.key_codes,
-        }
-    }
-}
-
-impl From<MouseKeyDefinition> for CommonDefinition {
-    fn from(val: MouseKeyDefinition) -> Self {
         CommonDefinition {
             id: val.id,
             text: val.text,
@@ -125,8 +94,7 @@ impl TryFrom<BoardElement> for CommonDefinition {
     fn try_from(value: BoardElement) -> Result<Self, ()> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
-            BoardElement::MouseKey(key) => Ok(key.into()),
-            BoardElement::MouseScroll(key) => Ok(key.into()),
+            BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key),
             _ => Err(()),
         }
     }
@@ -152,8 +120,8 @@ impl<'a> From<&'a KeyboardKeyDefinition> for CommonDefinitionRef<'a> {
     }
 }
 
-impl<'a> From<&'a MouseKeyDefinition> for CommonDefinitionRef<'a> {
-    fn from(val: &'a MouseKeyDefinition) -> Self {
+impl<'a> From<&'a CommonDefinition> for CommonDefinitionRef<'a> {
+    fn from(val: &'a CommonDefinition) -> Self {
         CommonDefinitionRef {
             id: &val.id,
             text: &val.text,
@@ -170,8 +138,7 @@ impl<'a> TryFrom<&'a BoardElement> for CommonDefinitionRef<'a> {
     fn try_from(value: &'a BoardElement) -> Result<Self, ()> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
-            BoardElement::MouseKey(key) => Ok(key.into()),
-            BoardElement::MouseScroll(key) => Ok(key.into()),
+            BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key.into()),
             _ => Err(()),
         }
     }
@@ -197,8 +164,8 @@ impl<'a> From<&'a mut KeyboardKeyDefinition> for CommonDefinitionMut<'a> {
     }
 }
 
-impl<'a> From<&'a mut MouseKeyDefinition> for CommonDefinitionMut<'a> {
-    fn from(val: &'a mut MouseKeyDefinition) -> Self {
+impl<'a> From<&'a mut CommonDefinition> for CommonDefinitionMut<'a> {
+    fn from(val: &'a mut CommonDefinition) -> Self {
         CommonDefinitionMut {
             id: &mut val.id,
             text: &mut val.text,
@@ -215,8 +182,7 @@ impl<'a> TryFrom<&'a mut BoardElement> for CommonDefinitionMut<'a> {
     fn try_from(value: &'a mut BoardElement) -> Result<Self, ()> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
-            BoardElement::MouseKey(key) => Ok(key.into()),
-            BoardElement::MouseScroll(key) => Ok(key.into()),
+            BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key.into()),
             _ => Err(()),
         }
     }

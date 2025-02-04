@@ -65,10 +65,10 @@ pub struct DisplayChoice {
 
 impl Display for DisplayChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)?;
         if self.primary {
-            write!(f, "{} (primary)", self.id)
-        } else {
-            write!(f, "{}", self.id)
+            write!(f, "(primary)")?;
         }
+        Ok(())
     }
 }
