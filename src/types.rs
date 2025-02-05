@@ -179,13 +179,19 @@ impl std::fmt::Display for StyleChoice {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
+    #[error("Could not open layout definition: {0}")]
     ConfigOpen(String),
+    #[error("Could not parse layout definition: {0}")]
     ConfigParse(String),
+    #[error("Could not open style definition: {0}")]
     StyleOpen(String),
+    #[error("Could not parse style definition: {0}")]
     StyleParse(String),
+    #[error("Unknown key: {0:?}")]
     UnknownKey(rdev::Key),
+    #[error("Unknown button: {0:?}")]
     UnknownButton(rdev::Button),
 }
 
