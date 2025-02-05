@@ -13,12 +13,13 @@ use iced::{
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
-use nuhxboard_logic::{code_convert::*, listener::RdevSubscriber};
+use nuhxboard_logic::{listener::RdevSubscriber, mouse_button_code_convert};
 use nuhxboard_types::{
     config::*,
     settings::*,
     style::{self, *},
 };
+use rdev::win_keycode_from_key;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
@@ -1278,14 +1279,14 @@ impl NuhxBoard {
                         self.caps = !self.caps;
                     }
                 }
-                let Ok(key) = keycode_convert(key) else {
+                let Some(key) = win_keycode_from_key(key) else {
                     return self.error(Error::UnknownKey(key));
                 };
                 self.pressed_keys.insert(key, Instant::now());
                 captured_key = Some(key);
             }
             rdev::EventType::KeyRelease(key) => {
-                let Ok(key_num) = keycode_convert(key) else {
+                let Some(key_num) = win_keycode_from_key(key) else {
                     return self.error(Error::UnknownKey(key));
                 };
                 if !self.pressed_keys.contains_key(&key_num) {

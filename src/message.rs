@@ -126,7 +126,10 @@ impl Message {
         Message::Listener(rdev::Event {
             event_type: rdev::EventType::KeyRelease(key),
             time: std::time::SystemTime::now(),
-            name: None,
+            unicode: None,
+            platform_code: 0,
+            position_code: 0,
+            usb_hid: 0,
         })
     }
 
@@ -134,7 +137,10 @@ impl Message {
         Message::Listener(rdev::Event {
             event_type: rdev::EventType::ButtonRelease(button),
             time: std::time::SystemTime::now(),
-            name: None,
+            unicode: None,
+            platform_code: 0,
+            position_code: 0,
+            usb_hid: 0,
         })
     }
 }
