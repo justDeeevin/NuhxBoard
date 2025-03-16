@@ -110,8 +110,8 @@ impl From<iced::Color> for NohRgb {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct KeyStyle {
-    pub loose: KeySubStyle,
-    pub pressed: KeySubStyle,
+    pub loose: Option<KeySubStyle>,
+    pub pressed: Option<KeySubStyle>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
@@ -164,7 +164,7 @@ impl Default for Style {
             },
             background_image_file_name: None,
             default_key_style: KeyStyle {
-                loose: KeySubStyle {
+                loose: Some(KeySubStyle {
                     background: NohRgb::DEFAULT_GRAY,
                     text: NohRgb::BLACK,
                     outline: NohRgb {
@@ -174,14 +174,10 @@ impl Default for Style {
                     },
                     show_outline: false,
                     outline_width: 1,
-                    font: Font {
-                        font_family: "Courier New".into(),
-                        size: 10.0,
-                        style: 0,
-                    },
+                    font: Font::default(),
                     background_image_file_name: None,
-                },
-                pressed: KeySubStyle {
+                }),
+                pressed: Some(KeySubStyle {
                     background: NohRgb::WHITE,
                     text: NohRgb::BLACK,
                     outline: NohRgb {
@@ -191,13 +187,9 @@ impl Default for Style {
                     },
                     show_outline: false,
                     outline_width: 1,
-                    font: Font {
-                        font_family: "Courier New".into(),
-                        size: 10.0,
-                        style: 0,
-                    },
+                    font: Font::default(),
                     background_image_file_name: None,
-                },
+                }),
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
@@ -205,6 +197,42 @@ impl Default for Style {
                 outline_width: 1,
             },
             element_styles: HashMap::new(),
+        }
+    }
+}
+
+impl KeySubStyle {
+    pub fn default_pressed() -> Self {
+        Self {
+            background: NohRgb::WHITE,
+            text: NohRgb::BLACK,
+            outline: NohRgb::DEFAULT_GRAY,
+            show_outline: true,
+            outline_width: 2,
+            font: Font::default(),
+            background_image_file_name: None,
+        }
+    }
+
+    pub fn default_loose() -> Self {
+        Self {
+            background: NohRgb::DEFAULT_GRAY,
+            text: NohRgb::WHITE,
+            outline: NohRgb::DEFAULT_GRAY,
+            show_outline: false,
+            outline_width: 2,
+            font: Font::default(),
+            background_image_file_name: None,
+        }
+    }
+}
+
+impl Default for Font {
+    fn default() -> Self {
+        Self {
+            font_family: "Courier New".into(),
+            size: 10.0,
+            style: 0,
         }
     }
 }

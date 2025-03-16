@@ -492,8 +492,20 @@ impl NuhxBoard {
             != pressed_button_list;
 
         let current_style = match pressed {
-            true => &style.pressed,
-            false => &style.loose,
+            true => {
+                if let Some(pressed) = &style.pressed {
+                    pressed
+                } else {
+                    &KeySubStyle::default_pressed()
+                }
+            }
+            false => {
+                if let Some(loose) = &style.loose {
+                    loose
+                } else {
+                    &KeySubStyle::default_loose()
+                }
+            }
         };
 
         frame.fill_text(canvas::Text {
@@ -610,7 +622,11 @@ impl NuhxBoard {
                 &key,
                 Color {
                     a: 0.5,
-                    ..style.pressed.background.into()
+                    ..if let Some(pressed) = &style.pressed {
+                        pressed.background.into()
+                    } else {
+                        KeySubStyle::default_pressed().background.into()
+                    }
                 },
             );
         }
