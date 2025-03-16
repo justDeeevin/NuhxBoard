@@ -8,7 +8,7 @@ use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
 use nuhxboard_types::{
     config::{BoardElement, CommonDefinitionRef, SerializablePoint},
-    style,
+    style::{self, KeySubStyle},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -217,6 +217,11 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
             ])
         ];
 
+        let loose = if let Some(loose) = &app.style.default_key_style.loose {
+            loose
+        } else {
+            &KeySubStyle::default_loose()
+        };
         let loose_keys = column![
             category_label("Loose Keys"),
             text("Background"),
@@ -224,7 +229,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Background Color",
                     app.color_pickers.default_loose_background,
-                    app.style.default_key_style.loose.background.into(),
+                    loose.background.into(),
                     ColorPicker::DefaultLooseBackground,
                 ),
                 labeled_text_input(
@@ -247,7 +252,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Text Color",
                     app.color_pickers.default_loose_text,
-                    app.style.default_key_style.loose.text.into(),
+                    loose.text.into(),
                     ColorPicker::DefaultLooseText,
                 ),
                 labeled_text_input(
@@ -267,16 +272,13 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Outline Color",
                     app.color_pickers.default_loose_outline,
-                    app.style.default_key_style.loose.outline.into(),
+                    loose.outline.into(),
                     ColorPicker::DefaultLooseOutline,
                 ),
-                checkbox(
-                    "Show Outline",
-                    app.style.default_key_style.loose.show_outline
-                )
-                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultLooseKeyShowOutline)),
+                checkbox("Show Outline", loose.show_outline)
+                    .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultLooseKeyShowOutline)),
                 row![
-                    number_input(app.style.default_key_style.loose.outline_width, 1.., |v| {
+                    number_input(loose.outline_width, 1.., |v| {
                         Message::ChangeStyle(StyleSetting::DefaultLooseKeyOutlineWidth(v))
                     }),
                     text(" Outline Width")
@@ -286,6 +288,11 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
         ]
         .padding(5);
 
+        let pressed = if let Some(pressed) = &app.style.default_key_style.pressed {
+            pressed
+        } else {
+            &KeySubStyle::default_pressed()
+        };
         let pressed_keys = column![
             category_label("Pressed Keys"),
             text("Background"),
@@ -293,7 +300,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Background Color",
                     app.color_pickers.default_pressed_background,
-                    app.style.default_key_style.pressed.background.into(),
+                    pressed.background.into(),
                     ColorPicker::DefaultPressedBackground,
                 ),
                 labeled_text_input(
@@ -316,7 +323,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Text Color",
                     app.color_pickers.default_pressed_text,
-                    app.style.default_key_style.pressed.text.into(),
+                    pressed.text.into(),
                     ColorPicker::DefaultPressedText,
                 ),
                 labeled_text_input(
@@ -336,22 +343,16 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 picker_button(
                     "Outline Color",
                     app.color_pickers.default_pressed_outline,
-                    app.style.default_key_style.pressed.outline.into(),
+                    pressed.outline.into(),
                     ColorPicker::DefaultPressedOutline,
                 ),
-                checkbox(
-                    "Show Outline",
-                    app.style.default_key_style.pressed.show_outline
-                )
-                .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultPressedKeyShowOutline)),
+                checkbox("Show Outline", pressed.show_outline).on_toggle(|_| Message::ChangeStyle(
+                    StyleSetting::DefaultPressedKeyShowOutline
+                )),
                 row![
-                    number_input(
-                        app.style.default_key_style.pressed.outline_width,
-                        1..,
-                        |v| {
-                            Message::ChangeStyle(StyleSetting::DefaultPressedKeyOutlineWidth(v))
-                        }
-                    ),
+                    number_input(pressed.outline_width, 1.., |v| {
+                        Message::ChangeStyle(StyleSetting::DefaultPressedKeyOutlineWidth(v))
+                    }),
                     text(" Outline Width")
                 ]
                 .align_y(Alignment::Center)
@@ -952,6 +953,8 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
 
         match style {
             style::ElementStyle::KeyStyle(style) => {
+                let default_loose = KeySubStyle::default_loose();
+                let loose = style.loose.as_ref().unwrap_or(&default_loose);
                 let column_1 = column![
                     category_label("Loose"),
                     text("Background"),
@@ -963,7 +966,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.loose.background.into(),
+                            loose.background.into(),
                             ColorPicker::LooseBackground(self.id),
                         ),
                         labeled_text_input(
@@ -993,11 +996,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.loose.text.into(),
+                            loose.text.into(),
                             ColorPicker::LooseText(self.id),
                         ),
                         {
-                            let font = &style.loose.font;
+                            let font = &loose.font;
                             rich_text![span("Pick a font")
                                 .font(Font {
                                     family: Family::Name(
@@ -1041,21 +1044,22 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             )))
                         ),
                         row![
-                            checkbox("Bold ", style.loose.font.style & 1 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::LooseKeyBold(id))
-                            ),
-                            checkbox("Italic", style.loose.font.style & 0b10 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::LooseKeyItalic(id))
-                            ),
+                            checkbox("Bold ", loose.font.style & 1 != 0).on_toggle(move |_| {
+                                Message::ChangeStyle(StyleSetting::LooseKeyBold(id))
+                            }),
+                            checkbox("Italic", loose.font.style & 0b10 != 0).on_toggle(move |_| {
+                                Message::ChangeStyle(StyleSetting::LooseKeyItalic(id))
+                            }),
                         ],
                         row![
-                            checkbox("Underline ", style.loose.font.style & 0b100 != 0).on_toggle(
+                            checkbox("Underline ", loose.font.style & 0b100 != 0).on_toggle(
                                 move |_| Message::ChangeStyle(StyleSetting::LooseKeyUnderline(id))
                             ),
-                            checkbox("Strikethrough", style.loose.font.style & 0b1000 != 0)
-                                .on_toggle(move |_| Message::ChangeStyle(
-                                    StyleSetting::LooseKeyStrikethrough(id)
-                                )),
+                            checkbox("Strikethrough", loose.font.style & 0b1000 != 0).on_toggle(
+                                move |_| Message::ChangeStyle(StyleSetting::LooseKeyStrikethrough(
+                                    id
+                                ))
+                            ),
                         ]
                     ]),
                     text("Outline"),
@@ -1067,14 +1071,14 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.loose.outline.into(),
+                            loose.outline.into(),
                             ColorPicker::LooseOutline(self.id),
                         ),
-                        checkbox("Show Outline", style.loose.show_outline).on_toggle(move |_| {
+                        checkbox("Show Outline", loose.show_outline).on_toggle(move |_| {
                             Message::ChangeStyle(StyleSetting::LooseKeyShowOutline(id))
                         }),
                         row![
-                            number_input(style.loose.outline_width, 1.., move |v| {
+                            number_input(loose.outline_width, 1.., move |v| {
                                 Message::ChangeStyle(StyleSetting::LooseKeyOutlineWidth {
                                     id,
                                     width: v,
@@ -1085,6 +1089,8 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                     ]),
                 ];
 
+                let default_pressed = KeySubStyle::default_pressed();
+                let pressed = style.pressed.as_ref().unwrap_or(&default_pressed);
                 let column_2 = column![
                     category_label("Pressed"),
                     text("Background"),
@@ -1096,7 +1102,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.pressed.background.into(),
+                            pressed.background.into(),
                             ColorPicker::PressedBackground(self.id),
                         ),
                         labeled_text_input(
@@ -1129,11 +1135,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.pressed.text.into(),
+                            pressed.text.into(),
                             ColorPicker::PressedText(self.id),
                         ),
                         {
-                            let font = &style.pressed.font;
+                            let font = &pressed.font;
                             rich_text![span("Pick a font")
                                 .font(Font {
                                     family: Family::Name(
@@ -1174,22 +1180,24 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             StyleSetting::PressedKeyFontFamily(self.id)
                         )),
                         row![
-                            checkbox("Bold ", style.pressed.font.style & 1 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::PressedKeyBold(id))
-                            ),
-                            checkbox("Italic", style.pressed.font.style & 0b10 != 0).on_toggle(
+                            checkbox("Bold ", pressed.font.style & 1 != 0).on_toggle(move |_| {
+                                Message::ChangeStyle(StyleSetting::PressedKeyBold(id))
+                            }),
+                            checkbox("Italic", pressed.font.style & 0b10 != 0).on_toggle(
                                 move |_| Message::ChangeStyle(StyleSetting::PressedKeyItalic(id))
                             ),
                         ],
                         row![
-                            checkbox("Underline ", style.pressed.font.style & 0b100 != 0)
-                                .on_toggle(move |_| Message::ChangeStyle(
-                                    StyleSetting::PressedKeyUnderline(id)
-                                )),
-                            checkbox("Strikethrough", style.pressed.font.style & 0b1000 != 0)
-                                .on_toggle(move |_| Message::ChangeStyle(
+                            checkbox("Underline ", pressed.font.style & 0b100 != 0).on_toggle(
+                                move |_| Message::ChangeStyle(StyleSetting::PressedKeyUnderline(
+                                    id
+                                ))
+                            ),
+                            checkbox("Strikethrough", pressed.font.style & 0b1000 != 0).on_toggle(
+                                move |_| Message::ChangeStyle(
                                     StyleSetting::PressedKeyStrikethrough(id)
-                                )),
+                                )
+                            ),
                         ]
                     ]),
                     text("Outline"),
@@ -1201,14 +1209,14 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .get(&self.id)
                                 .copied()
                                 .unwrap_or(false),
-                            style.pressed.outline.into(),
+                            pressed.outline.into(),
                             ColorPicker::PressedOutline(self.id),
                         ),
-                        checkbox("Show Outline", style.pressed.show_outline).on_toggle(move |_| {
+                        checkbox("Show Outline", pressed.show_outline).on_toggle(move |_| {
                             Message::ChangeStyle(StyleSetting::PressedKeyShowOutline(id))
                         }),
                         row![
-                            number_input(style.pressed.outline_width, 1.., move |v| {
+                            number_input(pressed.outline_width, 1.., move |v| {
                                 Message::ChangeStyle(StyleSetting::PressedKeyOutlineWidth {
                                     id,
                                     width: v,

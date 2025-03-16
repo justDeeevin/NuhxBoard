@@ -419,42 +419,50 @@ impl NuhxBoard {
                     StyleSetting::DefaultLooseKeyFontFamily => {
                         let new_font = self.text_input.default_loose_key_font_family.clone();
                         FONTS.write().unwrap().insert(new_font.clone().leak());
-                        self.style.default_key_style.loose.font.font_family = new_font;
+                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                            loose.font.font_family = new_font
+                        };
                     }
                     StyleSetting::DefaultLooseKeyShowOutline => {
-                        self.style.default_key_style.loose.show_outline =
-                            !self.style.default_key_style.loose.show_outline;
+                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                            loose.show_outline = !loose.show_outline;
+                        };
                     }
                     StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
-                        self.style.default_key_style.loose.outline_width = width;
+                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                            loose.outline_width = width;
+                        };
                     }
                     StyleSetting::DefaultLooseKeyBackgroundImage => {
                         let image = self.text_input.default_loose_key_background_image.clone();
-                        self.style
-                            .default_key_style
-                            .loose
-                            .background_image_file_name =
-                            if image.is_empty() { None } else { Some(image) };
+                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                            loose.background_image_file_name =
+                                if image.is_empty() { None } else { Some(image) };
+                        };
                     }
                     StyleSetting::DefaultPressedKeyFontFamily => {
                         let new_font = self.text_input.default_pressed_key_font_family.clone();
                         FONTS.write().unwrap().insert(new_font.clone().leak());
-                        self.style.default_key_style.pressed.font.font_family = new_font;
+                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                            pressed.font.font_family = new_font;
+                        };
                     }
                     StyleSetting::DefaultPressedKeyShowOutline => {
-                        self.style.default_key_style.pressed.show_outline =
-                            !self.style.default_key_style.pressed.show_outline;
+                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                            pressed.show_outline = !pressed.show_outline;
+                        };
                     }
                     StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
-                        self.style.default_key_style.pressed.outline_width = width;
+                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                            pressed.outline_width = width;
+                        };
                     }
                     StyleSetting::DefaultPressedKeyBackgroundImage => {
                         let image = self.text_input.default_pressed_key_background_image.clone();
-                        self.style
-                            .default_key_style
-                            .pressed
-                            .background_image_file_name =
-                            if image.is_empty() { None } else { Some(image) };
+                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                            pressed.background_image_file_name =
+                                if image.is_empty() { None } else { Some(image) };
+                        };
                     }
                     StyleSetting::KeyboardBackgroundImage => {
                         let image = self.text_input.keyboard_background_image.clone();
@@ -475,7 +483,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.font.font_family = new_font.clone();
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.font.font_family = new_font.clone();
+                                };
                             },
                             id
                         );
@@ -484,7 +494,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.show_outline = !style.loose.show_outline;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.show_outline = !loose.show_outline;
+                                };
                             },
                             id
                         );
@@ -493,7 +505,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.outline_width = width;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.outline_width = width;
+                                };
                             },
                             id
                         );
@@ -508,10 +522,12 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.background_image_file_name = if image.is_empty() {
-                                    None
-                                } else {
-                                    Some(image.clone())
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.background_image_file_name = if image.is_empty() {
+                                        None
+                                    } else {
+                                        Some(image.clone())
+                                    };
                                 };
                             },
                             id
@@ -528,7 +544,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.font.font_family = new_font.clone();
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.font.font_family = new_font.clone();
+                                };
                             },
                             id
                         );
@@ -537,7 +555,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.show_outline = !style.pressed.show_outline;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.show_outline = !pressed.show_outline;
+                                };
                             },
                             id
                         );
@@ -546,7 +566,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.outline_width = width;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.outline_width = width;
+                                };
                             },
                             id
                         );
@@ -561,10 +583,12 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.background_image_file_name = if image.is_empty() {
-                                    None
-                                } else {
-                                    Some(image.clone())
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.background_image_file_name = if image.is_empty() {
+                                        None
+                                    } else {
+                                        Some(image.clone())
+                                    };
                                 };
                             },
                             id
@@ -574,7 +598,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.font.style ^= 1 << 0;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.font.style ^= 1 << 0;
+                                };
                             },
                             id
                         );
@@ -583,7 +609,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.font.style ^= 1 << 1;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.font.style ^= 1 << 1;
+                                };
                             },
                             id
                         );
@@ -592,7 +620,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.font.style ^= 1 << 2;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.font.style ^= 1 << 2;
+                                };
                             },
                             id
                         );
@@ -601,7 +631,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.loose.font.style ^= 1 << 3;
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.font.style ^= 1 << 3;
+                                };
                             },
                             id
                         );
@@ -610,7 +642,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.font.style ^= 1 << 0;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.font.style ^= 1 << 0;
+                                };
                             },
                             id
                         );
@@ -619,7 +653,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.font.style ^= 1 << 1;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.font.style ^= 1 << 1;
+                                };
                             },
                             id
                         );
@@ -628,7 +664,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.font.style ^= 1 << 2;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.font.style ^= 1 << 2;
+                                }
                             },
                             id
                         );
@@ -637,7 +675,9 @@ impl NuhxBoard {
                         key_style_change!(
                             style,
                             {
-                                style.pressed.font.style ^= 1 << 3;
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.font.style ^= 1 << 3;
+                                };
                             },
                             id
                         );
@@ -756,28 +796,48 @@ impl NuhxBoard {
                         }
                     }
                 }
+                let loose = if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                    loose
+                } else {
+                    self.style.default_key_style.loose = Some(KeySubStyle::default_loose());
+                    self.style
+                        .default_key_style
+                        .loose
+                        .as_mut()
+                        .expect("Loose needs to be Some because it gets set one line up")
+                };
+                let pressed = if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                    pressed
+                } else {
+                    self.style.default_key_style.pressed = Some(KeySubStyle::default_pressed());
+                    self.style
+                        .default_key_style
+                        .pressed
+                        .as_mut()
+                        .expect("Pressed needs to be Some because it gets set one line up")
+                };
                 self.color_pickers.toggle(picker);
                 match picker {
                     ColorPicker::KeyboardBackground => {
                         self.style.background_color = color.into();
                     }
                     ColorPicker::DefaultLooseBackground => {
-                        self.style.default_key_style.loose.background = color.into();
+                        loose.background = color.into();
                     }
                     ColorPicker::DefaultLooseText => {
-                        self.style.default_key_style.loose.text = color.into();
+                        loose.text = color.into();
                     }
                     ColorPicker::DefaultLooseOutline => {
-                        self.style.default_key_style.loose.outline = color.into();
+                        loose.outline = color.into();
                     }
                     ColorPicker::DefaultPressedBackground => {
-                        self.style.default_key_style.pressed.background = color.into();
+                        pressed.background = color.into();
                     }
                     ColorPicker::DefaultPressedText => {
-                        self.style.default_key_style.pressed.text = color.into();
+                        pressed.text = color.into();
                     }
                     ColorPicker::DefaultPressedOutline => {
-                        self.style.default_key_style.pressed.outline = color.into();
+                        pressed.outline = color.into();
                     }
                     ColorPicker::DefaultMouseSpeedIndicator1 => {
                         self.style.default_mouse_speed_indicator_style.inner_color = color.into();
@@ -786,22 +846,70 @@ impl NuhxBoard {
                         self.style.default_mouse_speed_indicator_style.outer_color = color.into();
                     }
                     ColorPicker::LooseBackground(id) => {
-                        key_style_change!(style, { style.loose.background = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.background = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::LooseText(id) => {
-                        key_style_change!(style, { style.loose.text = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.text = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::LooseOutline(id) => {
-                        key_style_change!(style, { style.loose.outline = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(loose) = style.loose.as_mut() {
+                                    loose.outline = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::PressedBackground(id) => {
-                        key_style_change!(style, { style.pressed.background = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.background = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::PressedText(id) => {
-                        key_style_change!(style, { style.pressed.text = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.text = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::PressedOutline(id) => {
-                        key_style_change!(style, { style.pressed.outline = color.into() }, id);
+                        key_style_change!(
+                            style,
+                            {
+                                if let Some(pressed) = style.pressed.as_mut() {
+                                    pressed.outline = color.into()
+                                };
+                            },
+                            id
+                        );
                     }
                     ColorPicker::MouseSpeedIndicator1(id) => {
                         mouse_speed_indicator_style_change!(
@@ -1214,20 +1322,16 @@ impl NuhxBoard {
             .background_image_file_name
             .clone()
             .unwrap_or_default();
-        self.text_input.default_loose_key_background_image = self
-            .style
-            .default_key_style
-            .loose
-            .background_image_file_name
-            .clone()
-            .unwrap_or_default();
-        self.text_input.default_pressed_key_background_image = self
-            .style
-            .default_key_style
-            .pressed
-            .background_image_file_name
-            .clone()
-            .unwrap_or_default();
+        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+            self.text_input.default_loose_key_background_image =
+                loose.background_image_file_name.clone().unwrap_or_default();
+        };
+        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+            self.text_input.default_pressed_key_background_image = pressed
+                .background_image_file_name
+                .clone()
+                .unwrap_or_default();
+        };
 
         Task::none()
     }
@@ -1235,15 +1339,20 @@ impl NuhxBoard {
     /// See canvas.rs:478
     fn update_fonts(&self) {
         let mut new_fonts = HashSet::new();
-        new_fonts.insert(self.style.default_key_style.loose.font.font_family.clone());
-        new_fonts.insert(
-            self.style
-                .default_key_style
-                .pressed
-                .font
-                .font_family
-                .clone(),
-        );
+        new_fonts.insert({
+            if let Some(loose) = &self.style.default_key_style.loose {
+                loose.font.font_family.clone()
+            } else {
+                Font::default().font_family
+            }
+        });
+        new_fonts.insert({
+            if let Some(pressed) = &self.style.default_key_style.pressed {
+                pressed.font.font_family.clone()
+            } else {
+                Font::default().font_family
+            }
+        });
         new_fonts.extend(
             self.style
                 .element_styles
@@ -1251,8 +1360,16 @@ impl NuhxBoard {
                 .filter_map(|(_, style)| match style {
                     style::ElementStyle::KeyStyle(key_style) => Some(
                         [
-                            key_style.loose.font.font_family.clone(),
-                            key_style.pressed.font.font_family.clone(),
+                            if let Some(loose) = &key_style.loose {
+                                loose.font.font_family.clone()
+                            } else {
+                                Font::default().font_family
+                            },
+                            if let Some(pressed) = &key_style.pressed {
+                                pressed.font.font_family.clone()
+                            } else {
+                                Font::default().font_family
+                            },
                         ]
                         .into_iter(),
                     ),
