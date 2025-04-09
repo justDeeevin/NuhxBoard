@@ -40,16 +40,28 @@
         {
           "type": "object",
           "required": [
-            "Loose",
-            "Pressed",
             "__type"
           ],
           "properties": {
             "Loose": {
-              "$ref": "#/definitions/KeySubStyle"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/KeySubStyle"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "Pressed": {
-              "$ref": "#/definitions/KeySubStyle"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/KeySubStyle"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "__type": {
               "type": "string",
@@ -113,16 +125,26 @@
     },
     "KeyStyle": {
       "type": "object",
-      "required": [
-        "Loose",
-        "Pressed"
-      ],
       "properties": {
         "Loose": {
-          "$ref": "#/definitions/KeySubStyle"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/KeySubStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "Pressed": {
-          "$ref": "#/definitions/KeySubStyle"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/KeySubStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
