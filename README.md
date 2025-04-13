@@ -18,7 +18,7 @@ NuhxBoard is made with customizability in mind. Every part of its appearance and
 
 Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
 
-Keyboards are located in `~/.config/nuhxboard/keyboards`. Here’s the general structure of that directory:
+Definitions are located in `~/.config/nuhxboard/keyboards`. Here’s the general structure of that directory:
 
 - keyboards/
   - [CATEGORY NAME]/
@@ -113,8 +113,6 @@ All points are represented as an object with an `X` and `Y` property.
 
 There are four kinds of elements: KeyboardKeys, MouseKeys, MouseScrolls, and MouseSpeedIndicators. Each item in the list of elements indicates what kind it is by having a `__type` property.
 
----
-
 ##### Shared Properties
 
 These properties are shared by KeyboardKeys, MouseKeys, and MouseScrolls.
@@ -126,11 +124,9 @@ These properties are shared by KeyboardKeys, MouseKeys, and MouseScrolls.
 - **TextPosition**\
   The point where the top-left corner of the element’s text is to be. Technically, this can be anywhere in the window.
 - **KeyCodes**\
-  An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! NuhxBoard can automatically detect the proper keycode in edit mode, but [this document](https://github.com/justDeeevin/NuhxBoard/blob/main/KEYCODES.adoc) can be used for reference.
+  An array containing the keycodes (just integers) this key should track. You can have one element listen for multiple keys! It's recommended to use the graphical editor's keycode detector to set this option[^1].
 - **Text**\
   The text to display on the key.
-
----
 
 ##### KeyboardKey
 
@@ -140,8 +136,6 @@ In addition to the shared properties, KeyboardKeys have the following properties
   The text to display when shift is held.
 - **ChangeOnCaps**\
   Whether or not to follow the state of caps lock (generally, this is `true` for letters and `false` for symbols).
-
----
 
 ##### MouseSpeedIndicator
 
@@ -155,8 +149,6 @@ MouseSpeedIndicators are made up of a filled inner circle and an unfilled outer 
   The center of the circle
 - **Radius**\
   The radius of the outer ring. The inner ring is 20% of this radius.
-
----
 
 ### Styles
 
@@ -237,7 +229,7 @@ pub enum ElementStyleUnion {
 
 #### Top-Level Properties
 
-All images are stored in the `images` directory in the **category**. Images are refferred to by name, **including the file extension**.
+All images are stored in the `images` directory in the **category**. Images are referred to by name, **including the file extension**.
 
 All colors are represented as an object with three properties: `Red`, `Green`, and `Blue`. Each is an integer between 0 and 255.
 
@@ -251,8 +243,6 @@ All colors are represented as an object with three properties: `Red`, `Green`, a
   The default style to use for all MouseSpeedIndicators. This _must be specified_.
 - **ElementStyles**\
   An array of ElementStyle objects. Each ElementStyle object has a `Key` property, which is the Id of the element to which the style should be applied, and a `Value` property, which is either a KeyStyle or a MouseSpeedIndicatorStyle. Again, each item indicates its type with the `__type` property.
-
----
 
 #### KeyStyle
 
@@ -273,8 +263,6 @@ KeyStyles just list which style to use for when a key is `Pressed` or `Loose` (n
 - **BackgroundImageFileName**\
   The name of the image file to use as the background of the key.
 
----
-
 #### MouseSpeedIndicatorStyle
 
 - **InnerColor**\
@@ -284,8 +272,6 @@ KeyStyles just list which style to use for when a key is `Pressed` or `Loose` (n
 - **OutlineWidth**\
   The width of the outer ring.
 
----
-
 #### Fonts
 
 - **FontFamily**\
@@ -294,8 +280,6 @@ KeyStyles just list which style to use for when a key is `Pressed` or `Loose` (n
   The size of the font in pixels.
 - **Style**\
   A bitfield representing the style of the font. From least to most significant, the first bit is bold, the second italic, the third underline, and the fourth strikethrough. These effects can be combined. As an example, if I wanted bold and italicized text, I would set style to `3`, which is `0011` in binary.
-
----
 
 ### Settings
 
@@ -358,3 +342,5 @@ https://github.com/justDeeevin/NuhxBoard/assets/90054389/36dc9cf6-3b23-435c-a742
 Configurable like NohBoard:
 
 https://github.com/justDeeevin/NuhxBoard/assets/90054389/80c69a52-e76d-4715-a22c-78db34743959
+
+[^1]: Internally, NuhxBoard uses conversion functions provided by [RustDesk's fork of rdev](https://github.com/rustdesk-org/rdev). Both NuhxBoard and NohBoard use Windows keycodes. See [here](https://github.com/rustdesk-org/rdev/blob/f9b60b1dd0f3300a1b797d7a74c116683cd232c8/src/keycodes/windows.rs#L84) for the full list of keycodes and their corresponding keys.
