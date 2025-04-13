@@ -279,7 +279,7 @@ impl NuhxBoard {
             Message::MoveElement { index, delta } => {
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
-            Message::SaveKeyboard(file) => {
+            Message::SaveLayout(file) => {
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,

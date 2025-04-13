@@ -24,7 +24,7 @@ pub enum Message {
     ClearPressedKeys,
     ToggleEditMode,
     MoveElement { index: usize, delta: Coord<f32> },
-    SaveKeyboard(Option<std::path::PathBuf>),
+    SaveLayout(Option<std::path::PathBuf>),
     SaveStyle(Option<std::path::PathBuf>),
     SetHeight(f32),
     SetWidth(f32),

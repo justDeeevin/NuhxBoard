@@ -74,7 +74,7 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
                 text_input("", &app.text_input.save_keyboard_as_name,)
                     .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
-            button("Save").on_press(Message::SaveKeyboard(Some(
+            button("Save").on_press(Message::SaveLayout(Some(
                 KEYBOARDS_PATH
                     .join(&app.save_keyboard_as_category)
                     .join(&app.save_keyboard_as_name)

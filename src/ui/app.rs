@@ -188,7 +188,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             menu.append(&mut vec![
                 seperator().into(),
                 context_menu_button("Save Definition")
-                    .on_press(Message::SaveKeyboard(None))
+                    .on_press(Message::SaveLayout(None))
                     .into(),
                 context_menu_button("Save Definition As...")
                     .on_press(Message::Open(Box::new(SaveDefinitionAs)))
