@@ -18,7 +18,7 @@ NuhxBoard is made with customizability in mind. Every part of its appearance and
 
 Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
 
-Keyboards are located in `~/.local/share/NuhxBoard/keyboards`. Here’s the general structure of that directory:
+Keyboards are located in `~/.config/nuhxboard/keyboards`. Here’s the general structure of that directory:
 
 - keyboards/
   - [CATEGORY NAME]/
@@ -188,8 +188,8 @@ pub struct NohRgb {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct KeyStyle {
-    pub loose: KeySubStyle,
-    pub pressed: KeySubStyle,
+    pub loose: Option<KeySubStyle>,
+    pub pressed: Option<KeySubStyle>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
