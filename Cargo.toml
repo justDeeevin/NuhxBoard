@@ -36,34 +36,35 @@ eula = false
 iced-multi-window = "1.1.0"
 async-std.workspace = true
 color-eyre = { version = "0.6.3", default-features = false }
-colorgrad = "0.7.0"
+colorgrad = "0.7.1"
 display-info.workspace = true
 futures.workspace = true
 geo.workspace = true
-home = "0.5.9"
+home = "0.5.11"
 iced = { workspace = true, features = [
   "image",
   "canvas",
   "advanced",
   "async-std",
 ] }
-iced_aw = "0.11.0"
-image = { version = "0.25.2", features = ["ico"] }
-reqwest = { version = "0.12.7", features = ["blocking"] }
+iced_aw = "0.12.2"
+image = { version = "0.25.6", features = ["ico"] }
+reqwest = { version = "0.12.15", features = ["blocking"] }
 serde_json.workspace = true
-zip = "2.2.0"
-iced_fonts = "0.1.1"
+zip = "2.6.1"
+iced_fonts = "0.2.1"
 nuhxboard-types = { path = "crates/types", version = "0.7.0" }
 nuhxboard-logic = { path = "crates/logic", version = "0.7.0" }
 rdev.workspace = true
-nalgebra = "0.33.0"
+nalgebra = "0.33.2"
 thiserror.workspace = true
 confy = "0.6.1"
+tracing = "0.1.41"
 
 [build-dependencies]
 schemars.workspace = true
 nuhxboard-types = { path = "crates/types", version = "0.7.0" }
-serde_json = "1.0.128"
+serde_json = "1.0.140"
 
 [features]
 debug = ["iced/debug"]
@@ -82,15 +83,15 @@ keywords = ["keyboard", "streaming", "overlay", "linux", "nohboard"]
 categories = ["visualization"]
 
 [workspace.dependencies]
-geo = "0.29.3"
+geo = "0.30.0"
 iced = "0.13.1"
-serde_json = "1.0.133"
+serde_json = "1.0.140"
 futures = "0.3.31"
 rdev = { git = "https://github.com/rustdesk-org/rdev", rev = "f9b60b1dd0f3300a1b797d7a74c116683cd232c8" }
-display-info = "0.5.2"
-schemars = "0.8.21"
-async-std = "1.13.0"
-thiserror = "2.0.11"
+display-info = "0.5.4"
+schemars = "0.8.22"
+async-std = "1.13.1"
+thiserror = "2.0.12"
 # rust-version = "1.72.0"
 
 # The profile that 'cargo dist' will build with

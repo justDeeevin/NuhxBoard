@@ -29,12 +29,12 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardProperties {
         column![
             row![
                 text("Width: "),
-                number_input(app.layout.width, 0.0.., Message::SetWidth)
+                number_input(&app.layout.width, 0.0.., Message::SetWidth)
             ]
             .align_y(iced::Alignment::Center),
             row![
                 text("Height: "),
-                number_input(app.layout.height, 0.0.., Message::SetHeight)
+                number_input(&app.layout.height, 0.0.., Message::SetHeight)
             ]
             .align_y(iced::Alignment::Center)
         ]
@@ -203,7 +203,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 ),
                 row![
                     number_input(
-                        app.style.default_mouse_speed_indicator_style.outline_width,
+                        &app.style.default_mouse_speed_indicator_style.outline_width,
                         1..,
                         |v| Message::ChangeStyle(
                             StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(v)
@@ -276,7 +276,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                 checkbox("Show Outline", loose.show_outline)
                     .on_toggle(|_| Message::ChangeStyle(StyleSetting::DefaultLooseKeyShowOutline)),
                 row![
-                    number_input(loose.outline_width, 1.., |v| {
+                    number_input(&loose.outline_width, 1.., |v| {
                         Message::ChangeStyle(StyleSetting::DefaultLooseKeyOutlineWidth(v))
                     }),
                     text(" Outline Width")
@@ -348,7 +348,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
                     StyleSetting::DefaultPressedKeyShowOutline
                 )),
                 row![
-                    number_input(pressed.outline_width, 1.., |v| {
+                    number_input(&pressed.outline_width, 1.., |v| {
                         Message::ChangeStyle(StyleSetting::DefaultPressedKeyOutlineWidth(v))
                     }),
                     text(" Outline Width")
@@ -416,10 +416,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(def.text_position.x, 0.0.., move |v| {
+                        number_input(&def.text_position.x, 0.0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionX(v))
                         }),
-                        number_input(def.text_position.y, 0.0.., move |v| {
+                        number_input(&def.text_position.y, 0.0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionY(v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
@@ -428,7 +428,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     row![
                         text("Boundaries: "),
                         number_input(
-                            app.number_input
+                            &app.number_input
                                 .boundary_x
                                 .get(&index)
                                 .copied()
@@ -439,7 +439,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                             }
                         ),
                         number_input(
-                            app.number_input
+                            &app.number_input
                                 .boundary_y
                                 .get(&index)
                                 .copied()
@@ -555,7 +555,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     row![
                         text("Key codes: "),
                         number_input(
-                            app.number_input
+                            &app.number_input
                                 .keycode
                                 .get(&self.index)
                                 .copied()
@@ -647,10 +647,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(def.text_position.x, 0.0.., move |v| {
+                        number_input(&def.text_position.x, 0.0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionX(v))
                         }),
-                        number_input(def.text_position.y, 0.0.., move |v| {
+                        number_input(&def.text_position.y, 0.0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionY(v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
@@ -756,11 +756,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
             BoardElement::MouseSpeedIndicator(def) => column![
                 row![
                     text("Location: "),
-                    number_input(def.location.x, 0.0.., move |v| Message::ChangeElement(
+                    number_input(&def.location.x, 0.0.., move |v| Message::ChangeElement(
                         index,
                         ElementProperty::MouseSpeedIndicatorPositionX(v)
                     )),
-                    number_input(def.location.y, 0.0.., move |v| Message::ChangeElement(
+                    number_input(&def.location.y, 0.0.., move |v| Message::ChangeElement(
                         index,
                         ElementProperty::MouseSpeedIndicatorPositionY(v)
                     ))
@@ -768,7 +768,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                 .align_y(Alignment::Center),
                 row![
                     text("Radius: "),
-                    number_input(def.radius, 0.0.., move |v| Message::ChangeElement(
+                    number_input(&def.radius, 0.0.., move |v| Message::ChangeElement(
                         index,
                         ElementProperty::MouseSpeedIndicatorRadius(v)
                     ))
@@ -816,7 +816,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
             row![
                 text("Position: "),
                 number_input(
-                    app.number_input
+                    &app.number_input
                         .rectangle_position_x
                         .get(&self.index)
                         .copied()
@@ -827,7 +827,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                     }
                 ),
                 number_input(
-                    app.number_input
+                    &app.number_input
                         .rectangle_position_y
                         .get(&self.index)
                         .copied()
@@ -842,7 +842,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
             row![
                 text("Size: "),
                 number_input(
-                    app.number_input
+                    &app.number_input
                         .rectangle_size_x
                         .get(&self.index)
                         .copied()
@@ -853,7 +853,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                     }
                 ),
                 number_input(
-                    app.number_input
+                    &app.number_input
                         .rectangle_size_y
                         .get(&self.index)
                         .copied()
@@ -1076,7 +1076,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             Message::ChangeStyle(StyleSetting::LooseKeyShowOutline(id))
                         }),
                         row![
-                            number_input(loose.outline_width, 1.., move |v| {
+                            number_input(&loose.outline_width, 1.., move |v| {
                                 Message::ChangeStyle(StyleSetting::LooseKeyOutlineWidth {
                                     id,
                                     width: v,
@@ -1214,7 +1214,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             Message::ChangeStyle(StyleSetting::PressedKeyShowOutline(id))
                         }),
                         row![
-                            number_input(pressed.outline_width, 1.., move |v| {
+                            number_input(&pressed.outline_width, 1.., move |v| {
                                 Message::ChangeStyle(StyleSetting::PressedKeyOutlineWidth {
                                     id,
                                     width: v,
@@ -1249,7 +1249,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                     ColorPicker::MouseSpeedIndicator2(self.id)
                 ),
                 row![
-                    number_input(style.outline_width, 0.., move |v| {
+                    number_input(&style.outline_width, 0.., move |v| {
                         Message::ChangeStyle(StyleSetting::MouseSpeedIndicatorOutlineWidth {
                             id,
                             width: v,

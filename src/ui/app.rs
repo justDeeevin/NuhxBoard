@@ -265,7 +265,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
             row![
                 text("Mouse sensitivity: ").size(12),
                 horizontal_space(),
-                number_input(app.settings.mouse_sensitivity, 0.0.., |v| {
+                number_input(&app.settings.mouse_sensitivity, 0.0.., |v| {
                     Message::ChangeSetting(Setting::MouseSensitivity(v))
                 })
                 .size(12.0)
@@ -276,7 +276,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
             row![
                 text("Scroll hold time (ms): ").size(12),
                 horizontal_space(),
-                number_input(app.settings.scroll_hold_time, 0.., |v| {
+                number_input(&app.settings.scroll_hold_time, 0.., |v| {
                     Message::ChangeSetting(Setting::ScrollHoldTime(v))
                 })
                 .size(12.0)
@@ -310,7 +310,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
         input.extend([
             text("Show keypresses for at least").size(12).into(),
             row![
-                number_input(app.settings.min_press_time, 0.., |v| {
+                number_input(&app.settings.min_press_time, 0.., |v| {
                     Message::ChangeSetting(Setting::MinPressTime(v))
                 })
                 .size(12.0)

@@ -89,7 +89,7 @@ impl canvas::Program<Message> for NuhxBoard {
                         for (index, element) in self.layout.elements.iter().enumerate() {
                             match element {
                                 BoardElement::MouseSpeedIndicator(def) => {
-                                    if Euclidean::distance(
+                                    if Euclidean.distance(
                                         cursor_position,
                                         Coord::from(def.location.clone()),
                                     ) < def.radius
@@ -127,23 +127,19 @@ impl canvas::Program<Message> for NuhxBoard {
                                                 let left = window[0];
                                                 let right = window[1];
 
-                                                if Euclidean::distance(cursor_position, &left)
-                                                    <= 5.0
-                                                    && Euclidean::distance(cursor_position, &right)
+                                                if Euclidean.distance(cursor_position, &left) <= 5.0
+                                                    && Euclidean.distance(cursor_position, &right)
                                                         <= 5.0
                                                 {
                                                     state.hovered_vertex = Some(i + 1);
                                                     state.hovered_face = None;
-                                                } else if Euclidean::distance(
-                                                    cursor_position,
-                                                    &left,
-                                                ) <= 5.0
+                                                } else if Euclidean.distance(cursor_position, &left)
+                                                    <= 5.0
                                                 {
                                                     state.hovered_face = Some(i);
-                                                } else if Euclidean::distance(
-                                                    cursor_position,
-                                                    &right,
-                                                ) <= 5.0
+                                                } else if Euclidean
+                                                    .distance(cursor_position, &right)
+                                                    <= 5.0
                                                 {
                                                     state.hovered_face = Some(i + 1);
                                                 } else {
