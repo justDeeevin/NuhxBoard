@@ -23,6 +23,7 @@ use rdev::win_keycode_from_key;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
+    path::PathBuf,
     sync::{Arc, LazyLock, RwLock},
     time::{Duration, Instant},
 };
@@ -30,6 +31,13 @@ use std::{
 // See canvas.rs:478
 pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
     LazyLock::new(|| RwLock::new(HashSet::new()));
+pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    confy::get_configuration_file_path("NuhxBoard", None)
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("keyboard")
+});
 
 pub struct NuhxBoard {
     pub windows: WindowManager<NuhxBoard, Theme, Message>,
@@ -55,7 +63,6 @@ pub struct NuhxBoard {
     pub keyboard_options: Vec<String>,
     pub keyboard_category_options: Vec<String>,
     pub style_options: Vec<StyleChoice>,
-    pub keyboards_path: std::path::PathBuf,
     pub startup: bool,
     pub settings: Settings,
     pub display_options: Vec<DisplayInfo>,
@@ -81,13 +88,13 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
 
 impl NuhxBoard {
     pub fn new() -> (Self, Task<Message>) {
-        let nuhxboard_path = home::home_dir().unwrap().join(".local/share/NuhxBoard");
+        let mut errors = Vec::new();
 
-        let settings: Settings =
-            serde_json::from_reader(File::open(nuhxboard_path.join("NuhxBoard.json")).unwrap())
-                .unwrap();
+        let settings: Settings = confy::load("NuhxBoard", None).unwrap_or_else(|e| {
+            errors.push(NuhxBoardError::SettingsParse(Arc::new(e)));
+            Settings::default()
+        });
 
-        let keyboards_path = nuhxboard_path.join("keyboards");
         let layout = Layout {
             version: None,
             width: DEFAULT_WINDOW_SIZE.width,
@@ -130,7 +137,6 @@ impl NuhxBoard {
                 keyboard_options: Vec::new(),
                 keyboard_category_options: Vec::new(),
                 style_options: Vec::new(),
-                keyboards_path,
                 startup: true,
                 settings,
                 display_options: DisplayInfo::all().unwrap(),
@@ -191,15 +197,14 @@ impl NuhxBoard {
                     self.style_options = Vec::new();
                 }
 
-                self.keyboard_options =
-                    fs::read_dir(self.keyboards_path.join(&self.settings.category))
-                        .unwrap()
-                        .map(|r| r.unwrap())
-                        .filter(|entry| {
-                            entry.file_type().unwrap().is_dir() && entry.file_name() != "images"
-                        })
-                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                        .collect();
+                self.keyboard_options = fs::read_dir(KEYBOARDS_PATH.join(&self.settings.category))
+                    .unwrap()
+                    .map(|r| r.unwrap())
+                    .filter(|entry| {
+                        entry.file_type().unwrap().is_dir() && entry.file_name() != "images"
+                    })
+                    .map(|entry| entry.file_name().to_str().unwrap().to_owned())
+                    .collect();
                 self.keyboard_options.sort();
 
                 if self.startup {
@@ -275,7 +280,7 @@ impl NuhxBoard {
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveKeyboard(file) => {
-                let path = file.unwrap_or(self.keyboards_path.join(format!(
+                let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
                     self.keyboard_options[self.keyboard_choice.unwrap()]
@@ -287,7 +292,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::SaveStyle(file) => {
-                let path = file.unwrap_or(self.keyboards_path.join(format!(
+                let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
                     self.keyboard_options[self.keyboard_choice.unwrap()],
@@ -705,7 +710,7 @@ impl NuhxBoard {
             }
             Message::Open(window) => {
                 if window == LoadKeyboard {
-                    self.keyboard_category_options = fs::read_dir(&self.keyboards_path)
+                    self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
                         .unwrap()
                         .map(|r| r.unwrap())
                         .filter(|entry| {
@@ -1154,7 +1159,7 @@ impl NuhxBoard {
         self.text_input.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
 
         let config_file = match File::open(
-            self.keyboards_path
+            KEYBOARDS_PATH
                 .join(&self.settings.category)
                 .join(&self.keyboard_options[keyboard])
                 .join("keyboard.json"),
@@ -1175,7 +1180,7 @@ impl NuhxBoard {
         self.style_options = vec![StyleChoice::Default];
         self.style_options.append(
             &mut fs::read_dir(
-                self.keyboards_path
+                KEYBOARDS_PATH
                     .join(&self.settings.category)
                     .join(&self.keyboard_options[keyboard]),
             )
@@ -1197,7 +1202,7 @@ impl NuhxBoard {
             .collect(),
         );
         self.style_options.append(
-            &mut fs::read_dir(self.keyboards_path.join("global"))
+            &mut fs::read_dir(KEYBOARDS_PATH.join("global"))
                 .unwrap()
                 .map(|r| r.unwrap())
                 .filter(|entry| entry.file_type().unwrap().is_file())
@@ -1242,8 +1247,7 @@ impl NuhxBoard {
             self.style.background_image_file_name = new_image;
         }
         if let Some(name) = &self.style.background_image_file_name {
-            let path = self
-                .keyboards_path
+            let path = KEYBOARDS_PATH
                 .join(&self.settings.category)
                 .join("images")
                 .join(name);
@@ -1257,14 +1261,13 @@ impl NuhxBoard {
                         self.layout.height as u32,
                         image::imageops::FilterType::Nearest,
                     )
-                    .save(self.keyboards_path.parent().unwrap().join("background.png"))
+                    .save(KEYBOARDS_PATH.parent().unwrap().join("background.png"))
                     .unwrap();
             } else {
-                let _ =
-                    fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+                let _ = fs::remove_file(KEYBOARDS_PATH.parent().unwrap().join("background.png"));
             }
         } else {
-            let _ = fs::remove_file(self.keyboards_path.parent().unwrap().join("background.png"));
+            let _ = fs::remove_file(KEYBOARDS_PATH.parent().unwrap().join("background.png"));
         }
     }
 
@@ -1276,7 +1279,7 @@ impl NuhxBoard {
         if self.style_options[style] == StyleChoice::Default {
             self.style = Style::default();
         } else {
-            let path = self.keyboards_path.join(match &self.style_options[style] {
+            let path = KEYBOARDS_PATH.join(match &self.style_options[style] {
                 StyleChoice::Default => unreachable!(),
                 StyleChoice::Global(style_name) => {
                     format!("global/{}.style", style_name)

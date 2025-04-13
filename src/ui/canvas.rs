@@ -558,8 +558,7 @@ impl NuhxBoard {
         let shape = Polygon::new(LineString::from(boundaries), vec![]);
 
         if let Some(name) = &current_style.background_image_file_name {
-            let path = self
-                .keyboards_path
+            let path = KEYBOARDS_PATH
                 .join(&self.settings.category)
                 .join("images")
                 .join(name);

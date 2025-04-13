@@ -214,7 +214,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
         });
         if app.style.background_image_file_name.is_some() {
             let image = Image::new(Handle::from_path(
-                app.keyboards_path.parent().unwrap().join("background.png"),
+                KEYBOARDS_PATH.parent().unwrap().join("background.png"),
             ));
             return Stack::with_children(vec![image.into(), context_menu.into()]).into();
         }

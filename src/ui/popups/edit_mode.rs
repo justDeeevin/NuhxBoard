@@ -75,7 +75,7 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
                     .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
             button("Save").on_press(Message::SaveKeyboard(Some(
-                app.keyboards_path
+                KEYBOARDS_PATH
                     .join(&app.save_keyboard_as_category)
                     .join(&app.save_keyboard_as_name)
                     .join("keyboard.json")
@@ -120,12 +120,10 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
             checkbox("Save as global", app.save_style_as_global)
                 .on_toggle(|_| Message::ToggleSaveStyleAsGlobal),
             button("Save").on_press(Message::SaveStyle(Some(match app.save_style_as_global {
-                true => app
-                    .keyboards_path
+                true => KEYBOARDS_PATH
                     .join("global")
                     .join(format!("{}.style", &app.save_style_as_name)),
-                false => app
-                    .keyboards_path
+                false => KEYBOARDS_PATH
                     .join(&app.settings.category)
                     .join(&app.keyboard_options[app.keyboard_choice.unwrap()])
                     .join(format!("{}.style", &app.save_style_as_name)),
