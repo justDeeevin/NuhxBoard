@@ -117,11 +117,14 @@
           "format": "float"
         },
         "Style": {
-          "type": "integer",
-          "format": "uint8",
-          "minimum": 0.0
+          "$ref": "#/definitions/FontStyle"
         }
       }
+    },
+    "FontStyle": {
+      "type": "integer",
+      "format": "uint8",
+      "minimum": 0.0
     },
     "KeyStyle": {
       "type": "object",

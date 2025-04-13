@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use schemars::JsonSchema;
 use serde::{
     de::Deserializer,
@@ -131,12 +132,46 @@ pub struct KeySubStyle {
 pub struct Font {
     pub font_family: String,
     pub size: f32,
-    // This is a bitfield
-    // 0b0001 = bold
-    // 0b0010 = italic
-    // 0b0100 = underline
-    // 0b1000 = strikethrough
-    pub style: u8,
+    pub style: FontStyle,
+}
+
+bitflags! {
+    #[derive(Debug, Clone, Copy)]
+    pub struct FontStyle: u8 {
+        const BOLD = 0b0001;
+        const ITALIC = 0b0010;
+        const UNDERLINE = 0b0100;
+        const STRIKETHROUGH = 0b1000;
+    }
+}
+
+impl Serialize for FontStyle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u8(self.bits())
+    }
+}
+
+impl<'de> Deserialize<'de> for FontStyle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let bits = u8::deserialize(deserializer)?;
+        FontStyle::from_bits(bits).ok_or_else(|| serde::de::Error::custom("Extraneous bits set"))
+    }
+}
+
+impl JsonSchema for FontStyle {
+    fn schema_name() -> String {
+        "FontStyle".to_string()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        gen.subschema_for::<u8>()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
@@ -232,7 +267,7 @@ impl Default for Font {
         Self {
             font_family: "Courier New".into(),
             size: 10.0,
-            style: 0,
+            style: FontStyle::empty(),
         }
     }
 }

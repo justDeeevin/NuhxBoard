@@ -524,13 +524,13 @@ impl NuhxBoard {
                         .get(current_style.font.font_family.as_str())
                         .unwrap(),
                 ),
-                weight: if current_style.font.style & 1 != 0 {
+                weight: if current_style.font.style.contains(FontStyle::BOLD) {
                     iced::font::Weight::Bold
                 } else {
                     iced::font::Weight::Normal
                 },
                 stretch: iced::font::Stretch::Normal,
-                style: if current_style.font.style & 0b10 != 0 {
+                style: if current_style.font.style.contains(FontStyle::ITALIC) {
                     iced::font::Style::Italic
                 } else {
                     iced::font::Style::Normal

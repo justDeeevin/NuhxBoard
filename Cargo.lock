@@ -3549,6 +3549,7 @@ dependencies = [
 name = "nuhxboard-types"
 version = "0.7.0"
 dependencies = [
+ "bitflags 2.9.0",
  "display-info",
  "geo",
  "iced",

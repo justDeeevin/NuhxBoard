@@ -5,6 +5,7 @@ use iced_multi_window::Window;
 use nuhxboard_types::{
     config::SerializablePoint,
     settings::{Capitalization, DisplayChoice},
+    style::FontStyle,
 };
 use rdev::Event;
 
@@ -83,18 +84,12 @@ pub enum StyleSetting {
     LooseKeyShowOutline(u32),
     LooseKeyOutlineWidth { id: u32, width: u32 },
     LooseKeyBackgroundImage(u32),
-    LooseKeyBold(u32),
-    LooseKeyItalic(u32),
-    LooseKeyUnderline(u32),
-    LooseKeyStrikethrough(u32),
+    LooseKeyFontStyle { id: u32, style: FontStyle },
     PressedKeyFontFamily(u32),
     PressedKeyShowOutline(u32),
     PressedKeyOutlineWidth { id: u32, width: u32 },
     PressedKeyBackgroundImage(u32),
-    PressedKeyBold(u32),
-    PressedKeyItalic(u32),
-    PressedKeyUnderline(u32),
-    PressedKeyStrikethrough(u32),
+    PressedKeyFontStyle { id: u32, style: FontStyle },
     MouseSpeedIndicatorOutlineWidth { id: u32, width: u32 },
 }
 

@@ -8,7 +8,7 @@ use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
 use nuhxboard_types::{
     config::{BoardElement, CommonDefinitionRef, SerializablePoint},
-    style::{self, KeySubStyle},
+    style::{self, FontStyle, KeySubStyle},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1009,19 +1009,19 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                             .unwrap()
                                     ),
                                     stretch: iced::font::Stretch::Normal,
-                                    weight: if font.style & 1 != 0 {
+                                    weight: if font.style.contains(FontStyle::BOLD) {
                                         iced::font::Weight::Bold
                                     } else {
                                         iced::font::Weight::Normal
                                     },
-                                    style: if font.style & 0b10 != 0 {
+                                    style: if font.style.contains(FontStyle::ITALIC) {
                                         iced::font::Style::Italic
                                     } else {
                                         iced::font::Style::Normal
                                     },
                                 })
-                                .underline(font.style & 0b0100 != 0)
-                                .strikethrough(font.style & 0b1000 != 0)]
+                                .underline(font.style.contains(FontStyle::UNDERLINE))
+                                .strikethrough(font.style.contains(FontStyle::STRIKETHROUGH))]
                         },
                         labeled_text_input(
                             "Font Family: ",
@@ -1042,22 +1042,42 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             )))
                         ),
                         row![
-                            checkbox("Bold ", loose.font.style & 1 != 0).on_toggle(move |_| {
-                                Message::ChangeStyle(StyleSetting::LooseKeyBold(id))
-                            }),
-                            checkbox("Italic", loose.font.style & 0b10 != 0).on_toggle(move |_| {
-                                Message::ChangeStyle(StyleSetting::LooseKeyItalic(id))
-                            }),
+                            checkbox("Bold ", loose.font.style.contains(FontStyle::BOLD))
+                                .on_toggle(move |_| {
+                                    Message::ChangeStyle(StyleSetting::LooseKeyFontStyle {
+                                        id,
+                                        style: FontStyle::BOLD,
+                                    })
+                                }),
+                            checkbox("Italic", loose.font.style.contains(FontStyle::ITALIC))
+                                .on_toggle(move |_| {
+                                    Message::ChangeStyle(StyleSetting::LooseKeyFontStyle {
+                                        id,
+                                        style: FontStyle::ITALIC,
+                                    })
+                                }),
                         ],
                         row![
-                            checkbox("Underline ", loose.font.style & 0b100 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::LooseKeyUnderline(id))
-                            ),
-                            checkbox("Strikethrough", loose.font.style & 0b1000 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::LooseKeyStrikethrough(
-                                    id
-                                ))
-                            ),
+                            checkbox(
+                                "Underline ",
+                                loose.font.style.contains(FontStyle::UNDERLINE)
+                            )
+                            .on_toggle(move |_| Message::ChangeStyle(
+                                StyleSetting::LooseKeyFontStyle {
+                                    id,
+                                    style: FontStyle::UNDERLINE
+                                }
+                            )),
+                            checkbox(
+                                "Strikethrough",
+                                loose.font.style.contains(FontStyle::STRIKETHROUGH)
+                            )
+                            .on_toggle(move |_| Message::ChangeStyle(
+                                StyleSetting::LooseKeyFontStyle {
+                                    id,
+                                    style: FontStyle::STRIKETHROUGH
+                                }
+                            )),
                         ]
                     ]),
                     text("Outline"),
@@ -1148,19 +1168,19 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                             .unwrap()
                                     ),
                                     stretch: iced::font::Stretch::Normal,
-                                    weight: if font.style & 1 != 0 {
+                                    weight: if font.style.contains(FontStyle::BOLD) {
                                         iced::font::Weight::Bold
                                     } else {
                                         iced::font::Weight::Normal
                                     },
-                                    style: if font.style & 0b10 != 0 {
+                                    style: if font.style.contains(FontStyle::ITALIC) {
                                         iced::font::Style::Italic
                                     } else {
                                         iced::font::Style::Normal
                                     },
                                 })
-                                .underline(font.style & 0b0100 != 0)
-                                .strikethrough(font.style & 0b1000 != 0)]
+                                .underline(font.style.contains(FontStyle::UNDERLINE))
+                                .strikethrough(font.style.contains(FontStyle::STRIKETHROUGH))]
                         },
                         text_input(
                             "",
@@ -1178,24 +1198,42 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                             StyleSetting::PressedKeyFontFamily(self.id)
                         )),
                         row![
-                            checkbox("Bold ", pressed.font.style & 1 != 0).on_toggle(move |_| {
-                                Message::ChangeStyle(StyleSetting::PressedKeyBold(id))
-                            }),
-                            checkbox("Italic", pressed.font.style & 0b10 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::PressedKeyItalic(id))
-                            ),
+                            checkbox("Bold ", pressed.font.style.contains(FontStyle::BOLD))
+                                .on_toggle(move |_| {
+                                    Message::ChangeStyle(StyleSetting::PressedKeyFontStyle {
+                                        id,
+                                        style: FontStyle::BOLD,
+                                    })
+                                }),
+                            checkbox("Italic", pressed.font.style.contains(FontStyle::ITALIC))
+                                .on_toggle(move |_| Message::ChangeStyle(
+                                    StyleSetting::PressedKeyFontStyle {
+                                        id,
+                                        style: FontStyle::ITALIC
+                                    }
+                                )),
                         ],
                         row![
-                            checkbox("Underline ", pressed.font.style & 0b100 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(StyleSetting::PressedKeyUnderline(
-                                    id
-                                ))
-                            ),
-                            checkbox("Strikethrough", pressed.font.style & 0b1000 != 0).on_toggle(
-                                move |_| Message::ChangeStyle(
-                                    StyleSetting::PressedKeyStrikethrough(id)
-                                )
-                            ),
+                            checkbox(
+                                "Underline ",
+                                pressed.font.style.contains(FontStyle::UNDERLINE)
+                            )
+                            .on_toggle(move |_| Message::ChangeStyle(
+                                StyleSetting::PressedKeyFontStyle {
+                                    id,
+                                    style: FontStyle::UNDERLINE
+                                }
+                            )),
+                            checkbox(
+                                "Strikethrough",
+                                pressed.font.style.contains(FontStyle::STRIKETHROUGH)
+                            )
+                            .on_toggle(move |_| Message::ChangeStyle(
+                                StyleSetting::PressedKeyFontStyle {
+                                    id,
+                                    style: FontStyle::STRIKETHROUGH
+                                }
+                            )),
                         ]
                     ]),
                     text("Outline"),

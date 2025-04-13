@@ -1510,89 +1510,29 @@ impl NuhxBoard {
                     id
                 );
             }
-            StyleSetting::LooseKeyBold(id) => {
+            StyleSetting::LooseKeyFontStyle {
+                id,
+                style: font_style,
+            } => {
                 key_style_change!(
                     style,
                     {
                         if let Some(loose) = style.loose.as_mut() {
-                            loose.font.style ^= 1 << 0;
+                            loose.font.style.toggle(font_style);
                         };
                     },
                     id
                 );
             }
-            StyleSetting::LooseKeyItalic(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(loose) = style.loose.as_mut() {
-                            loose.font.style ^= 1 << 1;
-                        };
-                    },
-                    id
-                );
-            }
-            StyleSetting::LooseKeyUnderline(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(loose) = style.loose.as_mut() {
-                            loose.font.style ^= 1 << 2;
-                        };
-                    },
-                    id
-                );
-            }
-            StyleSetting::LooseKeyStrikethrough(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(loose) = style.loose.as_mut() {
-                            loose.font.style ^= 1 << 3;
-                        };
-                    },
-                    id
-                );
-            }
-            StyleSetting::PressedKeyBold(id) => {
+            StyleSetting::PressedKeyFontStyle {
+                id,
+                style: font_style,
+            } => {
                 key_style_change!(
                     style,
                     {
                         if let Some(pressed) = style.pressed.as_mut() {
-                            pressed.font.style ^= 1 << 0;
-                        };
-                    },
-                    id
-                );
-            }
-            StyleSetting::PressedKeyItalic(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(pressed) = style.pressed.as_mut() {
-                            pressed.font.style ^= 1 << 1;
-                        };
-                    },
-                    id
-                );
-            }
-            StyleSetting::PressedKeyUnderline(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(pressed) = style.pressed.as_mut() {
-                            pressed.font.style ^= 1 << 2;
-                        }
-                    },
-                    id
-                );
-            }
-            StyleSetting::PressedKeyStrikethrough(id) => {
-                key_style_change!(
-                    style,
-                    {
-                        if let Some(pressed) = style.pressed.as_mut() {
-                            pressed.font.style ^= 1 << 3;
+                            pressed.font.style.toggle(font_style);
                         };
                     },
                     id
