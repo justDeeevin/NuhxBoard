@@ -62,6 +62,7 @@ confy = "0.6.1"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 tracing-appender = "0.2.3"
+clap = { version = "4.5.36", features = ["derive"] }
 
 [build-dependencies]
 schemars.workspace = true

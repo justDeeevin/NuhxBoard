@@ -5,24 +5,35 @@ mod nuhxboard;
 mod types;
 mod ui;
 
-use color_eyre::eyre::ContextCompat;
-use nuhxboard::*;
 use std::{
     fs::{self, File},
     io::{self, prelude::*},
 };
+
+use clap::Parser;
+use color_eyre::eyre::ContextCompat;
+use nuhxboard::*;
 use tracing::{debug, info, Level};
 use tracing_subscriber::{filter, prelude::*};
 
+#[derive(Parser)]
+struct Args {
+    #[arg(long)]
+    iced_tracing: bool,
+}
+
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    let level = std::env::var("RUST_LOG").unwrap_or("INFO".to_owned());
-    let filter =
-        filter::Targets::new().with_target("nuhxboard", level.parse().unwrap_or(Level::INFO));
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(filter)
-        .init();
+    let args = Args::parse();
+    let registry = tracing_subscriber::registry().with(tracing_subscriber::fmt::layer());
+    if !args.iced_tracing {
+        let level = std::env::var("RUST_LOG").unwrap_or("INFO".to_owned());
+        let filter =
+            filter::Targets::new().with_target("nuhxboard", level.parse().unwrap_or(Level::INFO));
+        registry.with(filter).init();
+    } else {
+        registry.init();
+    }
 
     let config_path = KEYBOARDS_PATH.parent().wrap_err("Config exists in root?")?;
 
