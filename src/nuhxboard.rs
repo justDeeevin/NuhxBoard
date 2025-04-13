@@ -23,7 +23,7 @@ use rdev::win_keycode_from_key;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
-    sync::{LazyLock, RwLock},
+    sync::{Arc, LazyLock, RwLock},
     time::{Duration, Instant},
 };
 
@@ -1138,7 +1138,7 @@ impl NuhxBoard {
         ])
     }
 
-    fn error(&mut self, error: Error) -> iced::Task<Message> {
+    fn error(&mut self, error: NuhxBoardError) -> iced::Task<Message> {
         let (_, command) = self.windows.open(Box::new(ErrorPopup { error }));
         command.map(|_| Message::None)
     }
@@ -1161,18 +1161,14 @@ impl NuhxBoard {
         ) {
             Ok(file) => file,
             Err(e) => {
-                return self.error(Error::ConfigOpen(e.to_string()));
+                return self.error(NuhxBoardError::LayoutOpen(Arc::new(e)));
             }
         };
 
         self.layout = match serde_json::from_reader(config_file) {
             Ok(config) => config,
             Err(e) => {
-                return self.error(Error::ConfigParse(if e.is_eof() {
-                    format!("Unexpected EOF (End of file) at line {}", e.line())
-                } else {
-                    e.to_string()
-                }))
+                return self.error(NuhxBoardError::LayoutParse(Arc::new(e)));
             }
         };
 
@@ -1296,17 +1292,13 @@ impl NuhxBoard {
             let style_file = match File::open(path) {
                 Ok(f) => f,
                 Err(e) => {
-                    return self.error(Error::StyleOpen(e.to_string()));
+                    return self.error(NuhxBoardError::StyleOpen(Arc::new(e)));
                 }
             };
             self.style = match serde_json::from_reader(style_file) {
                 Ok(style) => style,
                 Err(e) => {
-                    return self.error(Error::StyleParse(if e.is_eof() {
-                        format!("Unexpeted EOF (End of file) at line {}", e.line())
-                    } else {
-                        e.to_string()
-                    }))
+                    return self.error(NuhxBoardError::StyleParse(Arc::new(e)));
                 }
             };
         }
@@ -1397,14 +1389,14 @@ impl NuhxBoard {
                     }
                 }
                 let Some(key) = win_keycode_from_key(key) else {
-                    return self.error(Error::UnknownKey(key));
+                    return self.error(NuhxBoardError::UnknownKey(key));
                 };
                 self.pressed_keys.insert(key, Instant::now());
                 captured_key = Some(key);
             }
             rdev::EventType::KeyRelease(key) => {
                 let Some(key_num) = win_keycode_from_key(key) else {
-                    return self.error(Error::UnknownKey(key));
+                    return self.error(NuhxBoardError::UnknownKey(key));
                 };
                 if !self.pressed_keys.contains_key(&key_num) {
                     return Task::none();
@@ -1432,7 +1424,7 @@ impl NuhxBoard {
                     return Task::none();
                 }
                 let Ok(button) = mouse_button_code_convert(button) else {
-                    return self.error(Error::UnknownButton(button));
+                    return self.error(NuhxBoardError::UnknownButton(button));
                 };
 
                 self.pressed_mouse_buttons.insert(button, Instant::now());
@@ -1440,7 +1432,7 @@ impl NuhxBoard {
             }
             rdev::EventType::ButtonRelease(button) => {
                 let Ok(button_num) = mouse_button_code_convert(button) else {
-                    return self.error(Error::UnknownButton(button));
+                    return self.error(NuhxBoardError::UnknownButton(button));
                 };
                 if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
                     return Task::none();

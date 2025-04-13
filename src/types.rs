@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Default, Clone)]
 pub struct SelectionLists {
@@ -179,16 +179,18 @@ impl std::fmt::Display for StyleChoice {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
-pub enum Error {
-    #[error("Could not open layout definition: {0}")]
-    ConfigOpen(String),
-    #[error("Could not parse layout definition: {0}")]
-    ConfigParse(String),
-    #[error("Could not open style definition: {0}")]
-    StyleOpen(String),
-    #[error("Could not parse style definition: {0}")]
-    StyleParse(String),
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum NuhxBoardError {
+    #[error("Error parsing settings. Using default settings")]
+    SettingsParse(#[source] Arc<confy::ConfyError>),
+    #[error("Error opening keyboard layout")]
+    LayoutOpen(#[source] Arc<std::io::Error>),
+    #[error("Error parsing keyboard layout")]
+    LayoutParse(#[source] Arc<serde_json::Error>),
+    #[error("Error opening keyboard style")]
+    StyleOpen(#[source] Arc<std::io::Error>),
+    #[error("Error parsing keyboard style")]
+    StyleParse(#[source] Arc<serde_json::Error>),
     #[error("Unknown key: {0:?}")]
     UnknownKey(rdev::Key),
     #[error("Unknown button: {0:?}")]
