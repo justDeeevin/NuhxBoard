@@ -2,7 +2,7 @@ use display_info::DisplayInfo;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Settings {
     pub capitalization: Capitalization,
     pub follow_for_caps_sensitive: bool,

@@ -741,13 +741,7 @@ impl NuhxBoard {
                 self.windows.was_closed(window);
 
                 if window == self.main_window {
-                    let mut settings_file = File::create(
-                        home::home_dir()
-                            .unwrap()
-                            .join(".local/share/NuhxBoard/NuhxBoard.json"),
-                    )
-                    .unwrap();
-                    serde_json::to_writer_pretty(&mut settings_file, &self.settings).unwrap();
+                    confy::store("nuhxboard", None, self.settings.clone()).unwrap();
                     if self.windows.empty() {
                         return iced::exit();
                     } else {
