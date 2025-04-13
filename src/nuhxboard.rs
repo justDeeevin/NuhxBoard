@@ -423,7 +423,9 @@ impl NuhxBoard {
                     }
                     StyleSetting::DefaultLooseKeyFontFamily => {
                         let new_font = self.text_input.default_loose_key_font_family.clone();
-                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                            FONTS.write().unwrap().insert(new_font.clone().leak());
+                        }
                         if let Some(loose) = self.style.default_key_style.loose.as_mut() {
                             loose.font.font_family = new_font
                         };
@@ -447,7 +449,9 @@ impl NuhxBoard {
                     }
                     StyleSetting::DefaultPressedKeyFontFamily => {
                         let new_font = self.text_input.default_pressed_key_font_family.clone();
-                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                            FONTS.write().unwrap().insert(new_font.clone().leak());
+                        }
                         if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
                             pressed.font.font_family = new_font;
                         };
@@ -484,7 +488,9 @@ impl NuhxBoard {
                             .get(&id)
                             .cloned()
                             .unwrap_or_default();
-                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                            FONTS.write().unwrap().insert(new_font.clone().leak());
+                        }
                         key_style_change!(
                             style,
                             {
@@ -545,7 +551,9 @@ impl NuhxBoard {
                             .get(&id)
                             .cloned()
                             .unwrap_or_default();
-                        FONTS.write().unwrap().insert(new_font.clone().leak());
+                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                            FONTS.write().unwrap().insert(new_font.clone().leak());
+                        }
                         key_style_change!(
                             style,
                             {
