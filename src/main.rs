@@ -11,9 +11,18 @@ use std::{
     fs::{self, File},
     io::{self, prelude::*},
 };
+use tracing::{debug, info, Level};
+use tracing_subscriber::{filter, prelude::*};
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
+    let level = std::env::var("RUST_LOG").unwrap_or("INFO".to_owned());
+    let filter =
+        filter::Targets::new().with_target("nuhxboard", level.parse().unwrap_or(Level::INFO));
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(filter)
+        .init();
 
     let config_path = KEYBOARDS_PATH.parent().wrap_err("Config exists in root?")?;
 
@@ -25,6 +34,7 @@ fn main() -> color_eyre::Result<()> {
     }
 
     if fs::read_dir(&*KEYBOARDS_PATH)?.count() == 0 {
+        info!("Downloading sample keyboards");
         let res = reqwest::blocking::get(
             "https://raw.githubusercontent.com/justdeeevin/nuhxboard/main/keyboards.zip",
         )?;
@@ -35,12 +45,15 @@ fn main() -> color_eyre::Result<()> {
 
         let mut keyboards_archive = zip::ZipArchive::new(keyboards_file).unwrap();
 
-        for i in 0..keyboards_archive.len() {
+        info!("Extracting sample keyboards");
+        let len = keyboards_archive.len();
+        for i in 1..=len {
             let mut file = keyboards_archive.by_index(i).unwrap();
             let outpath = match file.enclosed_name() {
                 Some(path) => KEYBOARDS_PATH.join(path),
                 None => continue,
             };
+            debug!("{} ({i}/{len})", outpath.display());
 
             if (*file.name()).ends_with('/') {
                 fs::create_dir_all(&outpath).unwrap();

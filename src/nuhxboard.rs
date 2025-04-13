@@ -27,6 +27,7 @@ use std::{
     sync::{Arc, LazyLock, RwLock},
     time::{Duration, Instant},
 };
+use tracing::{debug, info, trace};
 
 // See canvas.rs:478
 pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
@@ -88,8 +89,10 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
 
 impl NuhxBoard {
     pub fn new() -> (Self, Task<Message>) {
+        info!("Startup");
         let mut errors = Vec::new();
 
+        info!("Loading settings");
         let settings: Settings = confy::load("NuhxBoard", None).unwrap_or_else(|e| {
             errors.push(NuhxBoardError::SettingsParse(Arc::new(e)));
             Settings::default()
@@ -112,6 +115,7 @@ impl NuhxBoard {
 
         let mut windows = WindowManager::default();
 
+        debug!("Main window");
         // The app will open the main window on startup. The WindowManager automatically tracks IDs
         // and corresponding window types and runs the correct view, theme, and title logic when
         // necessary.
@@ -168,12 +172,16 @@ impl NuhxBoard {
         match message {
             Message::Listener(event) => {
                 self.canvas.clear();
+                debug!("Input event");
+                trace!("{event:?}");
                 return self.input_event(event);
             }
             Message::None => clear_canvas = false,
             Message::ReleaseScroll(button) => {
+                debug!("Scroll release: {button}");
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
                     1 => {
+                        debug!("Disabling scroll highlight");
                         self.pressed_scroll_buttons.remove(&button);
                     }
                     n => {
@@ -182,6 +190,7 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeKeyboardCategory(category) => {
+                info!("Keyboard category changed to {category}");
                 if category.is_empty() {
                     return Task::none();
                 }
@@ -214,72 +223,85 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::LoadLayout(layout) => {
+                info!("Layout changed to {layout}");
                 self.canvas.clear();
                 return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {
+                info!("Style changed to {style}");
                 self.canvas.clear();
                 return self.load_style(style);
             }
-            Message::ChangeSetting(setting) => match setting {
-                Setting::MouseSensitivity(sens) => {
-                    self.settings.mouse_sensitivity = sens;
-                }
-                Setting::ScrollHoldTime(time) => {
-                    self.settings.scroll_hold_time = time;
-                    clear_canvas = false;
-                }
-                Setting::CenterMouse => {
-                    self.settings.mouse_from_center = !self.settings.mouse_from_center;
-                }
-                Setting::DisplayChoice(choice) => {
-                    self.settings.display_choice = choice;
-                }
-                Setting::MinPressTime(time) => {
-                    self.settings.min_press_time = time;
-                    clear_canvas = false;
-                }
-                Setting::WindowTitle(title) => {
-                    self.settings.window_title = title;
-                    clear_canvas = false;
-                }
-                Setting::Capitalization(cap) => {
-                    match cap {
-                        Capitalization::Lower => {
-                            self.caps = false;
-                        }
-                        Capitalization::Upper => {
-                            self.caps = true;
-                        }
-                        Capitalization::Follow => {
-                            self.caps = self.true_caps;
-                        }
+            Message::ChangeSetting(setting) => {
+                info!("Setting changed: {setting:?}");
+                match setting {
+                    Setting::MouseSensitivity(sens) => {
+                        self.settings.mouse_sensitivity = sens;
                     }
-                    self.settings.capitalization = cap;
+                    Setting::ScrollHoldTime(time) => {
+                        self.settings.scroll_hold_time = time;
+                        clear_canvas = false;
+                    }
+                    Setting::CenterMouse => {
+                        self.settings.mouse_from_center = !self.settings.mouse_from_center;
+                    }
+                    Setting::DisplayChoice(choice) => {
+                        self.settings.display_choice = choice;
+                    }
+                    Setting::MinPressTime(time) => {
+                        self.settings.min_press_time = time;
+                        clear_canvas = false;
+                    }
+                    Setting::WindowTitle(title) => {
+                        self.settings.window_title = title;
+                        clear_canvas = false;
+                    }
+                    Setting::Capitalization(cap) => {
+                        match cap {
+                            Capitalization::Lower => {
+                                self.caps = false;
+                            }
+                            Capitalization::Upper => {
+                                self.caps = true;
+                            }
+                            Capitalization::Follow => {
+                                self.caps = self.true_caps;
+                            }
+                        }
+                        self.settings.capitalization = cap;
+                    }
+                    Setting::FollowForCapsSensitive => {
+                        self.settings.follow_for_caps_sensitive =
+                            !self.settings.follow_for_caps_sensitive;
+                    }
+                    Setting::FollowForCapsInsensitive => {
+                        self.settings.follow_for_caps_insensitive =
+                            !self.settings.follow_for_caps_insensitive;
+                    }
+                    Setting::UpdateTextPosition => {
+                        self.settings.update_text_position = !self.settings.update_text_position;
+                        clear_canvas = false;
+                    }
                 }
-                Setting::FollowForCapsSensitive => {
-                    self.settings.follow_for_caps_sensitive =
-                        !self.settings.follow_for_caps_sensitive;
-                }
-                Setting::FollowForCapsInsensitive => {
-                    self.settings.follow_for_caps_insensitive =
-                        !self.settings.follow_for_caps_insensitive;
-                }
-                Setting::UpdateTextPosition => {
-                    self.settings.update_text_position = !self.settings.update_text_position;
-                    clear_canvas = false;
-                }
-            },
+            }
             Message::ClearPressedKeys => {
+                info!("Clearing pressed keys");
                 self.pressed_keys.clear();
             }
             Message::ToggleEditMode => {
+                if self.edit_mode {
+                    info!("Exiting edit mode");
+                } else {
+                    info!("Entering edit mode");
+                }
                 self.edit_mode = !self.edit_mode;
             }
             Message::MoveElement { index, delta } => {
+                debug!("Moving element {index} ({},{})", delta.x, delta.y);
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveLayout(file) => {
+                info!("Saving layout to {file:?}");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
@@ -292,6 +314,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::SaveStyle(file) => {
+                info!("Saving style to {file:?}");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
@@ -304,6 +327,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::SetHeight(height) => {
+                debug!("Setting height to {height}");
                 self.layout.height = height;
                 self.canvas.clear();
                 return window::resize(
@@ -315,6 +339,7 @@ impl NuhxBoard {
                 );
             }
             Message::SetWidth(width) => {
+                debug!("Setting width to {width}");
                 self.layout.width = width;
                 self.canvas.clear();
                 return window::resize(
@@ -326,6 +351,7 @@ impl NuhxBoard {
                 );
             }
             Message::PushChange(change) => {
+                debug!("Pushing change: {change:?}");
                 if self.history_depth > 0 {
                     self.edit_history
                         .truncate(self.edit_history.len() - self.history_depth);
@@ -334,6 +360,7 @@ impl NuhxBoard {
                 self.edit_history.push(change);
             }
             Message::Undo => {
+                debug!("Undo");
                 if self.history_depth < self.edit_history.len() {
                     self.history_depth += 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth] {
@@ -348,6 +375,7 @@ impl NuhxBoard {
                 }
             }
             Message::Redo => {
+                debug!("Redo");
                 if self.history_depth > 0 {
                     self.history_depth -= 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
@@ -362,6 +390,7 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeTextInput(input, value) => {
+                debug!("Changing text input: {input:?} to {value}");
                 match input {
                     TextInputType::SaveStyleAsName => self.text_input.save_style_as_name = value,
                     TextInputType::SaveKeyboardAsName => {
@@ -401,322 +430,15 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::ChangeStyle(style) => {
-                macro_rules! key_style_change {
-                    ($name:ident, $block:block, $id:ident) => {
-                        let mut $name = self.style.default_key_style.clone();
-                        $block
-                        self.style
-                            .element_styles
-                            .entry($id)
-                            .and_modify(|$name| {
-                                let style::ElementStyle::KeyStyle(ref mut $name) = $name else {
-                                    panic!()
-                                };
-                                $block
-                            })
-                            .or_insert(style::ElementStyle::KeyStyle($name));
-                    }
-                }
-                match style {
-                    StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
-                        self.style.default_mouse_speed_indicator_style.outline_width = width;
-                    }
-                    StyleSetting::DefaultLooseKeyFontFamily => {
-                        let new_font = self.text_input.default_loose_key_font_family.clone();
-                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                            FONTS.write().unwrap().insert(new_font.clone().leak());
-                        }
-                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
-                            loose.font.font_family = new_font
-                        };
-                    }
-                    StyleSetting::DefaultLooseKeyShowOutline => {
-                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
-                            loose.show_outline = !loose.show_outline;
-                        };
-                    }
-                    StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
-                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
-                            loose.outline_width = width;
-                        };
-                    }
-                    StyleSetting::DefaultLooseKeyBackgroundImage => {
-                        let image = self.text_input.default_loose_key_background_image.clone();
-                        if let Some(loose) = self.style.default_key_style.loose.as_mut() {
-                            loose.background_image_file_name =
-                                if image.is_empty() { None } else { Some(image) };
-                        };
-                    }
-                    StyleSetting::DefaultPressedKeyFontFamily => {
-                        let new_font = self.text_input.default_pressed_key_font_family.clone();
-                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                            FONTS.write().unwrap().insert(new_font.clone().leak());
-                        }
-                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
-                            pressed.font.font_family = new_font;
-                        };
-                    }
-                    StyleSetting::DefaultPressedKeyShowOutline => {
-                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
-                            pressed.show_outline = !pressed.show_outline;
-                        };
-                    }
-                    StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
-                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
-                            pressed.outline_width = width;
-                        };
-                    }
-                    StyleSetting::DefaultPressedKeyBackgroundImage => {
-                        let image = self.text_input.default_pressed_key_background_image.clone();
-                        if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
-                            pressed.background_image_file_name =
-                                if image.is_empty() { None } else { Some(image) };
-                        };
-                    }
-                    StyleSetting::KeyboardBackgroundImage => {
-                        let image = self.text_input.keyboard_background_image.clone();
-                        self.change_background_image(Some(if image.is_empty() {
-                            None
-                        } else {
-                            Some(image)
-                        }));
-                    }
-                    StyleSetting::LooseKeyFontFamily(id) => {
-                        let new_font = self
-                            .text_input
-                            .loose_font_family
-                            .get(&id)
-                            .cloned()
-                            .unwrap_or_default();
-                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                            FONTS.write().unwrap().insert(new_font.clone().leak());
-                        }
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.font.font_family = new_font.clone();
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyShowOutline(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.show_outline = !loose.show_outline;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyOutlineWidth { id, width } => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.outline_width = width;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyBackgroundImage(id) => {
-                        let image = self
-                            .text_input
-                            .loose_background_image
-                            .get(&id)
-                            .cloned()
-                            .unwrap_or_default();
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.background_image_file_name = if image.is_empty() {
-                                        None
-                                    } else {
-                                        Some(image.clone())
-                                    };
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyFontFamily(id) => {
-                        let new_font = self
-                            .text_input
-                            .pressed_font_family
-                            .get(&id)
-                            .cloned()
-                            .unwrap_or_default();
-                        if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                            FONTS.write().unwrap().insert(new_font.clone().leak());
-                        }
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.font.font_family = new_font.clone();
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyShowOutline(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.show_outline = !pressed.show_outline;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyOutlineWidth { id, width } => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.outline_width = width;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyBackgroundImage(id) => {
-                        let image = self
-                            .text_input
-                            .pressed_background_image
-                            .get(&id)
-                            .cloned()
-                            .unwrap_or_default();
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.background_image_file_name = if image.is_empty() {
-                                        None
-                                    } else {
-                                        Some(image.clone())
-                                    };
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyBold(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.font.style ^= 1 << 0;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyItalic(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.font.style ^= 1 << 1;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyUnderline(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.font.style ^= 1 << 2;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::LooseKeyStrikethrough(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(loose) = style.loose.as_mut() {
-                                    loose.font.style ^= 1 << 3;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyBold(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.font.style ^= 1 << 0;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyItalic(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.font.style ^= 1 << 1;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyUnderline(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.font.style ^= 1 << 2;
-                                }
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::PressedKeyStrikethrough(id) => {
-                        key_style_change!(
-                            style,
-                            {
-                                if let Some(pressed) = style.pressed.as_mut() {
-                                    pressed.font.style ^= 1 << 3;
-                                };
-                            },
-                            id
-                        );
-                    }
-                    StyleSetting::MouseSpeedIndicatorOutlineWidth { id, width } => {
-                        let mut style = self.style.default_mouse_speed_indicator_style.clone();
-                        style.outline_width = width;
-                        self.style
-                            .element_styles
-                            .entry(id)
-                            .and_modify(|v| {
-                                let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) = v
-                                else {
-                                    panic!()
-                                };
-                                key.outline_width = width;
-                            })
-                            .or_insert(style::ElementStyle::MouseSpeedIndicatorStyle(style));
-                    }
-                }
+                debug!("Changing style: {style:?}");
+                self.change_style(style);
             }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
                 clear_canvas = false;
             }
             Message::Open(window) => {
+                info!("Opening new window {}", window.id());
                 if window == LoadKeyboard {
                     self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
                         .unwrap()
@@ -734,10 +456,15 @@ impl NuhxBoard {
                 return self.windows.open(window).1.map(|_| Message::None);
             }
             Message::CloseAllOf(window) => {
+                info!("Closing all windows of {}", window.id());
                 return self.windows.close_all_of(window).map(|_| Message::None);
             }
-            Message::Exit => return window::close(self.main_window),
+            Message::Exit => {
+                info!("Exiting");
+                return window::close(self.main_window);
+            }
             Message::Closed(window) => {
+                info!("Window {window} closed");
                 self.windows.was_closed(window);
 
                 if window == self.main_window {
@@ -756,6 +483,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::ChangeColor(picker, color) => {
+                debug!("Changing color picker {picker:?} to {color:?}");
                 // I love macros!
                 macro_rules! key_style_change {
                     ($name:ident, $block:block, $id:ident) => {
@@ -934,12 +662,17 @@ impl NuhxBoard {
                     }
                 }
             }
-            Message::ToggleColorPicker(picker) => self.color_pickers.toggle(picker),
+            Message::ToggleColorPicker(picker) => {
+                debug!("Toggling color picker {picker:?}");
+                self.color_pickers.toggle(picker);
+            }
             Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
+                debug!("Updating hovered element to {hovered_element:?}");
                 self.hovered_element = hovered_element;
             }
             Message::ChangeElement(element_i, property) => {
+                debug!("Changing element {element_i}: {property:?}");
                 let element = &mut self.layout.elements[element_i];
                 let mouse_key = matches!(
                     element,
@@ -1000,6 +733,7 @@ impl NuhxBoard {
                 }
             }
             Message::CenterTextPosition(i) => {
+                debug!("Centering text position of element {i}");
                 let element = &mut self.layout.elements[i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot center text position of mouse speed indicator");
@@ -1018,38 +752,45 @@ impl NuhxBoard {
                 def.text_position.x = centroid.x().trunc();
                 def.text_position.y = centroid.y().trunc();
             }
-            Message::ChangeNumberInput(input_type) => match input_type {
-                NumberInputType::BoundaryX(element, v) => {
-                    self.number_input.boundary_x.insert(element, v);
+            Message::ChangeNumberInput(input_type) => {
+                debug!("Changing number input: {input_type:?}");
+                match input_type {
+                    NumberInputType::BoundaryX(element, v) => {
+                        self.number_input.boundary_x.insert(element, v);
+                    }
+                    NumberInputType::BoundaryY(element, v) => {
+                        self.number_input.boundary_y.insert(element, v);
+                    }
+                    NumberInputType::Keycode(element, v) => {
+                        self.number_input.keycode.insert(element, v);
+                    }
+                    NumberInputType::RectanglePositionX(element, v) => {
+                        self.number_input.rectangle_position_x.insert(element, v);
+                    }
+                    NumberInputType::RectanglePositionY(element, v) => {
+                        self.number_input.rectangle_position_y.insert(element, v);
+                    }
+                    NumberInputType::RectangleSizeX(element, v) => {
+                        self.number_input.rectangle_size_x.insert(element, v);
+                    }
+                    NumberInputType::RectangleSizeY(element, v) => {
+                        self.number_input.rectangle_size_y.insert(element, v);
+                    }
                 }
-                NumberInputType::BoundaryY(element, v) => {
-                    self.number_input.boundary_y.insert(element, v);
+            }
+            Message::ChangeSelection(element, selection_type, selection) => {
+                debug!("Changing selection {element:?} {selection_type:?} to {selection}");
+                match selection_type {
+                    SelectionType::Boundary => {
+                        self.selections.boundary.insert(element, selection);
+                    }
+                    SelectionType::Keycode => {
+                        self.selections.keycode.insert(element, selection);
+                    }
                 }
-                NumberInputType::Keycode(element, v) => {
-                    self.number_input.keycode.insert(element, v);
-                }
-                NumberInputType::RectanglePositionX(element, v) => {
-                    self.number_input.rectangle_position_x.insert(element, v);
-                }
-                NumberInputType::RectanglePositionY(element, v) => {
-                    self.number_input.rectangle_position_y.insert(element, v);
-                }
-                NumberInputType::RectangleSizeX(element, v) => {
-                    self.number_input.rectangle_size_x.insert(element, v);
-                }
-                NumberInputType::RectangleSizeY(element, v) => {
-                    self.number_input.rectangle_size_y.insert(element, v);
-                }
-            },
-            Message::ChangeSelection(element, selection_type, selection) => match selection_type {
-                SelectionType::Boundary => {
-                    self.selections.boundary.insert(element, selection);
-                }
-                SelectionType::Keycode => {
-                    self.selections.keycode.insert(element, selection);
-                }
-            },
+            }
             Message::SwapBoundaries(element_i, left, right) => {
+                debug!("Swapping boundaries of element {element_i} from {left} to {right}");
                 let element = &mut self.layout.elements[element_i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot swap boundaries of mouse speed indicator");
@@ -1058,6 +799,7 @@ impl NuhxBoard {
                 self.selections.boundary.insert(element_i, right);
             }
             Message::MakeRectangle(element_i) => {
+                debug!("Making element {element_i} a rectangle");
                 let element = &mut self.layout.elements[element_i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot make rectangle of mouse speed indicator");
@@ -1104,9 +846,13 @@ impl NuhxBoard {
                     .close_all_of(Box::new(RectangleDialog { index: element_i }))
                     .map(|_| Message::None);
             }
-            Message::StartDetecting(element) => self.detecting.push(element),
+            Message::StartDetecting(element) => {
+                debug!("Detection begun for element {element}");
+                self.detecting.push(element);
+            }
         }
         if clear_canvas {
+            debug!("Clearing canvas");
             self.canvas.clear();
         }
         Task::none()
@@ -1387,6 +1133,7 @@ impl NuhxBoard {
         let mut out = Task::none();
         match event.event_type {
             rdev::EventType::KeyPress(key) => {
+                debug!("Key pressed: {key:?}");
                 if key == rdev::Key::CapsLock {
                     self.true_caps = !self.true_caps;
                     if self.settings.capitalization == Capitalization::Follow {
@@ -1400,6 +1147,7 @@ impl NuhxBoard {
                 captured_key = Some(key);
             }
             rdev::EventType::KeyRelease(key) => {
+                debug!("Key released: {key:?}");
                 let Some(key_num) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
@@ -1422,9 +1170,11 @@ impl NuhxBoard {
                         move |_| Message::key_release(key),
                     );
                 }
+                debug!("Disabling key highlight");
                 self.pressed_keys.remove(&key_num);
             }
             rdev::EventType::ButtonPress(button) => {
+                debug!("Button pressed: {button:?}");
                 if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
                     return Task::none();
                 }
@@ -1436,6 +1186,7 @@ impl NuhxBoard {
                 captured_key = Some(button);
             }
             rdev::EventType::ButtonRelease(button) => {
+                debug!("Button released: {button:?}");
                 let Ok(button_num) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
@@ -1465,9 +1216,11 @@ impl NuhxBoard {
                         move |_| Message::button_release(button),
                     );
                 }
+                debug!("Disabling button highlight");
                 self.pressed_mouse_buttons.remove(&button_num);
             }
             rdev::EventType::Wheel { delta_x, delta_y } => {
+                debug!("Wheel moved: ({delta_x}, {delta_y})");
                 let button;
                 if delta_x < 0 {
                     button = 3;
@@ -1495,6 +1248,7 @@ impl NuhxBoard {
                 );
             }
             rdev::EventType::MouseMove { x, y } => {
+                debug!("Mouse moved: ({x}, {y})");
                 let (x, y) = (x as f32, y as f32);
 
                 let current_time = event.time;
@@ -1524,6 +1278,7 @@ impl NuhxBoard {
                 };
 
                 let position_diff = (x - previous_pos.0, y - previous_pos.1);
+                trace!("Position delta: {position_diff:?}");
 
                 self.mouse_velocity = (
                     position_diff.0 / time_diff.as_secs_f32(),
@@ -1535,6 +1290,7 @@ impl NuhxBoard {
         }
 
         if let Some(key) = captured_key {
+            debug!("Key captured: {key:?}, updating layout def");
             for i in &self.detecting {
                 let BoardElement::KeyboardKey(def) = &mut self.layout.elements[*i] else {
                     continue;
@@ -1545,5 +1301,317 @@ impl NuhxBoard {
         }
 
         out
+    }
+
+    fn change_style(&mut self, style: StyleSetting) {
+        macro_rules! key_style_change {
+                    ($name:ident, $block:block, $id:ident) => {
+                        let mut $name = self.style.default_key_style.clone();
+                        $block
+                        self.style
+                            .element_styles
+                            .entry($id)
+                            .and_modify(|$name| {
+                                let style::ElementStyle::KeyStyle(ref mut $name) = $name else {
+                                    panic!()
+                                };
+                                $block
+                            })
+                            .or_insert(style::ElementStyle::KeyStyle($name));
+                    }
+                }
+        match style {
+            StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
+                self.style.default_mouse_speed_indicator_style.outline_width = width;
+            }
+            StyleSetting::DefaultLooseKeyFontFamily => {
+                let new_font = self.text_input.default_loose_key_font_family.clone();
+                if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                    FONTS.write().unwrap().insert(new_font.clone().leak());
+                }
+                if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                    loose.font.font_family = new_font
+                };
+            }
+            StyleSetting::DefaultLooseKeyShowOutline => {
+                if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                    loose.show_outline = !loose.show_outline;
+                };
+            }
+            StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
+                if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                    loose.outline_width = width;
+                };
+            }
+            StyleSetting::DefaultLooseKeyBackgroundImage => {
+                let image = self.text_input.default_loose_key_background_image.clone();
+                if let Some(loose) = self.style.default_key_style.loose.as_mut() {
+                    loose.background_image_file_name =
+                        if image.is_empty() { None } else { Some(image) };
+                };
+            }
+            StyleSetting::DefaultPressedKeyFontFamily => {
+                let new_font = self.text_input.default_pressed_key_font_family.clone();
+                if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                    FONTS.write().unwrap().insert(new_font.clone().leak());
+                }
+                if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                    pressed.font.font_family = new_font;
+                };
+            }
+            StyleSetting::DefaultPressedKeyShowOutline => {
+                if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                    pressed.show_outline = !pressed.show_outline;
+                };
+            }
+            StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
+                if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                    pressed.outline_width = width;
+                };
+            }
+            StyleSetting::DefaultPressedKeyBackgroundImage => {
+                let image = self.text_input.default_pressed_key_background_image.clone();
+                if let Some(pressed) = self.style.default_key_style.pressed.as_mut() {
+                    pressed.background_image_file_name =
+                        if image.is_empty() { None } else { Some(image) };
+                };
+            }
+            StyleSetting::KeyboardBackgroundImage => {
+                let image = self.text_input.keyboard_background_image.clone();
+                self.change_background_image(Some(if image.is_empty() {
+                    None
+                } else {
+                    Some(image)
+                }));
+            }
+            StyleSetting::LooseKeyFontFamily(id) => {
+                let new_font = self
+                    .text_input
+                    .loose_font_family
+                    .get(&id)
+                    .cloned()
+                    .unwrap_or_default();
+                if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                    FONTS.write().unwrap().insert(new_font.clone().leak());
+                }
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.font.font_family = new_font.clone();
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyShowOutline(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.show_outline = !loose.show_outline;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyOutlineWidth { id, width } => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.outline_width = width;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyBackgroundImage(id) => {
+                let image = self
+                    .text_input
+                    .loose_background_image
+                    .get(&id)
+                    .cloned()
+                    .unwrap_or_default();
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.background_image_file_name = if image.is_empty() {
+                                None
+                            } else {
+                                Some(image.clone())
+                            };
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyFontFamily(id) => {
+                let new_font = self
+                    .text_input
+                    .pressed_font_family
+                    .get(&id)
+                    .cloned()
+                    .unwrap_or_default();
+                if !FONTS.read().unwrap().contains(new_font.as_str()) {
+                    FONTS.write().unwrap().insert(new_font.clone().leak());
+                }
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.font.font_family = new_font.clone();
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyShowOutline(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.show_outline = !pressed.show_outline;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyOutlineWidth { id, width } => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.outline_width = width;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyBackgroundImage(id) => {
+                let image = self
+                    .text_input
+                    .pressed_background_image
+                    .get(&id)
+                    .cloned()
+                    .unwrap_or_default();
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.background_image_file_name = if image.is_empty() {
+                                None
+                            } else {
+                                Some(image.clone())
+                            };
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyBold(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.font.style ^= 1 << 0;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyItalic(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.font.style ^= 1 << 1;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyUnderline(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.font.style ^= 1 << 2;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::LooseKeyStrikethrough(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(loose) = style.loose.as_mut() {
+                            loose.font.style ^= 1 << 3;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyBold(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.font.style ^= 1 << 0;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyItalic(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.font.style ^= 1 << 1;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyUnderline(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.font.style ^= 1 << 2;
+                        }
+                    },
+                    id
+                );
+            }
+            StyleSetting::PressedKeyStrikethrough(id) => {
+                key_style_change!(
+                    style,
+                    {
+                        if let Some(pressed) = style.pressed.as_mut() {
+                            pressed.font.style ^= 1 << 3;
+                        };
+                    },
+                    id
+                );
+            }
+            StyleSetting::MouseSpeedIndicatorOutlineWidth { id, width } => {
+                let mut style = self.style.default_mouse_speed_indicator_style.clone();
+                style.outline_width = width;
+                self.style
+                    .element_styles
+                    .entry(id)
+                    .and_modify(|v| {
+                        let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) = v else {
+                            panic!()
+                        };
+                        key.outline_width = width;
+                    })
+                    .or_insert(style::ElementStyle::MouseSpeedIndicatorStyle(style));
+            }
+        }
     }
 }
