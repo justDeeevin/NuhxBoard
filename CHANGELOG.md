@@ -15,8 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Handling of null values for `KeyStyle.pressed` and `KeyStyle.loose`. [#13](https://github.com/justdeeevin/nuhxboard/pull/13)
 
-### Contributors
-
 ## [v0.6.0](https://github.com/justdeeevin/nuhxboard/releases/v0.6.0) - 2025-12-24
 
 Not quite a 1.0, because faces and vertices cannot yet be dragged.
