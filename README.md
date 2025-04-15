@@ -18,7 +18,7 @@ NuhxBoard is made with customizability in mind. Every part of its appearance and
 
 Keyboard layouts are grouped into categories, and styles (aside from global ones) correspond to specific keyboard layouts.
 
-Definitions are located in `~/.config/nuhxboard/keyboards`. Here’s the general structure of that directory:
+Definitions are located in `~/.config/nuhxboard/keyboards` (or `~\AppData\Roaming\NuhxBoard\keyboards` on windows. Here’s the general structure of that directory:
 
 - keyboards/
   - [CATEGORY NAME]/
