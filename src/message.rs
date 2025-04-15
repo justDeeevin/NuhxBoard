@@ -125,6 +125,8 @@ impl Message {
             platform_code: 0,
             position_code: 0,
             usb_hid: 0,
+            #[cfg(any(target_os = "windows", target_os = "macos"))]
+            extra_data: 0,
         })
     }
 
@@ -136,6 +138,8 @@ impl Message {
             platform_code: 0,
             position_code: 0,
             usb_hid: 0,
+            #[cfg(any(target_os = "windows", target_os = "macos"))]
+            extra_data: 0,
         })
     }
 }
