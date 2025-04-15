@@ -59,7 +59,7 @@ fn main() -> color_eyre::Result<()> {
         info!("Extracting sample keyboards");
         let len = keyboards_archive.len();
         for i in 1..=len {
-            let mut file = keyboards_archive.by_index(i).unwrap();
+            let mut file = keyboards_archive.by_index(i - 1).unwrap();
             let outpath = match file.enclosed_name() {
                 Some(path) => KEYBOARDS_PATH.join(path),
                 None => continue,
