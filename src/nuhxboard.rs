@@ -3,7 +3,6 @@ use crate::{
     types::*,
     ui::{app::*, popups::*},
 };
-use async_std::task::sleep;
 use display_info::DisplayInfo;
 use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
@@ -20,6 +19,7 @@ use nuhxboard_types::{
     style::{self, *},
 };
 use rdev::win_keycode_from_key;
+use smol::Timer;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
@@ -1163,7 +1163,7 @@ impl NuhxBoard {
                     < self.settings.min_press_time.into()
                 {
                     return Task::perform(
-                        sleep(
+                        Timer::after(
                             Duration::from_millis(self.settings.min_press_time)
                                 - self.pressed_keys.get(&key_num).unwrap().elapsed(),
                         ),
@@ -1205,7 +1205,7 @@ impl NuhxBoard {
                     < self.settings.min_press_time.into()
                 {
                     return Task::perform(
-                        sleep(
+                        Timer::after(
                             Duration::from_millis(self.settings.min_press_time)
                                 - self
                                     .pressed_mouse_buttons
@@ -1241,7 +1241,7 @@ impl NuhxBoard {
                 self.canvas.clear();
 
                 out = Task::perform(
-                    sleep(std::time::Duration::from_millis(
+                    Timer::after(std::time::Duration::from_millis(
                         self.settings.scroll_hold_time,
                     )),
                     move |_| Message::ReleaseScroll(button),

@@ -34,19 +34,14 @@ eula = false
 
 [dependencies]
 iced-multi-window = "1.1.0"
-async-std.workspace = true
+smol.workspace = true
 color-eyre = { version = "0.6.3", default-features = false }
 colorgrad = "0.7.1"
 display-info.workspace = true
 futures.workspace = true
 geo.workspace = true
 home = "0.5.11"
-iced = { workspace = true, features = [
-  "image",
-  "canvas",
-  "advanced",
-  "async-std",
-] }
+iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
 iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
 reqwest = { version = "0.12.15", features = ["blocking"] }
@@ -93,7 +88,7 @@ futures = "0.3.31"
 rdev = { git = "https://github.com/rustdesk-org/rdev", rev = "f9b60b1dd0f3300a1b797d7a74c116683cd232c8" }
 display-info = "0.5.4"
 schemars = "0.8.22"
-async-std = "1.13.1"
+smol = "2.0.2"
 thiserror = "2.0.12"
 # rust-version = "1.72.0"
 

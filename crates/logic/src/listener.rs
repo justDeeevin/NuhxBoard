@@ -1,4 +1,5 @@
 use async_stream::stream;
+use blocking::unblock;
 use iced::advanced::subscription::Recipe;
 use rdev::Event;
 use std::hash::Hash;
@@ -16,11 +17,11 @@ impl Recipe for RdevSubscriber {
         self: Box<Self>,
         _input: iced::advanced::subscription::EventStream,
     ) -> iced::advanced::graphics::futures::BoxStream<Self::Output> {
-        let (tx, rx) = async_std::channel::unbounded();
+        let (tx, rx) = async_channel::unbounded();
 
-        async_std::task::spawn_blocking(|| {
+        drop(smol::spawn(unblock(|| {
             rdev::listen(move |e| tx.send_blocking(e).unwrap()).unwrap();
-        });
+        })));
 
         Box::pin(stream! {
             while let Ok(e) = rx.recv().await {
