@@ -8,7 +8,7 @@ use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
 use nuhxboard_types::{
     config::{BoardElement, CommonDefinitionRef, SerializablePoint},
-    style::{self, FontStyle, KeySubStyle},
+    style::{self, FontStyle},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -215,11 +215,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
             ])
         ];
 
-        let loose = if let Some(loose) = &app.style.default_key_style.loose {
-            loose
-        } else {
-            &KeySubStyle::default_loose()
-        };
+        let loose = &app.style.default_key_style.loose;
         let loose_keys = column![
             category_label("Loose Keys"),
             text("Background"),
@@ -286,11 +282,7 @@ impl Window<NuhxBoard, Theme, Message> for KeyboardStyle {
         ]
         .padding(5);
 
-        let pressed = if let Some(pressed) = &app.style.default_key_style.pressed {
-            pressed
-        } else {
-            &KeySubStyle::default_pressed()
-        };
+        let pressed = &app.style.default_key_style.pressed;
         let pressed_keys = column![
             category_label("Pressed Keys"),
             text("Background"),
@@ -910,7 +902,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
             BoardElement::KeyboardKey(_)
             | BoardElement::MouseKey(_)
             | BoardElement::MouseScroll(_) => {
-                style::ElementStyle::KeyStyle(app.style.default_key_style.clone())
+                style::ElementStyle::KeyStyle(app.style.default_key_style.clone().into())
             }
             BoardElement::MouseSpeedIndicator(_) => style::ElementStyle::MouseSpeedIndicatorStyle(
                 app.style.default_mouse_speed_indicator_style.clone(),
@@ -941,7 +933,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
             BoardElement::KeyboardKey(_)
             | BoardElement::MouseKey(_)
             | BoardElement::MouseScroll(_) => {
-                style::ElementStyle::KeyStyle(app.style.default_key_style.clone())
+                style::ElementStyle::KeyStyle(app.style.default_key_style.clone().into())
             }
             BoardElement::MouseSpeedIndicator(_) => style::ElementStyle::MouseSpeedIndicatorStyle(
                 app.style.default_mouse_speed_indicator_style.clone(),
@@ -951,8 +943,8 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
 
         match style {
             style::ElementStyle::KeyStyle(style) => {
-                let default_loose = KeySubStyle::default_loose();
-                let loose = style.loose.as_ref().unwrap_or(&default_loose);
+                let default_loose = default.as_key_style().unwrap().loose.as_ref().unwrap();
+                let loose = style.loose.as_ref().unwrap_or(default_loose);
                 let column_1 = column![
                     category_label("Loose"),
                     text("Background"),
@@ -1107,8 +1099,8 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                     ]),
                 ];
 
-                let default_pressed = KeySubStyle::default_pressed();
-                let pressed = style.pressed.as_ref().unwrap_or(&default_pressed);
+                let default_pressed = default.as_key_style().unwrap().pressed.as_ref().unwrap();
+                let pressed = style.pressed.as_ref().unwrap_or(default_pressed);
                 let column_2 = column![
                     category_label("Pressed"),
                     text("Background"),

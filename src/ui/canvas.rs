@@ -478,7 +478,7 @@ impl NuhxBoard {
                 ElementStyle::KeyStyle(i_s) => i_s,
                 ElementStyle::MouseSpeedIndicatorStyle(_) => unreachable!(),
             },
-            None => &self.style.default_key_style,
+            None => &self.style.default_key_style.clone().into(),
         };
 
         let pressed = pressed_button_list
@@ -492,14 +492,14 @@ impl NuhxBoard {
                 if let Some(pressed) = &style.pressed {
                     pressed
                 } else {
-                    &KeySubStyle::default_pressed()
+                    &self.style.default_key_style.pressed
                 }
             }
             false => {
                 if let Some(loose) = &style.loose {
                     loose
                 } else {
-                    &KeySubStyle::default_loose()
+                    &self.style.default_key_style.loose
                 }
             }
         };
@@ -620,7 +620,7 @@ impl NuhxBoard {
                     ..if let Some(pressed) = &style.pressed {
                         pressed.background.into()
                     } else {
-                        KeySubStyle::default_pressed().background.into()
+                        self.style.default_key_style.pressed.background.into()
                     }
                 },
             );

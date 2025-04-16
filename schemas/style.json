@@ -19,7 +19,7 @@
       ]
     },
     "DefaultKeyStyle": {
-      "$ref": "#/definitions/KeyStyle"
+      "$ref": "#/definitions/DefaultKeyStyle"
     },
     "DefaultMouseSpeedIndicatorStyle": {
       "$ref": "#/definitions/MouseSpeedIndicatorStyle"
@@ -33,6 +33,21 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/KeyValue"
+      }
+    },
+    "DefaultKeyStyle": {
+      "type": "object",
+      "required": [
+        "Loose",
+        "Pressed"
+      ],
+      "properties": {
+        "Loose": {
+          "$ref": "#/definitions/KeySubStyle"
+        },
+        "Pressed": {
+          "$ref": "#/definitions/KeySubStyle"
+        }
       }
     },
     "ElementStyle": {
@@ -125,31 +140,6 @@
       "type": "integer",
       "format": "uint8",
       "minimum": 0.0
-    },
-    "KeyStyle": {
-      "type": "object",
-      "properties": {
-        "Loose": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/KeySubStyle"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "Pressed": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/KeySubStyle"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
     },
     "KeySubStyle": {
       "type": "object",

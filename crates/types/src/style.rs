@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct Style {
     pub background_color: NohRgb,
     pub background_image_file_name: Option<String>,
-    pub default_key_style: KeyStyle,
+    pub default_key_style: DefaultKeyStyle,
     pub default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle,
     #[serde(with = "CustomMap")]
     pub element_styles: HashMap<u32, ElementStyle>,
@@ -110,9 +110,25 @@ impl From<iced::Color> for NohRgb {
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
+pub struct DefaultKeyStyle {
+    pub loose: KeySubStyle,
+    pub pressed: KeySubStyle,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "PascalCase")]
 pub struct KeyStyle {
     pub loose: Option<KeySubStyle>,
     pub pressed: Option<KeySubStyle>,
+}
+
+impl From<DefaultKeyStyle> for KeyStyle {
+    fn from(val: DefaultKeyStyle) -> Self {
+        Self {
+            loose: Some(val.loose),
+            pressed: Some(val.pressed),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
@@ -189,6 +205,15 @@ pub enum ElementStyle {
     MouseSpeedIndicatorStyle(MouseSpeedIndicatorStyle),
 }
 
+impl ElementStyle {
+    pub fn as_key_style(&self) -> Option<&KeyStyle> {
+        match self {
+            ElementStyle::KeyStyle(key_style) => Some(key_style),
+            _ => None,
+        }
+    }
+}
+
 impl Default for Style {
     fn default() -> Self {
         Style {
@@ -198,8 +223,8 @@ impl Default for Style {
                 blue: 100.0,
             },
             background_image_file_name: None,
-            default_key_style: KeyStyle {
-                loose: Some(KeySubStyle {
+            default_key_style: DefaultKeyStyle {
+                loose: KeySubStyle {
                     background: NohRgb::DEFAULT_GRAY,
                     text: NohRgb::BLACK,
                     outline: NohRgb {
@@ -211,8 +236,8 @@ impl Default for Style {
                     outline_width: 1,
                     font: Font::default(),
                     background_image_file_name: None,
-                }),
-                pressed: Some(KeySubStyle {
+                },
+                pressed: KeySubStyle {
                     background: NohRgb::WHITE,
                     text: NohRgb::BLACK,
                     outline: NohRgb {
@@ -224,7 +249,7 @@ impl Default for Style {
                     outline_width: 1,
                     font: Font::default(),
                     background_image_file_name: None,
-                }),
+                },
             },
             default_mouse_speed_indicator_style: MouseSpeedIndicatorStyle {
                 inner_color: NohRgb::DEFAULT_GRAY,
@@ -232,32 +257,6 @@ impl Default for Style {
                 outline_width: 1,
             },
             element_styles: HashMap::new(),
-        }
-    }
-}
-
-impl KeySubStyle {
-    pub fn default_pressed() -> Self {
-        Self {
-            background: NohRgb::WHITE,
-            text: NohRgb::BLACK,
-            outline: NohRgb::DEFAULT_GRAY,
-            show_outline: true,
-            outline_width: 2,
-            font: Font::default(),
-            background_image_file_name: None,
-        }
-    }
-
-    pub fn default_loose() -> Self {
-        Self {
-            background: NohRgb::DEFAULT_GRAY,
-            text: NohRgb::WHITE,
-            outline: NohRgb::DEFAULT_GRAY,
-            show_outline: false,
-            outline_width: 2,
-            font: Font::default(),
-            background_image_file_name: None,
         }
     }
 }
