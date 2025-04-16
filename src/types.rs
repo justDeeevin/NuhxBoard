@@ -192,9 +192,9 @@ pub enum NuhxBoardError {
     #[error("Error parsing keyboard style")]
     StyleParse(#[source] Arc<serde_json::Error>),
     #[error("Unknown key: {0:?}")]
-    UnknownKey(rdev::Key),
+    UnknownKey(redev::Key),
     #[error("Unknown button: {0:?}")]
-    UnknownButton(rdev::Button),
+    UnknownButton(redev::Button),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

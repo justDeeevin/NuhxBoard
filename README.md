@@ -343,4 +343,4 @@ Configurable like NohBoard:
 
 https://github.com/justDeeevin/NuhxBoard/assets/90054389/80c69a52-e76d-4715-a22c-78db34743959
 
-[^1]: Internally, NuhxBoard uses conversion functions provided by [RustDesk's fork of rdev](https://github.com/rustdesk-org/rdev). Both NuhxBoard and NohBoard use Windows keycodes. See [here](https://github.com/rustdesk-org/rdev/blob/f9b60b1dd0f3300a1b797d7a74c116683cd232c8/src/keycodes/windows.rs#L84) for the full list of keycodes and their corresponding keys.
+[^1]: Internally, NuhxBoard uses conversion functions provided by [redev](https://github.com/justdeeevin/redev). Both NuhxBoard and NohBoard use Windows keycodes. See [here](https://github.com/justDeeevin/redev/blob/1be7a60eb2d9c5a2788436786e598db8e61c7b85/src/keycodes/windows.rs#L84) for the full list of keycodes and their corresponding keys.

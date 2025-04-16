@@ -3587,7 +3587,7 @@ dependencies = [
  "nalgebra",
  "nuhxboard-logic",
  "nuhxboard-types",
- "rdev",
+ "redev",
  "reqwest",
  "schemars",
  "serde_json",
@@ -3608,7 +3608,7 @@ dependencies = [
  "blocking",
  "futures",
  "iced",
- "rdev",
+ "redev",
  "smol 2.0.2",
  "thiserror 2.0.12",
 ]
@@ -4679,9 +4679,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "rdev"
-version = "0.5.0-2"
-source = "git+https://github.com/rustdesk-org/rdev?rev=f9b60b1dd0f3300a1b797d7a74c116683cd232c8#f9b60b1dd0f3300a1b797d7a74c116683cd232c8"
+name = "read-fonts"
+version = "0.22.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69aacb76b5c29acfb7f90155d39759a29496aebb49395830e928a9703d2eec2f"
+dependencies = [
+ "bytemuck",
+ "font-types",
+]
+
+[[package]]
+name = "redev"
+version = "0.1.0"
+source = "git+https://github.com/justdeeevin/redev?rev=1be7a60eb2d9c5a2788436786e598db8e61c7b85#1be7a60eb2d9c5a2788436786e598db8e61c7b85"
 dependencies = [
  "cocoa",
  "core-foundation 0.9.4",
@@ -4696,20 +4706,10 @@ dependencies = [
  "log",
  "mio 0.8.11",
  "strum",
- "strum_macros",
+ "thiserror 2.0.12",
  "widestring",
  "winapi",
  "x11",
-]
-
-[[package]]
-name = "read-fonts"
-version = "0.22.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69aacb76b5c29acfb7f90155d39759a29496aebb49395830e928a9703d2eec2f"
-dependencies = [
- "bytemuck",
- "font-types",
 ]
 
 [[package]]
@@ -5444,6 +5444,9 @@ name = "strum"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+dependencies = [
+ "strum_macros",
+]
 
 [[package]]
 name = "strum_macros"

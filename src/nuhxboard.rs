@@ -12,13 +12,13 @@ use iced::{
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
-use nuhxboard_logic::{listener::RdevSubscriber, mouse_button_code_convert};
+use nuhxboard_logic::{listener::RedevSubscriber, mouse_button_code_convert};
 use nuhxboard_types::{
     config::*,
     settings::*,
     style::{self, *},
 };
-use rdev::win_keycode_from_key;
+use redev::keycodes::windows::code_from_key as win_keycode_from_key;
 use smol::Timer;
 use std::{
     collections::{HashMap, HashSet},
@@ -811,7 +811,7 @@ impl NuhxBoard {
 
     pub fn subscription(&self) -> Subscription<Message> {
         Subscription::batch([
-            subscription::from_recipe(RdevSubscriber).map(Message::Listener),
+            subscription::from_recipe(RedevSubscriber).map(Message::Listener),
             iced::keyboard::on_key_press(|key, modifiers| {
                 if key == iced::keyboard::Key::Character(SmolStr::new("z"))
                     && ((std::env::consts::OS == "macos" && modifiers.command())
@@ -1066,13 +1066,13 @@ impl NuhxBoard {
         }
     }
 
-    fn input_event(&mut self, event: rdev::Event) -> Task<Message> {
+    fn input_event(&mut self, event: redev::Event) -> Task<Message> {
         let mut captured_key = None;
         let mut out = Task::none();
         match event.event_type {
-            rdev::EventType::KeyPress(key) => {
+            redev::EventType::KeyPress(key) => {
                 debug!("Key pressed: {key:?}");
-                if key == rdev::Key::CapsLock {
+                if key == redev::Key::CapsLock {
                     self.true_caps = !self.true_caps;
                     if self.settings.capitalization == Capitalization::Follow {
                         self.caps = !self.caps;
@@ -1084,7 +1084,7 @@ impl NuhxBoard {
                 self.pressed_keys.insert(key, Instant::now());
                 captured_key = Some(key);
             }
-            rdev::EventType::KeyRelease(key) => {
+            redev::EventType::KeyRelease(key) => {
                 debug!("Key released: {key:?}");
                 let Some(key_num) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
@@ -1111,9 +1111,9 @@ impl NuhxBoard {
                 debug!("Disabling key highlight");
                 self.pressed_keys.remove(&key_num);
             }
-            rdev::EventType::ButtonPress(button) => {
+            redev::EventType::ButtonPress(button) => {
                 debug!("Button pressed: {button:?}");
-                if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
+                if button == redev::Button::Unknown(6) || button == redev::Button::Unknown(7) {
                     return Task::none();
                 }
                 let Ok(button) = mouse_button_code_convert(button) else {
@@ -1123,12 +1123,12 @@ impl NuhxBoard {
                 self.pressed_mouse_buttons.insert(button, Instant::now());
                 captured_key = Some(button);
             }
-            rdev::EventType::ButtonRelease(button) => {
+            redev::EventType::ButtonRelease(button) => {
                 debug!("Button released: {button:?}");
                 let Ok(button_num) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
-                if button == rdev::Button::Unknown(6) || button == rdev::Button::Unknown(7) {
+                if button == redev::Button::Unknown(6) || button == redev::Button::Unknown(7) {
                     return Task::none();
                 }
                 if !self.pressed_mouse_buttons.contains_key(&button_num) {
@@ -1157,7 +1157,7 @@ impl NuhxBoard {
                 debug!("Disabling button highlight");
                 self.pressed_mouse_buttons.remove(&button_num);
             }
-            rdev::EventType::Wheel { delta_x, delta_y } => {
+            redev::EventType::Wheel { delta_x, delta_y } => {
                 debug!("Wheel moved: ({delta_x}, {delta_y})");
                 let button;
                 if delta_x < 0 {
@@ -1185,7 +1185,7 @@ impl NuhxBoard {
                     move |_| Message::ReleaseScroll(button),
                 );
             }
-            rdev::EventType::MouseMove { x, y } => {
+            redev::EventType::MouseMove { x, y } => {
                 debug!("Mouse moved: ({x}, {y})");
                 let (x, y) = (x as f32, y as f32);
 

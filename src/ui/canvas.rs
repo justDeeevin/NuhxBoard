@@ -14,7 +14,7 @@ use iced::{
 use image::ImageReader;
 use nalgebra::{Vector2, Vector3};
 use nuhxboard_types::{config::*, settings::*, style::*};
-use rdev::win_code_from_key;
+use redev::keycodes::windows::code_from_key as win_code_from_key;
 use std::collections::HashSet;
 
 fn captured_message() -> Option<Message> {
@@ -277,10 +277,10 @@ impl NuhxBoard {
                     {
                         let shift_pressed = self
                             .pressed_keys
-                            .contains_key(&win_code_from_key(rdev::Key::ShiftLeft).unwrap())
+                            .contains_key(&win_code_from_key(redev::Key::ShiftLeft).unwrap())
                             || self
                                 .pressed_keys
-                                .contains_key(&win_code_from_key(rdev::Key::ShiftRight).unwrap());
+                                .contains_key(&win_code_from_key(redev::Key::ShiftRight).unwrap());
                         match def.change_on_caps {
                             true => match self.caps
                                 ^ (shift_pressed

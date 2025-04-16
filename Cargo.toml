@@ -50,7 +50,7 @@ zip = "2.6.1"
 iced_fonts = "0.2.1"
 nuhxboard-types = { path = "crates/types", version = "0.7.0" }
 nuhxboard-logic = { path = "crates/logic", version = "0.7.0" }
-rdev.workspace = true
+redev.workspace = true
 nalgebra = "0.33.2"
 thiserror.workspace = true
 confy = "0.6.1"
@@ -85,7 +85,7 @@ geo = "0.30.0"
 iced = "0.13.1"
 serde_json = "1.0.140"
 futures = "0.3.31"
-rdev = { git = "https://github.com/rustdesk-org/rdev", rev = "f9b60b1dd0f3300a1b797d7a74c116683cd232c8" }
+redev = { git = "https://github.com/justdeeevin/redev", rev = "1be7a60eb2d9c5a2788436786e598db8e61c7b85" }
 display-info = "0.5.4"
 schemars = "0.8.22"
 smol = "2.0.2"

@@ -1,6 +1,6 @@
 pub mod listener;
 
-use rdev::Button;
+use redev::Button;
 
 #[derive(Debug, thiserror::Error)]
 #[error("Unrecognized key")]

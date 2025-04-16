@@ -7,7 +7,7 @@ use nuhxboard_types::{
     settings::{Capitalization, DisplayChoice},
     style::FontStyle,
 };
-use rdev::Event;
+use redev::Event;
 
 #[derive(Clone, Debug)]
 pub enum Message {
@@ -117,9 +117,9 @@ pub enum Setting {
 }
 
 impl Message {
-    pub fn key_release(key: rdev::Key) -> Self {
-        Message::Listener(rdev::Event {
-            event_type: rdev::EventType::KeyRelease(key),
+    pub fn key_release(key: redev::Key) -> Self {
+        Message::Listener(redev::Event {
+            event_type: redev::EventType::KeyRelease(key),
             time: std::time::SystemTime::now(),
             unicode: None,
             platform_code: 0,
@@ -130,9 +130,9 @@ impl Message {
         })
     }
 
-    pub fn button_release(button: rdev::Button) -> Self {
-        Message::Listener(rdev::Event {
-            event_type: rdev::EventType::ButtonRelease(button),
+    pub fn button_release(button: redev::Button) -> Self {
+        Message::Listener(redev::Event {
+            event_type: redev::EventType::ButtonRelease(button),
             time: std::time::SystemTime::now(),
             unicode: None,
             platform_code: 0,

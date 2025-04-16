@@ -1,12 +1,12 @@
 use async_stream::stream;
 use blocking::unblock;
 use iced::advanced::subscription::Recipe;
-use rdev::Event;
+use redev::Event;
 use std::hash::Hash;
 
-pub struct RdevSubscriber;
+pub struct RedevSubscriber;
 
-impl Recipe for RdevSubscriber {
+impl Recipe for RedevSubscriber {
     type Output = Event;
 
     fn hash(&self, state: &mut iced::advanced::subscription::Hasher) {
@@ -20,7 +20,7 @@ impl Recipe for RdevSubscriber {
         let (tx, rx) = async_channel::unbounded();
 
         drop(smol::spawn(unblock(|| {
-            rdev::listen(move |e| tx.send_blocking(e).unwrap()).unwrap();
+            redev::listen(move |e| tx.send_blocking(e).unwrap()).unwrap();
         })));
 
         Box::pin(stream! {
