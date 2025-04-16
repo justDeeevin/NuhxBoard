@@ -37,7 +37,7 @@ pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         .unwrap()
         .parent()
         .unwrap()
-        .join("keyboard")
+        .join("keyboards")
 });
 
 pub struct NuhxBoard {
