@@ -199,12 +199,12 @@ impl NuhxBoard {
             Message::Listener(event) => {
                 self.canvas.clear();
                 debug!("Input event");
-                trace!("{event:?}");
+                trace!(?event);
                 return self.input_event(event);
             }
             Message::None => clear_canvas = false,
             Message::ReleaseScroll(button) => {
-                debug!("Scroll release: {button}");
+                debug!(button, "Scroll release");
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
                     1 => {
                         debug!("Disabling scroll highlight");
@@ -216,7 +216,7 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeKeyboardCategory(category) => {
-                info!("Keyboard category changed to {category}");
+                info!(category, "Keyboard category changed");
                 if category.is_empty() {
                     return Task::none();
                 }
@@ -249,17 +249,17 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::LoadLayout(layout) => {
-                info!("Layout changed to {layout}");
+                info!(layout, "Layout changed");
                 self.canvas.clear();
                 return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {
-                info!("Style changed to {style}");
+                info!(style, "Style changed");
                 self.canvas.clear();
                 return self.load_style(style);
             }
             Message::ChangeSetting(setting) => {
-                info!("Setting changed: {setting:?}");
+                info!(?setting, "Setting changed");
                 match setting {
                     Setting::MouseSensitivity(sens) => {
                         self.settings.mouse_sensitivity = sens;
@@ -327,7 +327,7 @@ impl NuhxBoard {
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
             }
             Message::SaveLayout(file) => {
-                info!("Saving layout to {file:?}");
+                info!(?file, "Saving layout");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
@@ -340,7 +340,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::SaveStyle(file) => {
-                info!("Saving style to {file:?}");
+                info!(?file, "Saving style");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
@@ -353,7 +353,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::SetHeight(height) => {
-                debug!("Setting height to {height}");
+                debug!(height, "Setting height");
                 self.layout.height = height;
                 self.canvas.clear();
                 return window::resize(
@@ -365,7 +365,7 @@ impl NuhxBoard {
                 );
             }
             Message::SetWidth(width) => {
-                debug!("Setting width to {width}");
+                debug!(width, "Setting width");
                 self.layout.width = width;
                 self.canvas.clear();
                 return window::resize(
@@ -377,7 +377,7 @@ impl NuhxBoard {
                 );
             }
             Message::PushChange(change) => {
-                debug!("Pushing change: {change:?}");
+                debug!(?change, "Pushing change");
                 if self.history_depth > 0 {
                     self.edit_history
                         .truncate(self.edit_history.len() - self.history_depth);
@@ -410,7 +410,7 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeTextInput(input, value) => {
-                debug!("Changing text input: {input:?} to {value}");
+                debug!(?input, value, "Changing text input");
                 match input {
                     TextInputType::SaveStyleAsName => self.text_input.save_style_as_name = value,
                     TextInputType::SaveKeyboardAsName => {
@@ -450,7 +450,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::ChangeStyle(style) => {
-                debug!("Changing style: {style:?}");
+                debug!(?style, "Changing style");
                 self.change_style(style);
             }
             Message::ToggleSaveStyleAsGlobal => {
@@ -458,7 +458,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::Open(window) => {
-                info!("Opening new window {}", window.id());
+                info!(id = window.id(), "Opening new window");
                 if window == LoadKeyboard {
                     self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
                         .unwrap()
@@ -476,7 +476,7 @@ impl NuhxBoard {
                 return self.windows.open(window).1.map(|_| Message::None);
             }
             Message::CloseAllOf(window) => {
-                info!("Closing all windows of {}", window.id());
+                info!(id = window.id(), "Closing all windows");
                 return self.windows.close_all_of(window).map(|_| Message::None);
             }
             Message::Exit => {
@@ -484,7 +484,7 @@ impl NuhxBoard {
                 return window::close(self.main_window);
             }
             Message::Closed(window) => {
-                info!("Window {window} closed");
+                info!(%window, "Window closed");
                 self.windows.was_closed(window);
 
                 if window == self.main_window {
@@ -503,7 +503,7 @@ impl NuhxBoard {
                 clear_canvas = false;
             }
             Message::ChangeColor(picker, color) => {
-                debug!("Changing color picker {picker:?} to {color:?}");
+                debug!(?picker, ?color, "Changing color picker");
                 // I love macros!
                 macro_rules! mouse_speed_indicator_style_change {
                     ($name:ident, $block:block, $id:ident) => {
@@ -596,16 +596,16 @@ impl NuhxBoard {
                 }
             }
             Message::ToggleColorPicker(picker) => {
-                debug!("Toggling color picker {picker:?}");
+                debug!(?picker, "Toggling color picker");
                 self.color_pickers.toggle(picker);
             }
             Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
-                debug!("Updating hovered element to {hovered_element:?}");
+                debug!(?hovered_element, "Updating hovered element");
                 self.hovered_element = hovered_element;
             }
             Message::ChangeElement(element_i, property) => {
-                debug!("Changing element {element_i}: {property:?}");
+                debug!(element_i, ?property, "Changing element");
                 let element = &mut self.layout.elements[element_i];
                 let mouse_key = matches!(
                     element,
@@ -666,7 +666,7 @@ impl NuhxBoard {
                 }
             }
             Message::CenterTextPosition(i) => {
-                debug!("Centering text position of element {i}");
+                debug!(element = i, "Centering text position");
                 let element = &mut self.layout.elements[i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot center text position of mouse speed indicator");
@@ -686,7 +686,7 @@ impl NuhxBoard {
                 def.text_position.y = centroid.y().trunc();
             }
             Message::ChangeNumberInput(input_type) => {
-                debug!("Changing number input: {input_type:?}");
+                debug!(?input_type, "Changing number input");
                 match input_type {
                     NumberInputType::BoundaryX(element, v) => {
                         self.number_input.boundary_x.insert(element, v);
@@ -712,7 +712,7 @@ impl NuhxBoard {
                 }
             }
             Message::ChangeSelection(element, selection_type, selection) => {
-                debug!("Changing selection {element:?} {selection_type:?} to {selection}");
+                debug!(?element, ?selection_type, ?selection, "Changing selection");
                 match selection_type {
                     SelectionType::Boundary => {
                         self.selections.boundary.insert(element, selection);
@@ -723,7 +723,7 @@ impl NuhxBoard {
                 }
             }
             Message::SwapBoundaries(element_i, left, right) => {
-                debug!("Swapping boundaries of element {element_i} from {left} to {right}");
+                debug!(element_i, left, right, "Swapping boundaries");
                 let element = &mut self.layout.elements[element_i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot swap boundaries of mouse speed indicator");
@@ -732,7 +732,7 @@ impl NuhxBoard {
                 self.selections.boundary.insert(element_i, right);
             }
             Message::MakeRectangle(element_i) => {
-                debug!("Making element {element_i} a rectangle");
+                debug!(element_i, "Making rectangle");
                 let element = &mut self.layout.elements[element_i];
                 let Ok(def) = CommonDefinitionMut::try_from(element) else {
                     panic!("Cannot make rectangle of mouse speed indicator");
@@ -780,12 +780,12 @@ impl NuhxBoard {
                     .map(|_| Message::None);
             }
             Message::StartDetecting(element) => {
-                debug!("Detection begun for element {element}");
+                debug!(element, "Detection begun for element");
                 self.detecting.push(element);
             }
         }
         if clear_canvas {
-            debug!("Clearing canvas");
+            trace!("Clearing canvas");
             self.canvas.clear();
         }
         Task::none()
@@ -1065,7 +1065,7 @@ impl NuhxBoard {
         let mut out = Task::none();
         match event.event_type {
             redev::EventType::KeyPress(key) => {
-                debug!("Key pressed: {key:?}");
+                debug!(?key, "Key pressed");
                 if key == redev::Key::CapsLock {
                     self.true_caps = !self.true_caps;
                     if self.settings.capitalization == Capitalization::Follow {
@@ -1079,7 +1079,7 @@ impl NuhxBoard {
                 captured_key = Some(key);
             }
             redev::EventType::KeyRelease(key) => {
-                debug!("Key released: {key:?}");
+                debug!(?key, "Key released");
                 let Some(key_num) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
@@ -1106,7 +1106,7 @@ impl NuhxBoard {
                 self.pressed_keys.remove(&key_num);
             }
             redev::EventType::ButtonPress(button) => {
-                debug!("Button pressed: {button:?}");
+                debug!(?button, "Button pressed");
                 if button == redev::Button::Unknown(6) || button == redev::Button::Unknown(7) {
                     return Task::none();
                 }
@@ -1118,7 +1118,7 @@ impl NuhxBoard {
                 captured_key = Some(button);
             }
             redev::EventType::ButtonRelease(button) => {
-                debug!("Button released: {button:?}");
+                debug!(?button, "Button released");
                 let Ok(button_num) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
@@ -1210,7 +1210,7 @@ impl NuhxBoard {
                 };
 
                 let position_diff = (x - previous_pos.0, y - previous_pos.1);
-                trace!("Position delta: {position_diff:?}");
+                trace!(?position_diff);
 
                 self.mouse_velocity = (
                     position_diff.0 / time_diff.as_secs_f32(),
@@ -1222,7 +1222,7 @@ impl NuhxBoard {
         }
 
         if let Some(key) = captured_key {
-            debug!("Key captured: {key:?}, updating layout def");
+            debug!(?key, "Key captured, updating layout def");
             for i in &self.detecting {
                 let BoardElement::KeyboardKey(def) = &mut self.layout.elements[*i] else {
                     continue;
