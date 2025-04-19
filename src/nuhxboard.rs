@@ -14,7 +14,7 @@ use iced_multi_window::WindowManager;
 use image::ImageReader;
 use nuhxboard_logic::{listener::RedevSubscriber, mouse_button_code_convert};
 use nuhxboard_types::{
-    config::*,
+    layout::*,
     settings::*,
     style::{self, *},
 };

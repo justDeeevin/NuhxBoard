@@ -1,4 +1,4 @@
-use nuhxboard_types::{config::Layout, style::Style};
+use nuhxboard_types::{layout::Layout, style::Style};
 use schemars::schema_for;
 use std::{
     fs::{self, File},

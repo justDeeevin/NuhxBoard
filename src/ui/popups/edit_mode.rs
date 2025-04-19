@@ -7,7 +7,7 @@ use iced::{
 use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
 use nuhxboard_types::{
-    config::{BoardElement, CommonDefinitionRef, SerializablePoint},
+    layout::{BoardElement, CommonDefinitionRef, SerializablePoint},
     style::{self, FontStyle},
 };
 

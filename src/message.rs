@@ -3,7 +3,7 @@ use geo::Coord;
 use iced::{window, Color, Theme};
 use iced_multi_window::Window;
 use nuhxboard_types::{
-    config::SerializablePoint,
+    layout::SerializablePoint,
     settings::{Capitalization, DisplayChoice},
     style::FontStyle,
 };
