@@ -3583,6 +3583,7 @@ dependencies = [
  "iced-multi-window",
  "iced_aw",
  "iced_fonts 0.2.1",
+ "iced_graphics",
  "image 0.25.6",
  "nalgebra",
  "nuhxboard-logic",
@@ -3618,6 +3619,7 @@ name = "nuhxboard-types"
 version = "0.7.0"
 dependencies = [
  "bitflags 2.9.0",
+ "colorgrad",
  "display-info",
  "geo",
  "iced",

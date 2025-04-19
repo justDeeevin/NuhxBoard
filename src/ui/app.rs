@@ -1,11 +1,11 @@
-use super::{components::*, popups::*};
+use super::{components::*, keyboard::Keyboard, popups::*};
 use crate::{message::*, nuhxboard::*};
 use iced::{
     widget::{
-        canvas, checkbox, column, container, horizontal_space, image::Handle, pick_list, radio,
-        row, text, text_input, Image, Scrollable, Stack,
+        checkbox, column, container, horizontal_space, image::Handle, pick_list, radio, row, text,
+        text_input, Image, Scrollable, Stack,
     },
-    window, Background, Border, Color, Length, Renderer, Theme,
+    window, Background, Border, Color, Length, Theme,
 };
 use iced_aw::{number_input, ContextMenu, SelectionList};
 use iced_multi_window::Window;
@@ -91,11 +91,9 @@ impl Window<NuhxBoard, Theme, Message> for Main {
     }
 
     fn view<'a>(&self, app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
-        let canvas = canvas::<&NuhxBoard, Message, Theme, Renderer>(app)
-            .height(Length::Fill)
-            .width(Length::Fill);
+        let keyboard = Keyboard::new(app.layout.width, app.layout.height, app);
 
-        let context_menu = ContextMenu::new(canvas, || {
+        let context_menu = ContextMenu::new(keyboard, || {
             let mut menu = vec![
                 context_menu_button("Settings")
                     .on_press_maybe(

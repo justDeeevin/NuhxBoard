@@ -95,11 +95,7 @@ pub enum StyleSetting {
 
 #[derive(Debug, Clone)]
 pub enum Change {
-    MoveElement {
-        index: usize,
-        delta: Coord<f32>,
-        move_text: bool,
-    },
+    MoveElement { index: usize, delta: Coord<f32> },
 }
 
 #[derive(Debug, Clone)]

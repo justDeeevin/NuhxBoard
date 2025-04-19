@@ -5,7 +5,10 @@ use serde::{
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::{LazyLock, RwLock},
+};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
@@ -108,6 +111,17 @@ impl From<iced::Color> for NohRgb {
     }
 }
 
+impl From<NohRgb> for colorgrad::Color {
+    fn from(value: NohRgb) -> Self {
+        colorgrad::Color::new(
+            value.red / 255.0,
+            value.green / 255.0,
+            value.blue / 255.0,
+            1.0,
+        )
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct DefaultKeyStyle {
@@ -149,6 +163,37 @@ pub struct Font {
     pub font_family: String,
     pub size: f32,
     pub style: FontStyle,
+}
+
+impl From<FontStyle> for iced::font::Weight {
+    fn from(val: FontStyle) -> Self {
+        if val.contains(FontStyle::BOLD) {
+            iced::font::Weight::Bold
+        } else {
+            iced::font::Weight::Normal
+        }
+    }
+}
+
+impl From<FontStyle> for iced::font::Style {
+    fn from(val: FontStyle) -> Self {
+        if val.contains(FontStyle::ITALIC) {
+            iced::font::Style::Italic
+        } else {
+            iced::font::Style::Normal
+        }
+    }
+}
+
+impl Font {
+    pub fn as_iced(&self, store: &LazyLock<RwLock<HashSet<&'static str>>>) -> Option<iced::Font> {
+        Some(iced::Font {
+            family: iced::font::Family::Name(store.read().unwrap().get(self.font_family.as_str())?),
+            weight: self.style.into(),
+            style: self.style.into(),
+            stretch: iced::font::Stretch::Normal,
+        })
+    }
 }
 
 bitflags! {
@@ -209,6 +254,15 @@ impl ElementStyle {
     pub fn as_key_style(&self) -> Option<&KeyStyle> {
         match self {
             ElementStyle::KeyStyle(key_style) => Some(key_style),
+            _ => None,
+        }
+    }
+
+    pub fn as_mouse_speed_indicator_style(&self) -> Option<&MouseSpeedIndicatorStyle> {
+        match self {
+            ElementStyle::MouseSpeedIndicatorStyle(mouse_speed_indicator_style) => {
+                Some(mouse_speed_indicator_style)
+            }
             _ => None,
         }
     }

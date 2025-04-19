@@ -390,12 +390,9 @@ impl NuhxBoard {
                 if self.history_depth < self.edit_history.len() {
                     self.history_depth += 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth] {
-                        Change::MoveElement {
-                            index,
-                            delta,
-                            move_text,
-                        } => {
-                            self.layout.elements[index].translate(-delta, move_text);
+                        Change::MoveElement { index, delta } => {
+                            self.layout.elements[index]
+                                .translate(-delta, self.settings.update_text_position);
                         }
                     }
                 }
@@ -405,12 +402,9 @@ impl NuhxBoard {
                 if self.history_depth > 0 {
                     self.history_depth -= 1;
                     match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
-                        Change::MoveElement {
-                            index,
-                            delta,
-                            move_text,
-                        } => {
-                            self.layout.elements[index].translate(delta, move_text);
+                        Change::MoveElement { index, delta } => {
+                            self.layout.elements[index]
+                                .translate(delta, self.settings.update_text_position);
                         }
                     }
                 }
