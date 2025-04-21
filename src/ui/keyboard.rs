@@ -3,15 +3,15 @@ use std::{collections::HashSet, ops::Deref};
 use colorgrad::Gradient;
 use geo::{BoundingRect, Coord, Distance, Euclidean, LineString, Polygon, Within};
 use iced::{
-    advanced::{layout::Node, widget::tree, Shell, Widget},
+    advanced::{layout::Node, widget::tree, Widget},
     mouse,
     widget::{
-        canvas::{self, event::Status, Frame},
+        canvas::{self, event::Status},
         image::Handle,
     },
     Color, Element, Event, Length, Rectangle, Renderer, Size,
 };
-use iced_graphics::geometry::{Image, Path, Renderer as _};
+use iced_graphics::geometry::{frame::Backend, Image, Path, Renderer as _};
 use image::ImageReader;
 use nalgebra::{Vector2, Vector3};
 use nuhxboard_types::{
@@ -24,6 +24,8 @@ use crate::{
     message::{Change, Message},
     nuhxboard::{NuhxBoard, FONTS, KEYBOARDS_PATH},
 };
+
+type Frame = <Renderer as iced_graphics::geometry::Renderer>::Frame;
 
 const BALL_TO_RADIUS_RATIO: f32 = 0.2;
 
@@ -420,32 +422,28 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
     ) {
         let state = tree.state.downcast_ref::<State>();
 
-        let geometry = self.canvas.draw(renderer, self.bounds().size(), |frame| {
-            for (index, element) in self.layout.elements.iter().enumerate() {
-                if state.selected_element == Some(index) || state.held_element == Some(index) {
-                    continue;
-                }
-                self.draw_element(element, state, frame, index);
+        let mut frame = renderer.new_frame(self.bounds().size());
+        for (index, element) in self.layout.elements.iter().enumerate() {
+            if state.selected_element == Some(index) || state.held_element == Some(index) {
+                continue;
             }
+            self.draw_element(element, state, &mut frame, index);
+        }
 
-            // I can only have so much control over the layering of the elements. Geometry, text,
-            // and images are rendered in their own distinct passes, and their order over one
-            // another cannot be specified (to my knowledge).
-            let top_element = if state.selected_element.is_some() {
-                state.selected_element
-            } else {
-                state.held_element
-            };
-            if let Some(top_element) = top_element {
-                self.draw_element(
-                    &self.layout.elements[top_element],
-                    state,
-                    frame,
-                    top_element,
-                );
-            }
-        });
-        renderer.draw_geometry(geometry);
+        let top_element = if state.selected_element.is_some() {
+            state.selected_element
+        } else {
+            state.held_element
+        };
+        if let Some(top_element) = top_element {
+            self.draw_element(
+                &self.layout.elements[top_element],
+                state,
+                &mut frame,
+                top_element,
+            );
+        }
+        renderer.draw_geometry(frame.into_geometry());
     }
 
     fn on_event(
@@ -475,7 +473,6 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                 clear_canvas = true;
             }
             if clear_canvas {
-                captured_message(shell);
                 return Status::Captured;
             }
             return Status::Ignored;
@@ -507,10 +504,8 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                             shell.publish(Message::UpdateHoveredElement(Some(
                                                 index,
                                             )));
-                                            return Status::Captured;
                                         }
 
-                                        captured_message(shell);
                                         return Status::Captured;
                                     }
                                 }
@@ -564,9 +559,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                             shell.publish(Message::UpdateHoveredElement(Some(
                                                 index,
                                             )));
-                                            return Status::Captured;
                                         }
-                                        captured_message(shell);
                                         return Status::Captured;
                                     }
                                 }
@@ -604,31 +597,27 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                     state.selected_element = None;
                 }
 
-                captured_message(shell);
                 return Status::Captured;
             }
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
-                let message = if state.delta_accumulator != Coord::default() {
-                    let out = state.held_element.map(|index| {
+                if state.delta_accumulator != Coord::default() {
+                    if let Some(message) = state.held_element.map(|index| {
                         Message::PushChange(Change::MoveElement {
                             index,
                             delta: state.delta_accumulator,
                         })
-                    });
+                    }) {
+                        shell.publish(message);
+                    }
                     state.delta_accumulator = Coord::default();
                     state.selected_element = state.held_element;
-                    out
                 } else {
                     state.selected_element = self.hovered_element;
-                    Some(Message::UpdateCanvas)
-                };
+                }
 
                 state.held_element = None;
 
                 state.interaction = Interaction::None;
-                if let Some(message) = message {
-                    shell.publish(message);
-                }
             }
             _ => {}
         }
@@ -679,13 +668,6 @@ fn indicator_triangle(
         });
         builder.close();
     })
-}
-
-#[inline]
-fn captured_message(shell: &mut Shell<'_, Message>) {
-    if cfg!(target_os = "linux") && std::env::var("XDG_SESSION_TYPE").unwrap() == "wayland" {
-        shell.publish(Message::UpdateCanvas);
-    }
 }
 
 impl<'a> From<Keyboard<'a>> for Element<'a, Message> {

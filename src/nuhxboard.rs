@@ -7,7 +7,6 @@ use display_info::DisplayInfo;
 use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
     advanced::{graphics::core::SmolStr, subscription},
-    widget::canvas::Cache,
     window, Renderer, Subscription, Task, Theme,
 };
 use iced_multi_window::WindowManager;
@@ -71,7 +70,6 @@ pub struct NuhxBoard {
     pub main_window: window::Id,
     pub layout: Layout,
     pub style: Style,
-    pub canvas: Cache,
     /// `{[keycode]: [time_pressed]}`
     pub pressed_keys: HashMap<u32, Instant>,
     /// `{[keycode]: [time_pressed]}`
@@ -153,7 +151,6 @@ impl NuhxBoard {
                 main_window,
                 layout,
                 style: Style::default(),
-                canvas: Cache::default(),
                 pressed_keys: HashMap::new(),
                 pressed_mouse_buttons: HashMap::new(),
                 caps,
@@ -194,15 +191,13 @@ impl NuhxBoard {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
-        let mut clear_canvas = true;
         match message {
             Message::Listener(event) => {
-                self.canvas.clear();
                 debug!("Input event");
                 trace!(?event);
                 return self.input_event(event);
             }
-            Message::None => clear_canvas = false,
+            Message::None => {}
             Message::ReleaseScroll(button) => {
                 debug!(button, "Scroll release");
                 match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
@@ -245,17 +240,13 @@ impl NuhxBoard {
                 if self.startup {
                     return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
                 }
-
-                clear_canvas = false;
             }
             Message::LoadLayout(layout) => {
                 info!(layout, "Layout changed");
-                self.canvas.clear();
                 return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {
                 info!(style, "Style changed");
-                self.canvas.clear();
                 return self.load_style(style);
             }
             Message::ChangeSetting(setting) => {
@@ -266,7 +257,6 @@ impl NuhxBoard {
                     }
                     Setting::ScrollHoldTime(time) => {
                         self.settings.scroll_hold_time = time;
-                        clear_canvas = false;
                     }
                     Setting::CenterMouse => {
                         self.settings.mouse_from_center = !self.settings.mouse_from_center;
@@ -276,11 +266,9 @@ impl NuhxBoard {
                     }
                     Setting::MinPressTime(time) => {
                         self.settings.min_press_time = time;
-                        clear_canvas = false;
                     }
                     Setting::WindowTitle(title) => {
                         self.settings.window_title = title;
-                        clear_canvas = false;
                     }
                     Setting::Capitalization(cap) => {
                         match cap {
@@ -306,7 +294,6 @@ impl NuhxBoard {
                     }
                     Setting::UpdateTextPosition => {
                         self.settings.update_text_position = !self.settings.update_text_position;
-                        clear_canvas = false;
                     }
                 }
             }
@@ -336,8 +323,6 @@ impl NuhxBoard {
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.layout).unwrap();
-
-                clear_canvas = false;
             }
             Message::SaveStyle(file) => {
                 info!(?file, "Saving style");
@@ -349,13 +334,10 @@ impl NuhxBoard {
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
-
-                clear_canvas = false;
             }
             Message::SetHeight(height) => {
                 debug!(height, "Setting height");
                 self.layout.height = height;
-                self.canvas.clear();
                 return window::resize(
                     self.main_window,
                     iced::Size {
@@ -367,7 +349,6 @@ impl NuhxBoard {
             Message::SetWidth(width) => {
                 debug!(width, "Setting width");
                 self.layout.width = width;
-                self.canvas.clear();
                 return window::resize(
                     self.main_window,
                     iced::Size {
@@ -447,7 +428,6 @@ impl NuhxBoard {
                         self.text_input.pressed_font_family.insert(id, value);
                     }
                 }
-                clear_canvas = false;
             }
             Message::ChangeStyle(style) => {
                 debug!(?style, "Changing style");
@@ -455,7 +435,6 @@ impl NuhxBoard {
             }
             Message::ToggleSaveStyleAsGlobal => {
                 self.save_style_as_global = !self.save_style_as_global;
-                clear_canvas = false;
             }
             Message::Open(window) => {
                 info!(id = window.id(), "Opening new window");
@@ -499,8 +478,6 @@ impl NuhxBoard {
                 if self.windows.empty() {
                     return iced::exit();
                 }
-
-                clear_canvas = false;
             }
             Message::ChangeColor(picker, color) => {
                 debug!(?picker, ?color, "Changing color picker");
@@ -599,7 +576,6 @@ impl NuhxBoard {
                 debug!(?picker, "Toggling color picker");
                 self.color_pickers.toggle(picker);
             }
-            Message::UpdateCanvas => {}
             Message::UpdateHoveredElement(hovered_element) => {
                 debug!(?hovered_element, "Updating hovered element");
                 self.hovered_element = hovered_element;
@@ -783,10 +759,6 @@ impl NuhxBoard {
                 debug!(element, "Detection begun for element");
                 self.detecting.push(element);
             }
-        }
-        if clear_canvas {
-            trace!("Clearing canvas");
-            self.canvas.clear();
         }
         Task::none()
     }
@@ -1169,8 +1141,6 @@ impl NuhxBoard {
                     .and_modify(|v| *v += 1)
                     .or_insert(1);
                 captured_key = Some(button);
-
-                self.canvas.clear();
 
                 out = Task::perform(
                     Timer::after(std::time::Duration::from_millis(

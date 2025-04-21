@@ -35,7 +35,6 @@ pub enum Message {
     ToggleSaveStyleAsGlobal,
     ChangeColor(ColorPicker, Color),
     ToggleColorPicker(ColorPicker),
-    UpdateCanvas,
     ChangeTextInput(TextInputType, String),
     ChangeNumberInput(NumberInputType),
     ChangeSelection(usize, SelectionType, usize),
