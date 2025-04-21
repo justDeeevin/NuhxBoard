@@ -217,12 +217,14 @@
       ],
       "properties": {
         "X": {
-          "type": "number",
-          "format": "float"
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
         },
         "Y": {
-          "type": "number",
-          "format": "float"
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
         }
       }
     }

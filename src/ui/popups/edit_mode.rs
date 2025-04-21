@@ -408,10 +408,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(&def.text_position.x, 0.0.., move |v| {
+                        number_input(&def.text_position.x, 0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionX(v))
                         }),
-                        number_input(&def.text_position.y, 0.0.., move |v| {
+                        number_input(&def.text_position.y, 0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionY(v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
@@ -425,7 +425,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                 .get(&index)
                                 .copied()
                                 .unwrap_or_default(),
-                            0.0..,
+                            0..,
                             move |v| {
                                 Message::ChangeNumberInput(NumberInputType::BoundaryX(index, v))
                             }
@@ -436,7 +436,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                 .get(&index)
                                 .copied()
                                 .unwrap_or_default(),
-                            0.0..,
+                            0..,
                             move |v| {
                                 Message::ChangeNumberInput(NumberInputType::BoundaryY(index, v))
                             }
@@ -639,10 +639,10 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(&def.text_position.x, 0.0.., move |v| {
+                        number_input(&def.text_position.x, 0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionX(v))
                         }),
-                        number_input(&def.text_position.y, 0.0.., move |v| {
+                        number_input(&def.text_position.y, 0.., move |v| {
                             Message::ChangeElement(index, ElementProperty::TextPositionY(v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
@@ -748,11 +748,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
             BoardElement::MouseSpeedIndicator(def) => column![
                 row![
                     text("Location: "),
-                    number_input(&def.location.x, 0.0.., move |v| Message::ChangeElement(
+                    number_input(&def.location.x, 0.., move |v| Message::ChangeElement(
                         index,
                         ElementProperty::MouseSpeedIndicatorPositionX(v)
                     )),
-                    number_input(&def.location.y, 0.0.., move |v| Message::ChangeElement(
+                    number_input(&def.location.y, 0.., move |v| Message::ChangeElement(
                         index,
                         ElementProperty::MouseSpeedIndicatorPositionY(v)
                     ))
@@ -813,7 +813,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                         .get(&self.index)
                         .copied()
                         .unwrap_or_default(),
-                    0.0..,
+                    0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectanglePositionX(index, v))
                     }
@@ -824,7 +824,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                         .get(&self.index)
                         .copied()
                         .unwrap_or_default(),
-                    0.0..,
+                    0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectanglePositionY(index, v))
                     }
@@ -839,7 +839,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                         .get(&self.index)
                         .copied()
                         .unwrap_or_default(),
-                    0.0..,
+                    0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectangleSizeX(index, v))
                     }
@@ -850,7 +850,7 @@ impl Window<NuhxBoard, Theme, Message> for RectangleDialog {
                         .get(&self.index)
                         .copied()
                         .unwrap_or_default(),
-                    0.0..,
+                    0..,
                     move |v| {
                         Message::ChangeNumberInput(NumberInputType::RectangleSizeY(index, v))
                     }

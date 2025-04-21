@@ -13,7 +13,6 @@ keywords.workspace = true
 display-info.workspace = true
 geo.workspace = true
 iced.workspace = true
-ordered-float = "5.0.0"
 schemars.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json.workspace = true
