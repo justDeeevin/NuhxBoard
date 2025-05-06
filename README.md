@@ -12,6 +12,17 @@
 
 I may add functionality where I think it would fit, but I want to prioritize interoperability with NohBoard. Call it just another incentive for gamers to switch to Linux.
 
+## Installation
+
+NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [Cargo Binstall](https://crates.io/crates/cargo-binstall). You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). NixOS users can use the provided flake (output `packages.${system}.nuhxboard` or `packages.${system}.default`).
+
+NuhxBoard will detect if any app files are missing and replace them automatically. This includes
+
+- **The main settings**\
+  If the `NuhxBoard.json` file containing app settings and saved state doesn’t exist, it’ll be populated with defaults.
+- **Installed keyboards**\
+  If the `keyboards` directory is empty or doesn’t exist, then nuhxboard will download a pack of example keyboards to use.
+
 ## Usage
 
 NuhxBoard is made with customizability in mind. Every part of its appearance and behavior is configurable. At its core, NuhxBoard is an app that loads keyboard layouts and styles. A keyboard layout defines the positions, shapes, and behaviors of keys. It also defines the dimensions of the window. A style defines colors, fonts, and images.
@@ -323,17 +334,6 @@ NuhxBoard will lack native Wayland support for the foreseeable future. This is d
 
 Doesn’t work right now. :(\
 Support is in the works.
-
-## Installation
-
-NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [Cargo Binstall](https://crates.io/crates/cargo-binstall). You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). NixOS users can use the provided flake (output `packages.${system}.nuhxboard` or `packages.${system}.default`).
-
-NuhxBoard will detect if any app files are missing and replace them automatically. This includes
-
-- **The main settings**\
-  If the `NuhxBoard.json` file containing app settings and saved state doesn’t exist, it’ll be populated with defaults.
-- **Installed keyboards**\
-  If the `keyboards` directory is empty or doesn’t exist, then nuhxboard will download a pack of example keyboards to use.
 
 ## Demo
 
