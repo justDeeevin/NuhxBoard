@@ -19,6 +19,7 @@ use nuhxboard_types::{
     settings::Capitalization,
 };
 use redev::keycodes::windows::code_from_key as win_code_from_key;
+use tracing::trace;
 
 use crate::{
     message::{Change, Message},
@@ -451,6 +452,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
 
         for (i, c) in self.caches.iter().enumerate() {
             let geometry = c.draw(renderer, self.bounds().size(), |frame| {
+                trace!(index = i, "Redrawing element");
                 self.draw_element(&self.layout.elements[i], state, frame, i);
             });
             renderer.draw_geometry(geometry);
