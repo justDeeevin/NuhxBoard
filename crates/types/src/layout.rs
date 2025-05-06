@@ -88,13 +88,13 @@ impl From<KeyboardKeyDefinition> for CommonDefinition {
 }
 
 impl TryFrom<BoardElement> for CommonDefinition {
-    type Error = ();
+    type Error = MouseSpeedIndicatorDefinition;
 
-    fn try_from(value: BoardElement) -> Result<Self, ()> {
+    fn try_from(value: BoardElement) -> Result<Self, Self::Error> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
             BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key),
-            _ => Err(()),
+            BoardElement::MouseSpeedIndicator(key) => Err(key),
         }
     }
 }
@@ -132,13 +132,13 @@ impl<'a> From<&'a CommonDefinition> for CommonDefinitionRef<'a> {
 }
 
 impl<'a> TryFrom<&'a BoardElement> for CommonDefinitionRef<'a> {
-    type Error = ();
+    type Error = &'a MouseSpeedIndicatorDefinition;
 
-    fn try_from(value: &'a BoardElement) -> Result<Self, ()> {
+    fn try_from(value: &'a BoardElement) -> Result<Self, Self::Error> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
             BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key.into()),
-            _ => Err(()),
+            BoardElement::MouseSpeedIndicator(def) => Err(def),
         }
     }
 }
@@ -176,13 +176,13 @@ impl<'a> From<&'a mut CommonDefinition> for CommonDefinitionMut<'a> {
 }
 
 impl<'a> TryFrom<&'a mut BoardElement> for CommonDefinitionMut<'a> {
-    type Error = ();
+    type Error = &'a MouseSpeedIndicatorDefinition;
 
-    fn try_from(value: &'a mut BoardElement) -> Result<Self, ()> {
+    fn try_from(value: &'a mut BoardElement) -> Result<Self, Self::Error> {
         match value {
             BoardElement::KeyboardKey(key) => Ok(key.into()),
             BoardElement::MouseKey(key) | BoardElement::MouseScroll(key) => Ok(key.into()),
-            _ => Err(()),
+            BoardElement::MouseSpeedIndicator(key) => Err(key),
         }
     }
 }
