@@ -1,4 +1,4 @@
-# <img src="https://github.com/justDeeevin/NuhxBoard/raw/main/NuhxBoard.png" alt="The NuhxBoard logo" width="34" > NuhxBoard
+# <img src="https://github.com/justDeeevin/NuhxBoard/raw/main/media/NuhxBoard.png" alt="The NuhxBoard logo" width="34" > NuhxBoard
 
 ![Crates.io version](https://img.shields.io/crates/v/nuhxboard)
 ![Crates.io license](https://img.shields.io/crates/l/nuhxboard)
