@@ -9,6 +9,8 @@ use nuhxboard_types::{
 };
 use redev::Event;
 
+use std::path::PathBuf;
+
 #[derive(Clone, Debug)]
 pub enum Message {
     Open(Box<dyn Window<NuhxBoard, Theme, Message>>),
@@ -25,8 +27,8 @@ pub enum Message {
     ClearPressedKeys,
     ToggleEditMode,
     MoveElement { index: usize, delta: Coord<f32> },
-    SaveLayout(Option<std::path::PathBuf>),
-    SaveStyle(Option<std::path::PathBuf>),
+    SaveLayout(Option<PathBuf>),
+    SaveStyle(Option<PathBuf>),
     SetHeight(f32),
     SetWidth(f32),
     PushChange(Change),
