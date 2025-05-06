@@ -12,7 +12,7 @@ use iced_multi_window::Window;
 use nuhxboard_types::settings::*;
 use std::sync::Arc;
 
-static IMAGE: &[u8] = include_bytes!("../../NuhxBoard.png");
+static IMAGE: &[u8] = include_bytes!("../../media/NuhxBoard.png");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadKeyboard;
