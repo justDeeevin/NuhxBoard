@@ -57,13 +57,13 @@ pub enum SelectionType {
 pub enum ElementProperty {
     Text(String),
     ShiftText(String),
-    TextPositionX(u32),
-    TextPositionY(u32),
+    TextPositionX(f32),
+    TextPositionY(f32),
     FollowCaps,
     Boundary(usize, Option<SerializablePoint>),
     Keycode(usize, Option<u32>),
-    MouseSpeedIndicatorPositionX(u32),
-    MouseSpeedIndicatorPositionY(u32),
+    MouseSpeedIndicatorPositionX(f32),
+    MouseSpeedIndicatorPositionY(f32),
     MouseSpeedIndicatorRadius(f32),
 }
 

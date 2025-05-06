@@ -651,15 +651,15 @@ impl NuhxBoard {
                     LineString::new(
                         def.boundaries
                             .iter()
-                            .map(|p| Coord::<f32>::from(p.clone()))
+                            .map(|p| Coord::from(p.clone()))
                             .collect::<Vec<_>>(),
                     ),
                     vec![],
                 );
                 let centroid = bounds.centroid().unwrap();
 
-                def.text_position.x = centroid.x() as u32;
-                def.text_position.y = centroid.y() as u32;
+                def.text_position.x = centroid.x().trunc();
+                def.text_position.y = centroid.y().trunc();
             }
             Message::ChangeNumberInput(input_type) => {
                 debug!(?input_type, "Changing number input");

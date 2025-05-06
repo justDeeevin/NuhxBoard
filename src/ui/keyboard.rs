@@ -182,8 +182,8 @@ impl<'a> Keyboard<'a> {
                 let ball = Path::circle(
                     {
                         iced::Point {
-                            x: def.location.x as f32 + (def.radius * normalized_velocity.x),
-                            y: def.location.y as f32 + (def.radius * normalized_velocity.y),
+                            x: def.location.x + (def.radius * normalized_velocity.x),
+                            y: def.location.y + (def.radius * normalized_velocity.y),
                         }
                     },
                     def.radius * BALL_TO_RADIUS_RATIO,
@@ -209,8 +209,8 @@ impl<'a> Keyboard<'a> {
                 let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
                     def.location.clone().into(),
                     iced::Point {
-                        x: def.location.x as f32 + (def.radius * normalized_velocity.x),
-                        y: def.location.y as f32 + (def.radius * normalized_velocity.y),
+                        x: def.location.x + (def.radius * normalized_velocity.x),
+                        y: def.location.y + (def.radius * normalized_velocity.y),
                     },
                 )
                 .add_stop(0.0, style.inner_color.into())

@@ -1,4 +1,5 @@
 use iced::Point;
+use ordered_float::OrderedFloat;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -195,29 +196,20 @@ pub struct MouseSpeedIndicatorDefinition {
     pub radius: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct SerializablePoint {
-    pub x: u32,
-    pub y: u32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl From<SerializablePoint> for Point {
     fn from(point: SerializablePoint) -> Self {
-        Point::new(point.x as f32, point.y as f32)
+        Point::new(point.x, point.y)
     }
 }
 
 impl From<SerializablePoint> for geo::Coord<f32> {
-    fn from(value: SerializablePoint) -> Self {
-        Self {
-            x: value.x as f32,
-            y: value.y as f32,
-        }
-    }
-}
-
-impl From<SerializablePoint> for geo::Coord<u32> {
     fn from(value: SerializablePoint) -> Self {
         Self {
             x: value.x,
@@ -229,15 +221,6 @@ impl From<SerializablePoint> for geo::Coord<u32> {
 impl From<geo::Coord<f32>> for SerializablePoint {
     fn from(value: geo::Coord<f32>) -> Self {
         Self {
-            x: value.x as u32,
-            y: value.y as u32,
-        }
-    }
-}
-
-impl From<geo::Coord<u32>> for SerializablePoint {
-    fn from(value: geo::Coord<u32>) -> Self {
-        Self {
             x: value.x,
             y: value.y,
         }
@@ -246,13 +229,22 @@ impl From<geo::Coord<u32>> for SerializablePoint {
 
 impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
     fn add_assign(&mut self, rhs: geo::Coord<f32>) {
-        self.x += rhs.x as u32;
-        self.y += rhs.y as u32;
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
 impl std::fmt::Display for SerializablePoint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+impl Eq for SerializablePoint {}
+
+impl std::hash::Hash for SerializablePoint {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        OrderedFloat(self.x).hash(state);
+        OrderedFloat(self.y).hash(state);
     }
 }
