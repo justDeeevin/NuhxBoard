@@ -6,12 +6,12 @@ use iced::{
     advanced::{layout::Node, widget::tree, Widget},
     mouse,
     widget::{
-        canvas::{self, event::Status},
+        canvas::{self, event::Status, Frame},
         image::Handle,
     },
     Color, Element, Event, Length, Rectangle, Renderer, Size,
 };
-use iced_graphics::geometry::{frame::Backend, Image, Path, Renderer as _};
+use iced_graphics::geometry::{Image, Path, Renderer as _};
 use image::ImageReader;
 use nalgebra::{Vector2, Vector3};
 use nuhxboard_types::{
@@ -25,9 +25,8 @@ use crate::{
     nuhxboard::{NuhxBoard, FONTS, KEYBOARDS_PATH},
 };
 
-type Frame = <Renderer as iced_graphics::geometry::Renderer>::Frame;
-
 const BALL_TO_RADIUS_RATIO: f32 = 0.2;
+const HOVER_EDGE_DISTANCE: f32 = 5.0;
 
 pub struct Keyboard<'a> {
     app: &'a NuhxBoard,
@@ -52,6 +51,34 @@ struct State {
     interaction: Interaction,
     previous_cursor_position: Coord<f32>,
     delta_accumulator: Coord<f32>,
+}
+
+impl State {
+    fn set_hovered_face(&mut self, face: usize) -> bool {
+        let mut out = false;
+        if self.hovered_face.is_none() {
+            self.hovered_face = Some(face);
+            out = true;
+        }
+        if self.hovered_vertex.is_some() {
+            self.hovered_vertex = None;
+            out = true;
+        }
+        out
+    }
+
+    fn set_hovered_vertex(&mut self, vertex: usize) -> bool {
+        let mut out = false;
+        if self.hovered_vertex.is_none() {
+            self.hovered_vertex = Some(vertex);
+            out = true;
+        }
+        if self.hovered_face.is_some() {
+            self.hovered_face = None;
+            out = true;
+        }
+        out
+    }
 }
 
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -370,7 +397,7 @@ impl<'a> Keyboard<'a> {
                     canvas::Stroke {
                         // #FF4500
                         style: canvas::Style::Solid(Color::from_rgb(1.0, 45.0 / 255.0, 0.0)),
-                        width: 10.0,
+                        width: 5.0,
                         ..Default::default()
                     },
                 );
@@ -379,7 +406,7 @@ impl<'a> Keyboard<'a> {
                     &path,
                     canvas::Stroke {
                         style: canvas::Style::Solid(Color::BLACK),
-                        width: 20.0,
+                        width: 5.0,
                         ..Default::default()
                     },
                 );
@@ -422,28 +449,12 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
     ) {
         let state = tree.state.downcast_ref::<State>();
 
-        let mut frame = renderer.new_frame(self.bounds().size());
-        for (index, element) in self.layout.elements.iter().enumerate() {
-            if state.selected_element == Some(index) || state.held_element == Some(index) {
-                continue;
-            }
-            self.draw_element(element, state, &mut frame, index);
+        for (i, c) in self.caches.iter().enumerate() {
+            let geometry = c.draw(renderer, self.bounds().size(), |frame| {
+                self.draw_element(&self.layout.elements[i], state, frame, i);
+            });
+            renderer.draw_geometry(geometry);
         }
-
-        let top_element = if state.selected_element.is_some() {
-            state.selected_element
-        } else {
-            state.held_element
-        };
-        if let Some(top_element) = top_element {
-            self.draw_element(
-                &self.layout.elements[top_element],
-                state,
-                &mut frame,
-                top_element,
-            );
-        }
-        renderer.draw_geometry(frame.into_geometry());
     }
 
     fn on_event(
@@ -459,23 +470,18 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
     ) -> Status {
         let state = state.state.downcast_mut::<State>();
         if !self.edit_mode {
-            let mut clear_canvas = false;
-            if self.hovered_element.is_some() {
+            return if self.hovered_element.is_some() {
                 shell.publish(Message::UpdateHoveredElement(None));
-                return Status::Captured;
-            }
-            if state.selected_element.is_some() {
+                Status::Captured
+            } else if state.selected_element.is_some() {
                 state.selected_element = None;
-                clear_canvas = true;
-            }
-            if state.held_element.is_some() {
+                Status::Captured
+            } else if state.held_element.is_some() {
                 state.held_element = None;
-                clear_canvas = true;
-            }
-            if clear_canvas {
-                return Status::Captured;
-            }
-            return Status::Ignored;
+                Status::Captured
+            } else {
+                Status::Ignored
+            };
         }
 
         let Some(cursor_position) = cursor.position_in(self.bounds()) else {
@@ -520,40 +526,49 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                     let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
                                     if cursor_position.is_within(&bounds) {
-                                        if !bounds
-                                            // I love iterators -_-
-                                            .exterior()
-                                            .lines()
-                                            .collect::<Vec<_>>()
-                                            .as_slice()
+                                        let lines = bounds.exterior().lines().collect::<Vec<_>>();
+                                        if !lines
                                             .windows(2)
+                                            .chain(std::iter::once(
+                                                [*lines.last().unwrap(), *lines.first().unwrap()]
+                                                    .as_slice(),
+                                            ))
                                             .enumerate()
                                             .any(|(i, window)| {
                                                 let left = window[0];
                                                 let right = window[1];
 
-                                                if Euclidean.distance(cursor_position, &left) <= 5.0
+                                                if Euclidean.distance(cursor_position, &left)
+                                                    <= HOVER_EDGE_DISTANCE
                                                     && Euclidean.distance(cursor_position, &right)
-                                                        <= 5.0
+                                                        <= HOVER_EDGE_DISTANCE
                                                 {
-                                                    state.hovered_vertex = Some(i + 1);
-                                                    state.hovered_face = None;
+                                                    if state.set_hovered_vertex(i + 1) {
+                                                        shell.publish(Message::ClearCache(index));
+                                                    }
+                                                    true
                                                 } else if Euclidean.distance(cursor_position, &left)
-                                                    <= 5.0
+                                                    <= HOVER_EDGE_DISTANCE
                                                 {
-                                                    state.hovered_face = Some(i);
+                                                    if state.set_hovered_face(i) {
+                                                        shell.publish(Message::ClearCache(index));
+                                                    }
+                                                    true
                                                 } else if Euclidean
                                                     .distance(cursor_position, &right)
-                                                    <= 5.0
+                                                    <= HOVER_EDGE_DISTANCE
                                                 {
-                                                    state.hovered_face = Some(i + 1);
+                                                    if state.set_hovered_face(i + 1) {
+                                                        shell.publish(Message::ClearCache(index));
+                                                    }
+                                                    true
                                                 } else {
-                                                    return false;
+                                                    false
                                                 }
-                                                true
                                             })
                                         {
                                             state.hovered_face = None;
+                                            shell.publish(Message::ClearCache(index));
                                         }
                                         if self.hovered_element != Some(index) {
                                             shell.publish(Message::UpdateHoveredElement(Some(
@@ -592,8 +607,14 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
 
                 if state.selected_element.is_none() {
                     state.held_element = self.hovered_element;
+                    if let Some(i) = state.held_element {
+                        shell.publish(Message::ClearCache(i));
+                    }
                 } else {
                     state.held_element = state.selected_element;
+                    if let Some(i) = state.selected_element {
+                        shell.publish(Message::ClearCache(i));
+                    }
                     state.selected_element = None;
                 }
 
@@ -611,10 +632,19 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                     }
                     state.delta_accumulator = Coord::default();
                     state.selected_element = state.held_element;
+                    if let Some(i) = state.selected_element {
+                        shell.publish(Message::ClearCache(i));
+                    }
                 } else {
                     state.selected_element = self.hovered_element;
+                    if let Some(i) = state.selected_element {
+                        shell.publish(Message::ClearCache(i));
+                    }
                 }
 
+                if let Some(i) = state.held_element {
+                    shell.publish(Message::ClearCache(i));
+                }
                 state.held_element = None;
 
                 state.interaction = Interaction::None;

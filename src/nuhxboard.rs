@@ -7,6 +7,7 @@ use display_info::DisplayInfo;
 use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
     advanced::{graphics::core::SmolStr, subscription},
+    widget::canvas::Cache,
     window, Renderer, Subscription, Task, Theme,
 };
 use iced_multi_window::WindowManager;
@@ -51,12 +52,17 @@ macro_rules! key_style_change {
                 $block
                 style::ElementStyle::KeyStyle(style.into())
             });
+
+        $self.clear_cache_by_id($id);
     }
 }
 
-// See canvas.rs:478
+// Iced requires font family names to have a static lifetime. This means that `String`s read from config
+// must be leaked to be used. This data structure acts as a cache of fonts that have been used, so
+// the names only need to be leaked once.
 pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
     LazyLock::new(|| RwLock::new(HashSet::new()));
+
 pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     confy::get_configuration_file_path("NuhxBoard", None)
         .unwrap()
@@ -66,8 +72,14 @@ pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 pub struct NuhxBoard {
-    pub windows: WindowManager<NuhxBoard, Theme, Message>,
+    pub windows: WindowManager<Self, Theme, Message>,
     pub main_window: window::Id,
+    pub caches: Vec<Cache>,
+    pub caches_by_keycode: HashMap<u32, usize>,
+    pub caches_by_mouse_button: HashMap<u32, usize>,
+    pub caches_by_scroll_button: HashMap<u32, usize>,
+    pub caches_by_id: HashMap<u32, usize>,
+    pub mouse_speed_indicator_caches: Vec<usize>,
     pub layout: Layout,
     pub style: Style,
     /// `{[keycode]: [time_pressed]}`
@@ -149,6 +161,12 @@ impl NuhxBoard {
             Self {
                 windows,
                 main_window,
+                caches: Vec::new(),
+                caches_by_keycode: HashMap::new(),
+                caches_by_mouse_button: HashMap::new(),
+                caches_by_scroll_button: HashMap::new(),
+                caches_by_id: HashMap::new(),
+                mouse_speed_indicator_caches: Vec::new(),
                 layout,
                 style: Style::default(),
                 pressed_keys: HashMap::new(),
@@ -300,6 +318,7 @@ impl NuhxBoard {
             Message::ClearPressedKeys => {
                 info!("Clearing pressed keys");
                 self.pressed_keys.clear();
+                self.clear_all_caches();
             }
             Message::ToggleEditMode => {
                 if self.edit_mode {
@@ -312,6 +331,7 @@ impl NuhxBoard {
             Message::MoveElement { index, delta } => {
                 debug!("Moving element {index} ({},{})", delta.x, delta.y);
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
+                self.caches[index].clear();
             }
             Message::SaveLayout(file) => {
                 info!(?file, "Saving layout");
@@ -374,6 +394,7 @@ impl NuhxBoard {
                         Change::MoveElement { index, delta } => {
                             self.layout.elements[index]
                                 .translate(-delta, self.settings.update_text_position);
+                            self.caches[index].clear();
                         }
                     }
                 }
@@ -405,27 +426,35 @@ impl NuhxBoard {
                     }
                     TextInputType::DefaultLooseKeyBackgroundImage => {
                         self.text_input.default_loose_key_background_image = value;
+                        self.clear_all_caches();
                     }
                     TextInputType::DefaultLooseKeyFontFamily => {
                         self.text_input.default_loose_key_font_family = value;
+                        self.clear_all_caches();
                     }
                     TextInputType::DefaultPressedKeyBackgroundImage => {
                         self.text_input.default_pressed_key_background_image = value;
+                        self.clear_all_caches();
                     }
                     TextInputType::DefaultPressedKeyFontFamily => {
                         self.text_input.default_pressed_key_font_family = value;
+                        self.clear_all_caches();
                     }
                     TextInputType::LooseBackgroundImage(id) => {
                         self.text_input.loose_background_image.insert(id, value);
+                        self.clear_cache_by_id(id);
                     }
                     TextInputType::LooseFontFamily(id) => {
                         self.text_input.loose_font_family.insert(id, value);
+                        self.clear_cache_by_id(id);
                     }
                     TextInputType::PressedBackgroundImage(id) => {
                         self.text_input.pressed_background_image.insert(id, value);
+                        self.clear_cache_by_id(id);
                     }
                     TextInputType::PressedFontFamily(id) => {
                         self.text_input.pressed_font_family.insert(id, value);
+                        self.clear_cache_by_id(id);
                     }
                 }
             }
@@ -505,6 +534,7 @@ impl NuhxBoard {
                                 style::ElementStyle::MouseSpeedIndicatorStyle($name),
                             );
                         }
+                        self.clear_cache_by_id($id);
                     }
                 }
                 let loose = &mut self.style.default_key_style.loose;
@@ -516,27 +546,35 @@ impl NuhxBoard {
                     }
                     ColorPicker::DefaultLooseBackground => {
                         loose.background = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultLooseText => {
                         loose.text = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultLooseOutline => {
                         loose.outline = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultPressedBackground => {
                         pressed.background = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultPressedText => {
                         pressed.text = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultPressedOutline => {
                         pressed.outline = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultMouseSpeedIndicator1 => {
                         self.style.default_mouse_speed_indicator_style.inner_color = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::DefaultMouseSpeedIndicator2 => {
                         self.style.default_mouse_speed_indicator_style.outer_color = color.into();
+                        self.clear_all_caches();
                     }
                     ColorPicker::LooseBackground(id) => {
                         key_style_change!(self, loose, { loose.background = color.into() }, id);
@@ -578,6 +616,12 @@ impl NuhxBoard {
             }
             Message::UpdateHoveredElement(hovered_element) => {
                 debug!(?hovered_element, "Updating hovered element");
+                if let Some(hovered_element) = self.hovered_element {
+                    self.caches[hovered_element].clear();
+                }
+                if let Some(hovered_element) = hovered_element {
+                    self.caches[hovered_element].clear();
+                }
                 self.hovered_element = hovered_element;
             }
             Message::ChangeElement(element_i, property) => {
@@ -640,6 +684,7 @@ impl NuhxBoard {
                         },
                     }
                 }
+                self.caches[element_i].clear();
             }
             Message::CenterTextPosition(i) => {
                 debug!(element = i, "Centering text position");
@@ -660,6 +705,7 @@ impl NuhxBoard {
 
                 def.text_position.x = centroid.x().trunc();
                 def.text_position.y = centroid.y().trunc();
+                self.caches[i].clear();
             }
             Message::ChangeNumberInput(input_type) => {
                 debug!(?input_type, "Changing number input");
@@ -706,6 +752,7 @@ impl NuhxBoard {
                 };
                 def.boundaries.swap(left, right);
                 self.selections.boundary.insert(element_i, right);
+                self.caches[element_i].clear();
             }
             Message::MakeRectangle(element_i) => {
                 debug!(element_i, "Making rectangle");
@@ -750,6 +797,8 @@ impl NuhxBoard {
                     def.boundaries.push(point.into());
                 });
 
+                self.caches[element_i].clear();
+
                 return self
                     .windows
                     .close_all_of(Box::new(RectangleDialog { index: element_i }))
@@ -758,6 +807,12 @@ impl NuhxBoard {
             Message::StartDetecting(element) => {
                 debug!(element, "Detection begun for element");
                 self.detecting.push(element);
+            }
+            Message::ClearCache(i) => {
+                self.caches[i].clear();
+            }
+            Message::ClearAllCaches => {
+                self.clear_all_caches();
             }
         }
         Task::none()
@@ -829,6 +884,32 @@ impl NuhxBoard {
                 return self.error(NuhxBoardError::LayoutParse(Arc::new(e)));
             }
         };
+
+        self.caches.clear();
+        self.caches_by_keycode.clear();
+        self.caches_by_mouse_button.clear();
+        self.caches_by_scroll_button.clear();
+        self.mouse_speed_indicator_caches.clear();
+        for (i, e) in self.layout.elements.iter().enumerate() {
+            self.caches_by_id.insert(e.id(), i);
+            let cache = Cache::new();
+            self.caches.push(cache);
+            match e {
+                BoardElement::KeyboardKey(def) => {
+                    self.caches_by_keycode
+                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                }
+                BoardElement::MouseKey(def) => {
+                    self.caches_by_mouse_button
+                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                }
+                BoardElement::MouseScroll(def) => {
+                    self.caches_by_scroll_button
+                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                }
+                _ => {}
+            }
+        }
 
         self.style_options = vec![StyleChoice::Default];
         self.style_options.append(
@@ -985,6 +1066,7 @@ impl NuhxBoard {
             .clone()
             .unwrap_or_default();
 
+        self.clear_all_caches();
         Task::none()
     }
 
@@ -1048,6 +1130,9 @@ impl NuhxBoard {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
                 self.pressed_keys.insert(key, Instant::now());
+                if let Some(i) = self.caches_by_keycode.get(&key) {
+                    self.caches[*i].clear();
+                }
                 captured_key = Some(key);
             }
             redev::EventType::KeyRelease(key) => {
@@ -1076,6 +1161,9 @@ impl NuhxBoard {
                 }
                 debug!("Disabling key highlight");
                 self.pressed_keys.remove(&key_num);
+                if let Some(i) = self.caches_by_keycode.get(&key_num) {
+                    self.caches[*i].clear();
+                }
             }
             redev::EventType::ButtonPress(button) => {
                 debug!(?button, "Button pressed");
@@ -1087,6 +1175,9 @@ impl NuhxBoard {
                 };
 
                 self.pressed_mouse_buttons.insert(button, Instant::now());
+                if let Some(i) = self.caches_by_mouse_button.get(&button) {
+                    self.caches[*i].clear();
+                }
                 captured_key = Some(button);
             }
             redev::EventType::ButtonRelease(button) => {
@@ -1122,6 +1213,9 @@ impl NuhxBoard {
                 }
                 debug!("Disabling button highlight");
                 self.pressed_mouse_buttons.remove(&button_num);
+                if let Some(i) = self.caches_by_mouse_button.get(&button_num) {
+                    self.caches[*i].clear();
+                }
             }
             redev::EventType::Wheel { delta_x, delta_y } => {
                 debug!("Wheel moved: ({delta_x}, {delta_y})");
@@ -1148,6 +1242,9 @@ impl NuhxBoard {
                     )),
                     move |_| Message::ReleaseScroll(button),
                 );
+                if let Some(i) = self.caches_by_scroll_button.get(&button) {
+                    self.caches[*i].clear();
+                }
             }
             redev::EventType::MouseMove { x, y } => {
                 debug!("Mouse moved: ({x}, {y})");
@@ -1188,6 +1285,9 @@ impl NuhxBoard {
                 );
                 self.previous_mouse_position = (x, y);
                 self.previous_mouse_time = current_time;
+                for i in &self.mouse_speed_indicator_caches {
+                    self.caches[*i].clear();
+                }
             }
         }
 
@@ -1418,6 +1518,18 @@ impl NuhxBoard {
                     })
                     .or_insert(style::ElementStyle::MouseSpeedIndicatorStyle(style));
             }
+        }
+    }
+
+    fn clear_all_caches(&self) {
+        for c in &self.caches {
+            c.clear();
+        }
+    }
+
+    fn clear_cache_by_id(&self, id: u32) {
+        if let Some(i) = self.caches_by_id.get(&id) {
+            self.caches[*i].clear();
         }
     }
 }

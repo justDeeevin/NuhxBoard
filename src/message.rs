@@ -46,6 +46,8 @@ pub enum Message {
     CenterTextPosition(usize),
     MakeRectangle(usize),
     StartDetecting(usize),
+    ClearCache(usize),
+    ClearAllCaches,
     None,
 }
 
