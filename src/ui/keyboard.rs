@@ -163,9 +163,7 @@ impl<'a> Keyboard<'a> {
                         v.as_mouse_speed_indicator_style().unwrap()
                     });
 
-                let bg = cache.bg.draw(renderer, self.bounds().size(), |frame| {
-                    trace!(index = index, "Redrawing background");
-
+                let fg = cache.fg.draw(renderer, self.bounds().size(), |frame| {
                     frame.fill(&inner, Color::from(style.inner_color));
 
                     frame.stroke(
@@ -196,42 +194,40 @@ impl<'a> Keyboard<'a> {
                             },
                         );
                     }
-                });
 
-                if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
-                    return (cache.fg.draw(renderer, self.bounds().size(), |_| {}), bg);
-                }
+                    if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
+                        return;
+                    }
 
-                let velocity = Vector2::new(self.mouse_velocity.0, self.mouse_velocity.1);
-                let normalized_velocity = velocity.normalize();
+                    let velocity = Vector2::new(self.mouse_velocity.0, self.mouse_velocity.1);
+                    let normalized_velocity = velocity.normalize();
 
-                let squashed_magnitude =
-                    (self.settings.mouse_sensitivity * 0.000005 * velocity.magnitude()).tanh();
+                    let squashed_magnitude =
+                        (self.settings.mouse_sensitivity * 0.000005 * velocity.magnitude()).tanh();
 
-                let ball = Path::circle(
-                    {
-                        iced::Point {
-                            x: *(def.location.x + (def.radius * normalized_velocity.x)),
-                            y: *(def.location.y + (def.radius * normalized_velocity.y)),
-                        }
-                    },
-                    def.radius * BALL_TO_RADIUS_RATIO,
-                );
+                    let ball = Path::circle(
+                        {
+                            iced::Point {
+                                x: *(def.location.x + (def.radius * normalized_velocity.x)),
+                                y: *(def.location.y + (def.radius * normalized_velocity.y)),
+                            }
+                        },
+                        def.radius * BALL_TO_RADIUS_RATIO,
+                    );
 
-                let triangle = indicator_triangle(
-                    velocity,
-                    def.radius,
-                    BALL_TO_RADIUS_RATIO,
-                    squashed_magnitude,
-                    def.location.clone().into(),
-                );
+                    let triangle = indicator_triangle(
+                        velocity,
+                        def.radius,
+                        BALL_TO_RADIUS_RATIO,
+                        squashed_magnitude,
+                        def.location.clone().into(),
+                    );
 
-                let ball_gradient = colorgrad::GradientBuilder::new()
-                    .colors(&[style.inner_color.into(), style.outer_color.into()])
-                    .build::<colorgrad::LinearGradient>()
-                    .unwrap();
-                let ball_color = ball_gradient.at(squashed_magnitude);
-                let fg = cache.fg.draw(renderer, self.bounds().size(), |frame| {
+                    let ball_gradient = colorgrad::GradientBuilder::new()
+                        .colors(&[style.inner_color.into(), style.outer_color.into()])
+                        .build::<colorgrad::LinearGradient>()
+                        .unwrap();
+                    let ball_color = ball_gradient.at(squashed_magnitude);
                     trace!(index = index, "Redrawing foreground");
 
                     frame.fill(
@@ -250,7 +246,7 @@ impl<'a> Keyboard<'a> {
                     frame.fill(&triangle, triangle_gradient);
                 });
 
-                (fg, bg)
+                (fg, cache.bg.draw(renderer, self.bounds().size(), |_| {}))
             }
         }
     }
