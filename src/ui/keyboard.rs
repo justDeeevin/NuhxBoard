@@ -228,7 +228,7 @@ impl<'a> Keyboard<'a> {
                         .build::<colorgrad::LinearGradient>()
                         .unwrap();
                     let ball_color = ball_gradient.at(squashed_magnitude);
-                    trace!(index = index, "Redrawing foreground");
+                    trace!(index, "Redrawing foreground");
 
                     frame.fill(
                         &ball,
@@ -300,7 +300,7 @@ impl<'a> Keyboard<'a> {
         });
 
         let fg = cache.fg.draw(renderer, self.bounds().size(), |frame| {
-            trace!(index = index, "Redrawing foreground");
+            trace!(index, "Redrawing foreground");
 
             frame.fill_text(canvas::Text {
                 content: text,
@@ -371,7 +371,7 @@ impl<'a> Keyboard<'a> {
         });
 
         let bg = cache.bg.draw(renderer, self.bounds().size(), |frame| {
-            trace!(index = index, "Redrawing background");
+            trace!(index, "Redrawing background");
 
             if let Some(name) = &current_style.background_image_file_name {
                 let path = KEYBOARDS_PATH
