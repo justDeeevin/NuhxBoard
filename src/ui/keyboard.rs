@@ -19,7 +19,7 @@ use nuhxboard_types::{
     settings::Capitalization,
 };
 use redev::keycodes::windows::code_from_key as win_code_from_key;
-use tracing::trace;
+use tracing::{debug, trace};
 
 use crate::{
     message::{Change, Message},
@@ -654,11 +654,13 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                 if state.selected_element.is_none() {
                     state.held_element = self.hovered_element;
                     if let Some(i) = state.held_element {
+                        debug!(index = i, "picking up element");
                         shell.publish(Message::ClearCache(i));
                     }
                 } else {
                     state.held_element = state.selected_element;
                     if let Some(i) = state.selected_element {
+                        debug!(index = i, "picking up element");
                         shell.publish(Message::ClearCache(i));
                     }
                     state.selected_element = None;
@@ -679,16 +681,19 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                     state.delta_accumulator = Coord::default();
                     state.selected_element = state.held_element;
                     if let Some(i) = state.selected_element {
+                        debug!(index = i, "selecting element");
                         shell.publish(Message::ClearCache(i));
                     }
                 } else {
                     state.selected_element = self.hovered_element;
                     if let Some(i) = state.selected_element {
+                        debug!(index = i, "selecting element");
                         shell.publish(Message::ClearCache(i));
                     }
                 }
 
                 if let Some(i) = state.held_element {
+                    debug!(index = i, "deselecting element");
                     shell.publish(Message::ClearCache(i));
                 }
                 state.held_element = None;
