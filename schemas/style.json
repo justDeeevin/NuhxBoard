@@ -1,16 +1,10 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Style",
   "type": "object",
-  "required": [
-    "BackgroundColor",
-    "DefaultKeyStyle",
-    "DefaultMouseSpeedIndicatorStyle",
-    "ElementStyles"
-  ],
   "properties": {
     "BackgroundColor": {
-      "$ref": "#/definitions/NohRgb"
+      "$ref": "#/$defs/NohRgb"
     },
     "BackgroundImageFileName": {
       "type": [
@@ -19,110 +13,75 @@
       ]
     },
     "DefaultKeyStyle": {
-      "$ref": "#/definitions/DefaultKeyStyle"
+      "$ref": "#/$defs/DefaultKeyStyle"
     },
     "DefaultMouseSpeedIndicatorStyle": {
-      "$ref": "#/definitions/MouseSpeedIndicatorStyle"
+      "$ref": "#/$defs/MouseSpeedIndicatorStyle"
     },
     "ElementStyles": {
-      "$ref": "#/definitions/CustomMap"
+      "$ref": "#/$defs/CustomMap"
     }
   },
-  "definitions": {
+  "required": [
+    "BackgroundColor",
+    "DefaultKeyStyle",
+    "DefaultMouseSpeedIndicatorStyle",
+    "ElementStyles"
+  ],
+  "$defs": {
     "CustomMap": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/KeyValue"
+        "$ref": "#/$defs/KeyValue"
       }
     },
     "DefaultKeyStyle": {
       "type": "object",
+      "properties": {
+        "Loose": {
+          "$ref": "#/$defs/KeySubStyle"
+        },
+        "Pressed": {
+          "$ref": "#/$defs/KeySubStyle"
+        }
+      },
       "required": [
         "Loose",
         "Pressed"
-      ],
-      "properties": {
-        "Loose": {
-          "$ref": "#/definitions/KeySubStyle"
-        },
-        "Pressed": {
-          "$ref": "#/definitions/KeySubStyle"
-        }
-      }
+      ]
     },
     "ElementStyle": {
       "oneOf": [
         {
           "type": "object",
-          "required": [
-            "__type"
-          ],
           "properties": {
-            "Loose": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/KeySubStyle"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "Pressed": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/KeySubStyle"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
             "__type": {
               "type": "string",
-              "enum": [
-                "KeyStyle"
-              ]
+              "const": "KeyStyle"
             }
-          }
+          },
+          "$ref": "#/$defs/KeyStyle",
+          "required": [
+            "__type"
+          ]
         },
         {
           "type": "object",
-          "required": [
-            "InnerColor",
-            "OuterColor",
-            "OutlineWidth",
-            "__type"
-          ],
           "properties": {
-            "InnerColor": {
-              "$ref": "#/definitions/NohRgb"
-            },
-            "OuterColor": {
-              "$ref": "#/definitions/NohRgb"
-            },
-            "OutlineWidth": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
             "__type": {
               "type": "string",
-              "enum": [
-                "MouseSpeedIndicatorStyle"
-              ]
+              "const": "MouseSpeedIndicatorStyle"
             }
-          }
+          },
+          "$ref": "#/$defs/MouseSpeedIndicatorStyle",
+          "required": [
+            "__type"
+          ]
         }
       ]
     },
     "Font": {
       "type": "object",
-      "required": [
-        "FontFamily",
-        "Size",
-        "Style"
-      ],
       "properties": {
         "FontFamily": {
           "type": "string"
@@ -132,28 +91,50 @@
           "format": "float"
         },
         "Style": {
-          "$ref": "#/definitions/FontStyle"
+          "$ref": "#/$defs/FontStyle"
         }
-      }
+      },
+      "required": [
+        "FontFamily",
+        "Size",
+        "Style"
+      ]
     },
     "FontStyle": {
       "type": "integer",
       "format": "uint8",
-      "minimum": 0.0
+      "minimum": 0
+    },
+    "KeyStyle": {
+      "type": "object",
+      "properties": {
+        "Loose": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KeySubStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Pressed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KeySubStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     },
     "KeySubStyle": {
       "type": "object",
-      "required": [
-        "Background",
-        "Font",
-        "Outline",
-        "OutlineWidth",
-        "ShowOutline",
-        "Text"
-      ],
       "properties": {
         "Background": {
-          "$ref": "#/definitions/NohRgb"
+          "$ref": "#/$defs/NohRgb"
         },
         "BackgroundImageFileName": {
           "type": [
@@ -162,69 +143,72 @@
           ]
         },
         "Font": {
-          "$ref": "#/definitions/Font"
+          "$ref": "#/$defs/Font"
         },
         "Outline": {
-          "$ref": "#/definitions/NohRgb"
+          "$ref": "#/$defs/NohRgb"
         },
         "OutlineWidth": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0.0
+          "minimum": 0
         },
         "ShowOutline": {
           "type": "boolean"
         },
         "Text": {
-          "$ref": "#/definitions/NohRgb"
+          "$ref": "#/$defs/NohRgb"
         }
-      }
+      },
+      "required": [
+        "Background",
+        "Text",
+        "Outline",
+        "ShowOutline",
+        "OutlineWidth",
+        "Font"
+      ]
     },
     "KeyValue": {
       "type": "object",
-      "required": [
-        "Key",
-        "Value"
-      ],
       "properties": {
         "Key": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0.0
+          "minimum": 0
         },
         "Value": {
-          "$ref": "#/definitions/ElementStyle"
+          "$ref": "#/$defs/ElementStyle"
         }
-      }
+      },
+      "required": [
+        "Key",
+        "Value"
+      ]
     },
     "MouseSpeedIndicatorStyle": {
       "type": "object",
-      "required": [
-        "InnerColor",
-        "OuterColor",
-        "OutlineWidth"
-      ],
       "properties": {
         "InnerColor": {
-          "$ref": "#/definitions/NohRgb"
+          "$ref": "#/$defs/NohRgb"
         },
         "OuterColor": {
-          "$ref": "#/definitions/NohRgb"
+          "$ref": "#/$defs/NohRgb"
         },
         "OutlineWidth": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0.0
+          "minimum": 0
         }
-      }
+      },
+      "required": [
+        "InnerColor",
+        "OuterColor",
+        "OutlineWidth"
+      ]
     },
     "NohRgb": {
       "type": "object",
-      "required": [
-        "Blue",
-        "Green",
-        "Red"
-      ],
       "properties": {
         "Blue": {
           "type": "number",
@@ -238,7 +222,12 @@
           "type": "number",
           "format": "float"
         }
-      }
+      },
+      "required": [
+        "Red",
+        "Green",
+        "Blue"
+      ]
     }
   }
 }

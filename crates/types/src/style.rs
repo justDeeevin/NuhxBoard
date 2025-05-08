@@ -50,13 +50,14 @@ impl CustomMap {
         Ok(map)
     }
 }
-impl schemars::JsonSchema for CustomMap {
-    fn schema_name() -> String {
-        "CustomMap".to_string()
+
+impl JsonSchema for CustomMap {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "CustomMap".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        gen.subschema_for::<Vec<KeyValue>>()
+    fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        generator.subschema_for::<Vec<KeyValue>>()
     }
 }
 
@@ -226,12 +227,12 @@ impl<'de> Deserialize<'de> for FontStyle {
 }
 
 impl JsonSchema for FontStyle {
-    fn schema_name() -> String {
-        "FontStyle".to_string()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "FontStyle".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        gen.subschema_for::<u8>()
+    fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        generator.subschema_for::<u8>()
     }
 }
 
