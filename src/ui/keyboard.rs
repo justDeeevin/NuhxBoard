@@ -3,10 +3,10 @@ use std::{collections::HashSet, ops::Deref};
 use colorgrad::Gradient;
 use geo::{BoundingRect, Coord, Distance, Euclidean, LineString, Polygon, Within};
 use iced::{
-    advanced::{layout::Node, widget::tree, Widget},
+    advanced::{layout::Node, widget::tree, Renderer as _, Widget},
     mouse,
     widget::{
-        canvas::{self, event::Status, Frame},
+        canvas::{self, event::Status, Geometry},
         image::Handle,
     },
     Color, Element, Event, Length, Rectangle, Renderer, Size,
@@ -94,63 +94,61 @@ impl<'a> Keyboard<'a> {
         Self { width, height, app }
     }
 
-    fn draw_element(&self, element: &BoardElement, state: &State, frame: &mut Frame, index: usize) {
-        match element {
-            BoardElement::KeyboardKey(def) => {
-                self.draw_key(
-                    state,
-                    def.into(),
-                    frame,
-                    {
-                        let shift_pressed = self
+    /// Returns `(fg, bg)`
+    fn draw_element(
+        &self,
+        state: &State,
+        renderer: &Renderer,
+        index: usize,
+    ) -> (Geometry, Geometry) {
+        match &self.layout.elements[index] {
+            BoardElement::KeyboardKey(def) => self.draw_key(
+                state,
+                renderer,
+                {
+                    let shift_pressed = self
+                        .pressed_keys
+                        .contains_key(&win_code_from_key(redev::Key::ShiftLeft).unwrap())
+                        || self
                             .pressed_keys
-                            .contains_key(&win_code_from_key(redev::Key::ShiftLeft).unwrap())
-                            || self
-                                .pressed_keys
-                                .contains_key(&win_code_from_key(redev::Key::ShiftRight).unwrap());
-                        match def.change_on_caps {
-                            true => match self.caps
-                                ^ (shift_pressed
-                                    && (self.settings.capitalization == Capitalization::Follow
-                                        || self.settings.follow_for_caps_sensitive))
-                            {
-                                true => def.shift_text.clone(),
-                                false => def.text.clone(),
-                            },
-                            false => match shift_pressed
+                            .contains_key(&win_code_from_key(redev::Key::ShiftRight).unwrap());
+                    match def.change_on_caps {
+                        true => match self.caps
+                            ^ (shift_pressed
                                 && (self.settings.capitalization == Capitalization::Follow
-                                    || self.settings.follow_for_caps_insensitive)
-                            {
-                                true => def.shift_text.clone(),
-                                false => def.text.clone(),
-                            },
-                        }
-                    },
-                    self.pressed_keys.keys().cloned().collect(),
-                    index,
-                );
-            }
-            BoardElement::MouseKey(def) => {
-                self.draw_key(
-                    state,
-                    def.into(),
-                    frame,
-                    def.text.clone(),
-                    self.pressed_mouse_buttons.keys().cloned().collect(),
-                    index,
-                );
-            }
-            BoardElement::MouseScroll(def) => {
-                self.draw_key(
-                    state,
-                    def.into(),
-                    frame,
-                    def.text.clone(),
-                    self.pressed_scroll_buttons.keys().cloned().collect(),
-                    index,
-                );
-            }
+                                    || self.settings.follow_for_caps_sensitive))
+                        {
+                            true => def.shift_text.clone(),
+                            false => def.text.clone(),
+                        },
+                        false => match shift_pressed
+                            && (self.settings.capitalization == Capitalization::Follow
+                                || self.settings.follow_for_caps_insensitive)
+                        {
+                            true => def.shift_text.clone(),
+                            false => def.text.clone(),
+                        },
+                    }
+                },
+                self.pressed_keys.keys().cloned().collect(),
+                index,
+            ),
+            BoardElement::MouseKey(def) => self.draw_key(
+                state,
+                renderer,
+                def.text.clone(),
+                self.pressed_mouse_buttons.keys().cloned().collect(),
+                index,
+            ),
+            BoardElement::MouseScroll(def) => self.draw_key(
+                state,
+                renderer,
+                def.text.clone(),
+                self.pressed_scroll_buttons.keys().cloned().collect(),
+                index,
+            ),
             BoardElement::MouseSpeedIndicator(def) => {
+                let cache = &self.caches[index];
                 let inner = Path::circle(
                     def.location.clone().into(),
                     def.radius * BALL_TO_RADIUS_RATIO,
@@ -165,40 +163,43 @@ impl<'a> Keyboard<'a> {
                         v.as_mouse_speed_indicator_style().unwrap()
                     });
 
-                frame.fill(&inner, Color::from(style.inner_color));
+                let bg = cache.bg.draw(renderer, self.bounds().size(), |frame| {
+                    trace!(index = index, "Redrawing background");
 
-                frame.stroke(
-                    &outer,
-                    canvas::Stroke {
-                        width: style.outline_width as f32,
-                        style: canvas::Style::Solid(style.inner_color.into()),
-                        ..Default::default()
-                    },
-                );
+                    frame.fill(&inner, Color::from(style.inner_color));
 
-                // TODO: Still highlight when an element is selected. While the current code is
-                // closer to NohBoard's behavior, I'm not a fan of it.
-                if self.hovered_element == Some(index)
-                    && state.held_element.is_none()
-                    && state.selected_element.is_none()
-                {
-                    frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
-                } else if state.held_element == Some(index) {
-                    frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
-                }
-                if state.selected_element == Some(index) {
                     frame.stroke(
                         &outer,
                         canvas::Stroke {
-                            width: 2.0,
-                            style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                            width: style.outline_width as f32,
+                            style: canvas::Style::Solid(style.inner_color.into()),
                             ..Default::default()
                         },
                     );
-                }
+                    // TODO: Still highlight when an element is selected. While the current code is
+                    // closer to NohBoard's behavior, I'm not a fan of it.
+                    if self.hovered_element == Some(index)
+                        && state.held_element.is_none()
+                        && state.selected_element.is_none()
+                    {
+                        frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+                    } else if state.held_element == Some(index) {
+                        frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
+                    }
+                    if state.selected_element == Some(index) {
+                        frame.stroke(
+                            &outer,
+                            canvas::Stroke {
+                                width: 2.0,
+                                style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                                ..Default::default()
+                            },
+                        );
+                    }
+                });
 
                 if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
-                    return;
+                    return (cache.fg.draw(renderer, self.bounds().size(), |_| {}), bg);
                 }
 
                 let velocity = Vector2::new(self.mouse_velocity.0, self.mouse_velocity.1);
@@ -210,8 +211,8 @@ impl<'a> Keyboard<'a> {
                 let ball = Path::circle(
                     {
                         iced::Point {
-                            x: def.location.x + (def.radius * normalized_velocity.x),
-                            y: def.location.y + (def.radius * normalized_velocity.y),
+                            x: *(def.location.x + (def.radius * normalized_velocity.x)),
+                            y: *(def.location.y + (def.radius * normalized_velocity.y)),
                         }
                     },
                     def.radius * BALL_TO_RADIUS_RATIO,
@@ -230,33 +231,41 @@ impl<'a> Keyboard<'a> {
                     .build::<colorgrad::LinearGradient>()
                     .unwrap();
                 let ball_color = ball_gradient.at(squashed_magnitude);
-                frame.fill(
-                    &ball,
-                    Color::from_rgb(ball_color.r, ball_color.g, ball_color.b),
-                );
-                let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
-                    def.location.clone().into(),
-                    iced::Point {
-                        x: def.location.x + (def.radius * normalized_velocity.x),
-                        y: def.location.y + (def.radius * normalized_velocity.y),
-                    },
-                )
-                .add_stop(0.0, style.inner_color.into())
-                .add_stop(1.0, style.outer_color.into());
-                frame.fill(&triangle, triangle_gradient);
+                let fg = cache.fg.draw(renderer, self.bounds().size(), |frame| {
+                    trace!(index = index, "Redrawing foreground");
+
+                    frame.fill(
+                        &ball,
+                        Color::from_rgb(ball_color.r, ball_color.g, ball_color.b),
+                    );
+                    let triangle_gradient = iced::widget::canvas::gradient::Linear::new(
+                        def.location.clone().into(),
+                        iced::Point {
+                            x: *(def.location.x + (def.radius * normalized_velocity.x)),
+                            y: *(def.location.y + (def.radius * normalized_velocity.y)),
+                        },
+                    )
+                    .add_stop(0.0, style.inner_color.into())
+                    .add_stop(1.0, style.outer_color.into());
+                    frame.fill(&triangle, triangle_gradient);
+                });
+
+                (fg, bg)
             }
         }
     }
 
+    /// Returns `(fg, bg)`
     fn draw_key(
         &self,
         state: &State,
-        def: CommonDefinitionRef,
-        frame: &mut Frame,
+        renderer: &Renderer,
         text: String,
         pressed_button_list: HashSet<u32>,
         index: usize,
-    ) {
+    ) -> (Geometry, Geometry) {
+        let cache = &self.caches[index];
+        let def = CommonDefinitionRef::try_from(&self.layout.elements[index]).unwrap();
         let element_style = &self.style.element_styles.get(def.id);
 
         let style = match element_style {
@@ -282,17 +291,9 @@ impl<'a> Keyboard<'a> {
                 .unwrap_or(&self.style.default_key_style.loose)
         };
 
-        frame.fill_text(canvas::Text {
-            content: text,
-            position: def.text_position.clone().into(),
-            color: current_style.text.into(),
-            size: iced::Pixels(current_style.font.size),
-            font: current_style.font.as_iced(&FONTS).unwrap(),
-            horizontal_alignment: iced::alignment::Horizontal::Center,
-            vertical_alignment: iced::alignment::Vertical::Center,
-            shaping: iced::widget::text::Shaping::Advanced,
-            ..Default::default()
-        });
+        let mut boundaries = def.boundaries.clone();
+        boundaries.push(boundaries[0].clone());
+        let shape = Polygon::new(LineString::from(boundaries), vec![]);
 
         let key = Path::new(|builder| {
             builder.move_to(def.boundaries[0].clone().into());
@@ -301,118 +302,138 @@ impl<'a> Keyboard<'a> {
             }
             builder.close();
         });
-        let mut boundaries = def.boundaries.clone();
-        boundaries.push(boundaries[0].clone());
-        let shape = Polygon::new(LineString::from(boundaries), vec![]);
 
-        if let Some(name) = &current_style.background_image_file_name {
-            let path = KEYBOARDS_PATH
-                .join(&self.settings.category)
-                .join("images")
-                .join(name);
+        let fg = cache.fg.draw(renderer, self.bounds().size(), |frame| {
+            trace!(index = index, "Redrawing foreground");
 
-            if !name.is_empty() && path.exists() {
-                let rect = shape.bounding_rect().unwrap();
-                let width = rect.width();
-                let height = rect.height();
+            frame.fill_text(canvas::Text {
+                content: text,
+                position: def.text_position.clone().into(),
+                color: current_style.text.into(),
+                size: iced::Pixels(current_style.font.size),
+                font: current_style.font.as_iced(&FONTS).unwrap(),
+                horizontal_alignment: iced::alignment::Horizontal::Center,
+                vertical_alignment: iced::alignment::Vertical::Center,
+                shaping: iced::widget::text::Shaping::Advanced,
+                ..Default::default()
+            });
 
-                let image = ImageReader::open(path).unwrap();
-                let image = image.decode().unwrap();
-                let image = image.resize_exact(
-                    width as u32,
-                    height as u32,
-                    image::imageops::FilterType::Nearest,
-                );
-                let pos = rect.min();
-
-                frame.draw_image(
-                    iced::Rectangle::new(
-                        iced::Point { x: pos.x, y: pos.y },
-                        iced::Size::new(width, height),
-                    ),
-                    Image::new(Handle::from_rgba(
-                        width as u32,
-                        height as u32,
-                        image.to_rgba8().to_vec(),
-                    )),
+            if current_style.show_outline {
+                frame.stroke(
+                    &key,
+                    canvas::Stroke {
+                        style: canvas::Style::Solid(current_style.outline.into()),
+                        width: current_style.outline_width as f32,
+                        ..Default::default()
+                    },
                 );
             }
-        } else {
-            frame.fill(&key, Color::from(current_style.background));
-        }
 
-        if current_style.show_outline {
-            frame.stroke(
-                &key,
-                canvas::Stroke {
-                    style: canvas::Style::Solid(current_style.outline.into()),
-                    width: current_style.outline_width as f32,
-                    ..Default::default()
-                },
-            );
-        }
-
-        if self.hovered_element == Some(index)
-            && state.held_element.is_none()
-            && state.selected_element.is_none()
-        {
-            frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
-        } else if state.held_element == Some(index) {
-            frame.fill(
-                &key,
-                Color {
-                    a: 0.5,
-                    ..if let Some(pressed) = &style.pressed {
-                        pressed.background.into()
-                    } else {
-                        self.style.default_key_style.pressed.background.into()
-                    }
-                },
-            );
-        }
-        if state.selected_element == Some(index) {
-            frame.stroke(
-                &key,
-                canvas::Stroke {
-                    style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
-                    width: 2.0,
-                    ..Default::default()
-                },
-            );
-        }
-        if let Some(face) = state.hovered_face {
-            let face = shape.exterior().lines().nth(face).unwrap();
-            let path = Path::line(
-                iced::Point {
-                    x: face.start.x,
-                    y: face.start.y,
-                },
-                iced::Point {
-                    x: face.end.x,
-                    y: face.end.y,
-                },
-            );
             if state.selected_element == Some(index) {
                 frame.stroke(
-                    &path,
+                    &key,
                     canvas::Stroke {
-                        // #FF4500
-                        style: canvas::Style::Solid(Color::from_rgb(1.0, 45.0 / 255.0, 0.0)),
-                        width: 5.0,
-                        ..Default::default()
-                    },
-                );
-            } else if self.hovered_element == Some(index) {
-                frame.stroke(
-                    &path,
-                    canvas::Stroke {
-                        style: canvas::Style::Solid(Color::BLACK),
-                        width: 5.0,
+                        style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                        width: 2.0,
                         ..Default::default()
                     },
                 );
             }
-        }
+            if let Some(face) = state.hovered_face {
+                let face = shape.exterior().lines().nth(face).unwrap();
+                let path = Path::line(
+                    iced::Point {
+                        x: face.start.x,
+                        y: face.start.y,
+                    },
+                    iced::Point {
+                        x: face.end.x,
+                        y: face.end.y,
+                    },
+                );
+                if state.selected_element == Some(index) {
+                    frame.stroke(
+                        &path,
+                        canvas::Stroke {
+                            // #FF4500
+                            style: canvas::Style::Solid(Color::from_rgb(1.0, 45.0 / 255.0, 0.0)),
+                            width: 5.0,
+                            ..Default::default()
+                        },
+                    );
+                } else if self.hovered_element == Some(index) {
+                    frame.stroke(
+                        &path,
+                        canvas::Stroke {
+                            style: canvas::Style::Solid(Color::BLACK),
+                            width: 5.0,
+                            ..Default::default()
+                        },
+                    );
+                }
+            }
+        });
+
+        let bg = cache.bg.draw(renderer, self.bounds().size(), |frame| {
+            trace!(index = index, "Redrawing background");
+
+            if let Some(name) = &current_style.background_image_file_name {
+                let path = KEYBOARDS_PATH
+                    .join(&self.settings.category)
+                    .join("images")
+                    .join(name);
+
+                if !name.is_empty() && path.exists() {
+                    let rect = shape.bounding_rect().unwrap();
+                    let width = rect.width();
+                    let height = rect.height();
+
+                    let image = ImageReader::open(path).unwrap();
+                    let image = image.decode().unwrap();
+                    let image = image.resize_exact(
+                        width as u32,
+                        height as u32,
+                        image::imageops::FilterType::Nearest,
+                    );
+                    let pos = rect.min();
+
+                    frame.draw_image(
+                        iced::Rectangle::new(
+                            iced::Point { x: pos.x, y: pos.y },
+                            iced::Size::new(width, height),
+                        ),
+                        Image::new(Handle::from_rgba(
+                            width as u32,
+                            height as u32,
+                            image.to_rgba8().to_vec(),
+                        )),
+                    );
+                }
+            } else {
+                frame.fill(&key, Color::from(current_style.background));
+            }
+
+            if self.hovered_element == Some(index)
+                && state.held_element.is_none()
+                && state.selected_element.is_none()
+            {
+                frame.fill(&key, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+            } else if state.held_element == Some(index) {
+                frame.fill(
+                    &key,
+                    Color {
+                        a: 0.5,
+                        ..if let Some(pressed) = &style.pressed {
+                            pressed.background.into()
+                        } else {
+                            self.style.default_key_style.pressed.background.into()
+                        }
+                    },
+                );
+            }
+        });
+
+        (fg, bg)
     }
 
     fn bounds(&self) -> Rectangle {
@@ -450,12 +471,39 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
     ) {
         let state = tree.state.downcast_ref::<State>();
 
-        for (i, c) in self.caches.iter().enumerate() {
-            let geometry = c.draw(renderer, self.bounds().size(), |frame| {
-                trace!(index = i, "Redrawing element");
-                self.draw_element(&self.layout.elements[i], state, frame, i);
+        let mut fgs = Vec::new();
+        let mut bgs = Vec::new();
+
+        for i in 0..self.caches.len() {
+            if state.held_element == Some(i) {
+                continue;
+            }
+            let (fg, bg) = self.draw_element(state, renderer, i);
+            fgs.push(fg);
+            bgs.push(bg);
+        }
+
+        renderer.with_layer(self.bounds(), |renderer| {
+            for geo in bgs {
+                renderer.draw_geometry(geo);
+            }
+        });
+
+        renderer.with_layer(self.bounds(), |renderer| {
+            for geo in fgs {
+                renderer.draw_geometry(geo);
+            }
+        });
+
+        if let Some(i) = state.held_element.or(state.selected_element) {
+            let (fg, bg) = self.draw_element(state, renderer, i);
+            renderer.with_layer(self.bounds(), |renderer| {
+                renderer.draw_geometry(bg);
             });
-            renderer.draw_geometry(geometry);
+
+            renderer.with_layer(self.bounds(), |renderer| {
+                renderer.draw_geometry(fg);
+            });
         }
     }
 

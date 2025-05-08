@@ -1,6 +1,5 @@
-use iced::Point;
-use ordered_float::OrderedFloat;
-use schemars::JsonSchema;
+pub use ordered_float::OrderedFloat;
+use schemars::{json_schema, JsonSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
@@ -196,24 +195,52 @@ pub struct MouseSpeedIndicatorDefinition {
     pub radius: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct SerializablePoint {
-    pub x: f32,
-    pub y: f32,
+    pub x: OrderedFloat<f32>,
+    pub y: OrderedFloat<f32>,
 }
 
-impl From<SerializablePoint> for Point {
+impl JsonSchema for SerializablePoint {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "SerializablePoint".into()
+    }
+
+    fn schema_id() -> std::borrow::Cow<'static, str> {
+        "nuhxboard_types::layout::SerializablePoint".into()
+    }
+
+    fn json_schema(_generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        json_schema!({
+            "$schema": "https://json-schema.org/draft/2029-12/schema",
+            "properties": {
+                "X": {
+                    "format": "float",
+                    "type": "number"
+                },
+                "Y": {
+                    "format": "float",
+                    "type": "number"
+                }
+            },
+            "required": ["X", "Y"],
+            "title": "SerializablePoint",
+            "type": "object"
+        })
+    }
+}
+impl From<SerializablePoint> for iced::Point {
     fn from(point: SerializablePoint) -> Self {
-        Point::new(point.x, point.y)
+        iced::Point::new(*point.x, *point.y)
     }
 }
 
 impl From<SerializablePoint> for geo::Coord<f32> {
     fn from(value: SerializablePoint) -> Self {
         Self {
-            x: value.x,
-            y: value.y,
+            x: *value.x,
+            y: *value.y,
         }
     }
 }
@@ -221,8 +248,8 @@ impl From<SerializablePoint> for geo::Coord<f32> {
 impl From<geo::Coord<f32>> for SerializablePoint {
     fn from(value: geo::Coord<f32>) -> Self {
         Self {
-            x: value.x,
-            y: value.y,
+            x: OrderedFloat(value.x),
+            y: OrderedFloat(value.y),
         }
     }
 }
@@ -237,14 +264,5 @@ impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
 impl std::fmt::Display for SerializablePoint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
-impl Eq for SerializablePoint {}
-
-impl std::hash::Hash for SerializablePoint {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        OrderedFloat(self.x).hash(state);
-        OrderedFloat(self.y).hash(state);
     }
 }

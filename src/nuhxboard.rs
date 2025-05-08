@@ -71,10 +71,23 @@ pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         .join("keyboards")
 });
 
+#[derive(Default)]
+pub struct ElementCache {
+    pub fg: Cache,
+    pub bg: Cache,
+}
+
+impl ElementCache {
+    pub fn clear(&self) {
+        self.fg.clear();
+        self.bg.clear();
+    }
+}
+
 pub struct NuhxBoard {
     pub windows: WindowManager<Self, Theme, Message>,
     pub main_window: window::Id,
-    pub caches: Vec<Cache>,
+    pub caches: Vec<ElementCache>,
     pub caches_by_keycode: HashMap<u32, usize>,
     pub caches_by_mouse_button: HashMap<u32, usize>,
     pub caches_by_scroll_button: HashMap<u32, usize>,
@@ -635,8 +648,8 @@ impl NuhxBoard {
                 if let Ok(def) = CommonDefinitionMut::try_from(&mut *element) {
                     match property {
                         ElementProperty::Text(ref v) => *def.text = v.clone(),
-                        ElementProperty::TextPositionX(v) => def.text_position.x = v,
-                        ElementProperty::TextPositionY(v) => def.text_position.y = v,
+                        ElementProperty::TextPositionX(v) => *def.text_position.x = v,
+                        ElementProperty::TextPositionY(v) => *def.text_position.y = v,
                         ElementProperty::Boundary(i, ref v) => {
                             if let Some(v) = v {
                                 if i >= def.boundaries.len() {
@@ -677,8 +690,8 @@ impl NuhxBoard {
                             panic!("Invalid property for selected element")
                         }
                         BoardElement::MouseSpeedIndicator(def) => match property {
-                            ElementProperty::MouseSpeedIndicatorPositionX(v) => def.location.x = v,
-                            ElementProperty::MouseSpeedIndicatorPositionY(v) => def.location.y = v,
+                            ElementProperty::MouseSpeedIndicatorPositionX(v) => *def.location.x = v,
+                            ElementProperty::MouseSpeedIndicatorPositionY(v) => *def.location.y = v,
                             ElementProperty::MouseSpeedIndicatorRadius(v) => def.radius = v,
                             _ => panic!("Invalid property for selected element"),
                         },
@@ -703,8 +716,8 @@ impl NuhxBoard {
                 );
                 let centroid = bounds.centroid().unwrap();
 
-                def.text_position.x = centroid.x().trunc();
-                def.text_position.y = centroid.y().trunc();
+                def.text_position.x = centroid.x().trunc().into();
+                def.text_position.y = centroid.y().trunc().into();
                 self.caches[i].clear();
             }
             Message::ChangeNumberInput(input_type) => {
@@ -892,8 +905,8 @@ impl NuhxBoard {
         self.mouse_speed_indicator_caches.clear();
         for (i, e) in self.layout.elements.iter().enumerate() {
             self.caches_by_id.insert(e.id(), i);
-            let cache = Cache::new();
-            self.caches.push(cache);
+            let (fg, bg) = std::array::from_fn(|_| Cache::new()).into();
+            self.caches.push(ElementCache { fg, bg });
             match e {
                 BoardElement::KeyboardKey(def) => {
                     self.caches_by_keycode

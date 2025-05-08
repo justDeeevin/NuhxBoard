@@ -7,7 +7,7 @@ use iced::{
 use iced_aw::{helpers::selection_list_with, number_input, selection_list};
 use iced_multi_window::Window;
 use nuhxboard_types::{
-    layout::{BoardElement, CommonDefinitionRef, SerializablePoint},
+    layout::{BoardElement, CommonDefinitionRef, OrderedFloat, SerializablePoint},
     style::{self, FontStyle},
 };
 
@@ -408,11 +408,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(&def.text_position.x, 0.0.., move |v| {
-                            Message::ChangeElement(index, ElementProperty::TextPositionX(v))
+                        number_input(&def.text_position.x, OrderedFloat(0.0).., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionX(*v))
                         }),
-                        number_input(&def.text_position.y, 0.0.., move |v| {
-                            Message::ChangeElement(index, ElementProperty::TextPositionY(v))
+                        number_input(&def.text_position.y, OrderedFloat(0.0).., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionY(*v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
                     ]
@@ -454,13 +454,15 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                             .boundary_x
                                             .get(&self.index)
                                             .copied()
-                                            .unwrap_or_default(),
+                                            .unwrap_or_default()
+                                            .into(),
                                         y: app
                                             .number_input
                                             .boundary_y
                                             .get(&self.index)
                                             .copied()
                                             .unwrap_or_default()
+                                            .into()
                                     })
                                 )
                             )),
@@ -476,13 +478,15 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                                     .boundary_x
                                                     .get(&self.index)
                                                     .copied()
-                                                    .unwrap_or_default(),
+                                                    .unwrap_or_default()
+                                                    .into(),
                                                 y: app
                                                     .number_input
                                                     .boundary_y
                                                     .get(&self.index)
                                                     .copied()
-                                                    .unwrap_or_default(),
+                                                    .unwrap_or_default()
+                                                    .into(),
                                             }),
                                         ),
                                     )
@@ -639,11 +643,11 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                     ),
                     row![
                         text("Text Position: "),
-                        number_input(&def.text_position.x, 0.0.., move |v| {
-                            Message::ChangeElement(index, ElementProperty::TextPositionX(v))
+                        number_input(&def.text_position.x, OrderedFloat(0.0).., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionX(*v))
                         }),
-                        number_input(&def.text_position.y, 0.0.., move |v| {
-                            Message::ChangeElement(index, ElementProperty::TextPositionY(v))
+                        number_input(&def.text_position.y, OrderedFloat(0.0).., move |v| {
+                            Message::ChangeElement(index, ElementProperty::TextPositionY(*v))
                         }),
                         button("Center").on_press(Message::CenterTextPosition(index)),
                     ]
@@ -660,13 +664,15 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                             .boundary_x
                                             .get(&self.index)
                                             .copied()
-                                            .unwrap_or_default(),
+                                            .unwrap_or_default()
+                                            .into(),
                                         y: app
                                             .number_input
                                             .boundary_y
                                             .get(&self.index)
                                             .copied()
                                             .unwrap_or_default()
+                                            .into()
                                     })
                                 )
                             )),
@@ -682,13 +688,15 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
                                                     .boundary_x
                                                     .get(&self.index)
                                                     .copied()
-                                                    .unwrap_or_default(),
+                                                    .unwrap_or_default()
+                                                    .into(),
                                                 y: app
                                                     .number_input
                                                     .boundary_y
                                                     .get(&self.index)
                                                     .copied()
-                                                    .unwrap_or_default(),
+                                                    .unwrap_or_default()
+                                                    .into(),
                                             }),
                                         ),
                                     )
@@ -748,14 +756,18 @@ impl Window<NuhxBoard, Theme, Message> for ElementProperties {
             BoardElement::MouseSpeedIndicator(def) => column![
                 row![
                     text("Location: "),
-                    number_input(&def.location.x, 0.0.., move |v| Message::ChangeElement(
-                        index,
-                        ElementProperty::MouseSpeedIndicatorPositionX(v)
-                    )),
-                    number_input(&def.location.y, 0.0.., move |v| Message::ChangeElement(
-                        index,
-                        ElementProperty::MouseSpeedIndicatorPositionY(v)
-                    ))
+                    number_input(&def.location.x, OrderedFloat(0.0).., move |v| {
+                        Message::ChangeElement(
+                            index,
+                            ElementProperty::MouseSpeedIndicatorPositionX(*v),
+                        )
+                    }),
+                    number_input(&def.location.y, OrderedFloat(0.0).., move |v| {
+                        Message::ChangeElement(
+                            index,
+                            ElementProperty::MouseSpeedIndicatorPositionY(*v),
+                        )
+                    })
                 ]
                 .align_y(Alignment::Center),
                 row![
