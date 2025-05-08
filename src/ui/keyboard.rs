@@ -27,7 +27,8 @@ use crate::{
 };
 
 const BALL_TO_RADIUS_RATIO: f32 = 0.2;
-const HOVER_EDGE_DISTANCE: f32 = 5.0;
+const HOVER_EDGE_DISTANCE: f32 = 6.0;
+const HOVER_EDGE_THICKNESS: f32 = 4.0;
 
 pub struct Keyboard<'a> {
     app: &'a NuhxBoard,
@@ -335,37 +336,75 @@ impl<'a> Keyboard<'a> {
                     },
                 );
             }
-            if let Some(face) = state.hovered_face {
-                let face = shape.exterior().lines().nth(face).unwrap();
-                let path = Path::line(
-                    iced::Point {
-                        x: face.start.x,
-                        y: face.start.y,
-                    },
-                    iced::Point {
-                        x: face.end.x,
-                        y: face.end.y,
-                    },
-                );
-                if state.selected_element == Some(index) {
-                    frame.stroke(
-                        &path,
-                        canvas::Stroke {
-                            // #FF4500
-                            style: canvas::Style::Solid(Color::from_rgb(1.0, 45.0 / 255.0, 0.0)),
-                            width: 5.0,
-                            ..Default::default()
+            if self.hovered_element == Some(index) {
+                if let Some(face) = state.hovered_face {
+                    let face = shape.exterior().lines().nth(face).unwrap();
+                    let path = Path::line(
+                        iced::Point {
+                            x: face.start.x,
+                            y: face.start.y,
+                        },
+                        iced::Point {
+                            x: face.end.x,
+                            y: face.end.y,
                         },
                     );
-                } else if self.hovered_element == Some(index) {
-                    frame.stroke(
-                        &path,
-                        canvas::Stroke {
-                            style: canvas::Style::Solid(Color::BLACK),
-                            width: 5.0,
-                            ..Default::default()
+                    if state.selected_element == Some(index) {
+                        frame.stroke(
+                            &path,
+                            canvas::Stroke {
+                                // #FF4500
+                                style: canvas::Style::Solid(Color::from_rgb(
+                                    1.0,
+                                    45.0 / 255.0,
+                                    0.0,
+                                )),
+                                width: HOVER_EDGE_THICKNESS,
+                                ..Default::default()
+                            },
+                        );
+                    } else if self.hovered_element == Some(index) {
+                        frame.stroke(
+                            &path,
+                            canvas::Stroke {
+                                style: canvas::Style::Solid(Color::BLACK),
+                                width: HOVER_EDGE_THICKNESS,
+                                ..Default::default()
+                            },
+                        );
+                    }
+                }
+                if let Some(vertex) = state.hovered_vertex {
+                    let vertex = shape.exterior().coords().nth(vertex).unwrap();
+                    let path = Path::rectangle(
+                        iced::Point {
+                            x: vertex.x - (HOVER_EDGE_THICKNESS / 2.0),
+                            y: vertex.y - (HOVER_EDGE_THICKNESS / 2.0),
                         },
+                        iced::Size::new(HOVER_EDGE_THICKNESS, HOVER_EDGE_THICKNESS),
                     );
+                    if state.selected_element == Some(index) {
+                        frame.fill(
+                            &path,
+                            canvas::Fill {
+                                // #FF4500
+                                style: canvas::Style::Solid(Color::from_rgb(
+                                    1.0,
+                                    45.0 / 255.0,
+                                    0.0,
+                                )),
+                                ..Default::default()
+                            },
+                        );
+                    } else if self.hovered_element == Some(index) {
+                        frame.fill(
+                            &path,
+                            canvas::Fill {
+                                style: canvas::Style::Solid(Color::BLACK),
+                                ..Default::default()
+                            },
+                        );
+                    }
                 }
             }
         });
@@ -572,50 +611,52 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                     let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
                                     if cursor_position.is_within(&bounds) {
-                                        let lines = bounds.exterior().lines().collect::<Vec<_>>();
-                                        if !lines
-                                            .windows(2)
-                                            .chain(std::iter::once(
-                                                [*lines.last().unwrap(), *lines.first().unwrap()]
-                                                    .as_slice(),
-                                            ))
-                                            .enumerate()
-                                            .any(|(i, window)| {
-                                                let left = window[0];
-                                                let right = window[1];
-
-                                                if Euclidean.distance(cursor_position, &left)
-                                                    <= HOVER_EDGE_DISTANCE
-                                                    && Euclidean.distance(cursor_position, &right)
-                                                        <= HOVER_EDGE_DISTANCE
-                                                {
-                                                    if state.set_hovered_vertex(i + 1) {
-                                                        shell.publish(Message::ClearCache(index));
-                                                    }
-                                                    true
-                                                } else if Euclidean.distance(cursor_position, &left)
-                                                    <= HOVER_EDGE_DISTANCE
-                                                {
-                                                    if state.set_hovered_face(i) {
-                                                        shell.publish(Message::ClearCache(index));
-                                                    }
-                                                    true
-                                                } else if Euclidean
-                                                    .distance(cursor_position, &right)
-                                                    <= HOVER_EDGE_DISTANCE
-                                                {
-                                                    if state.set_hovered_face(i + 1) {
-                                                        shell.publish(Message::ClearCache(index));
-                                                    }
-                                                    true
-                                                } else {
-                                                    false
+                                        let exterior = bounds.exterior();
+                                        if !(exterior.coords().enumerate().any(|(i, vertex)| {
+                                            if Euclidean.distance(cursor_position, *vertex)
+                                                <= HOVER_EDGE_DISTANCE
+                                            {
+                                                if state.set_hovered_vertex(i) {
+                                                    debug!(
+                                                        index,
+                                                        vertex = i,
+                                                        "Setting hovered vertex"
+                                                    );
+                                                    shell.publish(Message::ClearCache(index));
                                                 }
-                                            })
-                                        {
-                                            state.hovered_face = None;
-                                            shell.publish(Message::ClearCache(index));
+                                                true
+                                            } else {
+                                                false
+                                            }
+                                        }) || exterior.lines().enumerate().any(|(i, face)| {
+                                            if Euclidean.distance(cursor_position, &face)
+                                                <= HOVER_EDGE_DISTANCE
+                                            {
+                                                if state.set_hovered_face(i) {
+                                                    debug!(index, face = i, "Setting hovered face");
+                                                    shell.publish(Message::ClearCache(index));
+                                                }
+                                                true
+                                            } else {
+                                                false
+                                            }
+                                        })) {
+                                            let mut clear = false;
+                                            if state.hovered_face.is_some() {
+                                                debug!(index, "Clearing hovered face");
+                                                state.hovered_face = None;
+                                                clear = true;
+                                            }
+                                            if state.hovered_vertex.is_some() {
+                                                debug!(index, "Clearing hovered vertex");
+                                                state.hovered_vertex = None;
+                                                clear = true;
+                                            }
+                                            if clear {
+                                                shell.publish(Message::ClearCache(index));
+                                            }
                                         }
+
                                         if self.hovered_element != Some(index) {
                                             shell.publish(Message::UpdateHoveredElement(Some(
                                                 index,
@@ -629,6 +670,8 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
 
                         if self.hovered_element.is_some() {
                             shell.publish(Message::UpdateHoveredElement(None));
+                            state.hovered_face = None;
+                            state.hovered_vertex = None;
                             return Status::Captured;
                         }
                     }
