@@ -36,7 +36,7 @@ impl BoardElement {
         }
     }
 
-    pub fn translate(&mut self, delta: geo::Coord<f32>, move_text: bool) {
+    pub fn translate(&mut self, delta: Coord<f32>, move_text: bool) {
         match self {
             BoardElement::MouseSpeedIndicator(key) => {
                 key.location += delta;
@@ -199,7 +199,7 @@ impl<'a> From<&'a mut CommonDefinition> for CommonDefinitionMut<'a> {
 }
 
 impl<'a> TryFrom<&'a mut BoardElement> for CommonDefinitionMut<'a> {
-    type Error = &'a MouseSpeedIndicatorDefinition;
+    type Error = &'a mut MouseSpeedIndicatorDefinition;
 
     fn try_from(value: &'a mut BoardElement) -> Result<Self, Self::Error> {
         match value {
@@ -259,7 +259,7 @@ impl From<SerializablePoint> for iced::Point {
     }
 }
 
-impl From<SerializablePoint> for geo::Coord<f32> {
+impl From<SerializablePoint> for Coord<f32> {
     fn from(value: SerializablePoint) -> Self {
         Self {
             x: *value.x,
@@ -268,8 +268,8 @@ impl From<SerializablePoint> for geo::Coord<f32> {
     }
 }
 
-impl From<geo::Coord<f32>> for SerializablePoint {
-    fn from(value: geo::Coord<f32>) -> Self {
+impl From<Coord<f32>> for SerializablePoint {
+    fn from(value: Coord<f32>) -> Self {
         Self {
             x: OrderedFloat(value.x),
             y: OrderedFloat(value.y),
@@ -277,15 +277,15 @@ impl From<geo::Coord<f32>> for SerializablePoint {
     }
 }
 
-impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
-    fn add_assign(&mut self, rhs: geo::Coord<f32>) {
+impl std::ops::AddAssign<Coord<f32>> for SerializablePoint {
+    fn add_assign(&mut self, rhs: Coord<f32>) {
         self.x += rhs.x;
         self.y += rhs.y;
     }
 }
 
-impl std::ops::SubAssign<geo::Coord<f32>> for SerializablePoint {
-    fn sub_assign(&mut self, rhs: geo::Coord<f32>) {
+impl std::ops::SubAssign<Coord<f32>> for SerializablePoint {
+    fn sub_assign(&mut self, rhs: Coord<f32>) {
         self.x -= rhs.x;
         self.y -= rhs.y;
     }

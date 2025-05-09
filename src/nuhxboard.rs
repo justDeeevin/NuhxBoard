@@ -4,7 +4,7 @@ use crate::{
     ui::{app::*, popups::*},
 };
 use display_info::DisplayInfo;
-use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
+use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect, Vector2DOps};
 use iced::{
     advanced::{graphics::core::SmolStr, subscription},
     widget::canvas::Cache,
@@ -348,9 +348,14 @@ impl NuhxBoard {
             }
             Message::MoveFace { index, face, delta } => {
                 debug!(index, face, delta = ?(delta.x, delta.y), "Moving face");
-                let mut def =
-                    CommonDefinitionMut::try_from(&mut self.layout.elements[index]).unwrap();
-                def.translate_face(face, delta);
+                match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
+                    Ok(mut def) => {
+                        def.translate_face(face, delta);
+                    }
+                    Err(def) => {
+                        def.radius += delta.x;
+                    }
+                }
                 self.caches[index].clear();
             }
             Message::MoveVertex {
@@ -427,10 +432,14 @@ impl NuhxBoard {
                             self.caches[index].clear();
                         }
                         Change::MoveFace { index, face, delta } => {
-                            let mut def =
-                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
-                                    .unwrap();
-                            def.translate_face(face, -delta);
+                            match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
+                                Ok(mut def) => {
+                                    def.translate_face(face, -delta);
+                                }
+                                Err(def) => {
+                                    def.radius -= delta.x;
+                                }
+                            }
                             self.caches[index].clear();
                         }
                         Change::MoveVertex {
@@ -457,10 +466,14 @@ impl NuhxBoard {
                                 .translate(delta, self.settings.update_text_position);
                         }
                         Change::MoveFace { index, face, delta } => {
-                            let mut def =
-                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
-                                    .unwrap();
-                            def.translate_face(face, delta);
+                            match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
+                                Ok(mut def) => {
+                                    def.translate_face(face, delta);
+                                }
+                                Err(def) => {
+                                    def.radius += delta.x;
+                                }
+                            }
                             self.caches[index].clear();
                         }
                         Change::MoveVertex {

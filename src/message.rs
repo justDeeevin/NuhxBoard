@@ -110,6 +110,7 @@ pub enum StyleSetting {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::enum_variant_names)]
 pub enum Change {
     MoveElement {
         index: usize,

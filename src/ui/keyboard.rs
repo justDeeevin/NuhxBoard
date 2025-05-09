@@ -176,25 +176,56 @@ impl<'a> Keyboard<'a> {
                             ..Default::default()
                         },
                     );
-                    // TODO: Still highlight when an element is selected. While the current code is
-                    // closer to NohBoard's behavior, I'm not a fan of it.
+
                     if self.hovered_element == Some(index)
                         && state.held_element.is_none()
                         && state.selected_element.is_none()
                     {
                         frame.fill(&outer, Color::from_rgba(0.0, 0.0, 1.0, 0.5));
+                        if state.hovered_face.is_some() {
+                            frame.stroke(
+                                &outer,
+                                canvas::Stroke {
+                                    width: HOVER_FACE_THICKNESS,
+                                    style: canvas::Style::Solid(Color::WHITE),
+                                    ..Default::default()
+                                },
+                            )
+                        }
                     } else if state.held_element == Some(index) {
                         frame.fill(&outer, Color::from_rgba(1.0, 1.0, 1.0, 0.5));
+                    }
+                    if state.selected_element == Some(index) && state.hovered_face.is_some() {
+                        frame.stroke(
+                            &outer,
+                            canvas::Stroke {
+                                width: HOVER_FACE_THICKNESS,
+                                // #FF4500
+                                style: canvas::Style::Solid(Color::from_rgb(
+                                    1.0,
+                                    45.0 / 255.0,
+                                    0.0,
+                                )),
+                                ..Default::default()
+                            },
+                        )
                     }
                     if state.selected_element == Some(index) {
                         frame.stroke(
                             &outer,
                             canvas::Stroke {
                                 width: 2.0,
-                                style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                                style: canvas::Style::Solid(Color::from_rgb(1.0, 0.0, 1.0)),
                                 ..Default::default()
                             },
                         );
+                        frame.fill(
+                            &inner,
+                            canvas::Fill {
+                                style: canvas::Style::Solid(Color::from_rgb(1.0, 0.0, 1.0)),
+                                ..Default::default()
+                            },
+                        )
                     }
 
                     if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
@@ -331,7 +362,7 @@ impl<'a> Keyboard<'a> {
                 frame.stroke(
                     &key,
                     canvas::Stroke {
-                        style: canvas::Style::Solid(Color::from_rgba(1.0, 0.0, 1.0, 1.0)),
+                        style: canvas::Style::Solid(Color::from_rgb(1.0, 0.0, 1.0)),
                         width: 2.0,
                         ..Default::default()
                     },
@@ -476,23 +507,37 @@ impl<'a> Keyboard<'a> {
         Rectangle::with_size(Size::new(self.width, self.height))
     }
 
-    fn face_move_delta(&self, face: usize, index: usize, delta: Coord<f32>) -> Coord<f32> {
-        let def = CommonDefinitionRef::try_from(&self.layout.elements[index]).unwrap();
-        let polygon = Polygon::new(LineString::from(def.boundaries.clone()), vec![]);
-        let face_line = polygon.exterior().lines().nth(face).unwrap();
-        let face_vec = Vector3::new(
-            face_line.end.x - face_line.start.x,
-            face_line.end.y - face_line.start.y,
-            0.0,
-        );
-        let u = Vector3::new(0.0, 0.0, 1.0);
-        let mut ortho = face_vec.cross(&u).normalize();
-        let delta_vec = Vector3::new(delta.x, delta.y, 0.0);
-        let comp = delta_vec.dot(&ortho) / ortho.magnitude();
-        ortho *= comp;
-        Coord {
-            x: ortho.x,
-            y: ortho.y,
+    fn face_move_delta(
+        &self,
+        face: usize,
+        index: usize,
+        delta: Coord<f32>,
+        start: Coord<f32>,
+    ) -> Coord<f32> {
+        match CommonDefinitionRef::try_from(&self.layout.elements[index]) {
+            Ok(def) => {
+                let polygon = Polygon::new(LineString::from(def.boundaries.clone()), vec![]);
+                let face_line = polygon.exterior().lines().nth(face).unwrap();
+                let face_vec = Vector3::new(
+                    face_line.end.x - face_line.start.x,
+                    face_line.end.y - face_line.start.y,
+                    0.0,
+                );
+                let u = Vector3::new(0.0, 0.0, 1.0);
+                let mut ortho = face_vec.cross(&u).normalize();
+                let delta_vec = Vector3::new(delta.x, delta.y, 0.0);
+                let comp = delta_vec.dot(&ortho) / ortho.magnitude();
+                ortho *= comp;
+                Coord {
+                    x: ortho.x,
+                    y: ortho.y,
+                }
+            }
+            Err(def) => {
+                let to_center = Vector2::new(*def.location.x - start.x, *def.location.y - start.y);
+                let comp = to_center.dot(&Vector2::new(delta.x, delta.y)) / to_center.magnitude();
+                Coord { x: -comp, y: 0.0 }
+            }
         }
     }
 }
@@ -607,6 +652,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                         for (index, element) in self.layout.elements.iter().enumerate() {
                             match element {
                                 BoardElement::MouseSpeedIndicator(def) => {
+                                    let mut captured = false;
                                     if Euclidean.distance(
                                         cursor_position,
                                         Coord::from(def.location.clone()),
@@ -618,6 +664,29 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                             )));
                                         }
 
+                                        captured = true;
+                                    }
+                                    if ((def.radius - HOVER_EDGE_DISTANCE)
+                                        ..(def.radius + HOVER_EDGE_DISTANCE))
+                                        .contains(&Euclidean.distance(
+                                            cursor_position,
+                                            Coord::from(def.location.clone()),
+                                        ))
+                                    {
+                                        if state.hovered_face.is_none() {
+                                            debug!(index, "Hovering mouse speed indicator edge");
+                                            state.hovered_face = Some(0);
+                                            shell.publish(Message::ClearCache(index));
+                                            captured = true;
+                                        }
+                                    } else if state.hovered_face.is_some() {
+                                        debug!(index, "Leaving mouse speed indicator edge");
+                                        state.hovered_face = None;
+                                        shell.publish(Message::ClearCache(index));
+                                        captured = true;
+                                    }
+
+                                    if captured {
                                         return Status::Captured;
                                     }
                                 }
@@ -710,7 +779,12 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                 shell.publish(Message::MoveFace {
                                     index,
                                     face,
-                                    delta: self.face_move_delta(face, index, delta),
+                                    delta: self.face_move_delta(
+                                        face,
+                                        index,
+                                        delta,
+                                        state.previous_cursor_position,
+                                    ),
                                 });
                             } else if let Some(vertex) = state.hovered_vertex {
                                 shell.publish(Message::MoveVertex {
@@ -751,7 +825,12 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                 if state.delta_accumulator != Coord::default() {
                     if let Some(message) = state.held_element.map(|index| {
                         if let Some(face) = state.hovered_face {
-                            let delta = self.face_move_delta(face, index, state.delta_accumulator);
+                            let delta = self.face_move_delta(
+                                face,
+                                index,
+                                state.delta_accumulator,
+                                cursor_position - state.delta_accumulator,
+                            );
                             Message::PushChange(Change::MoveFace { index, face, delta })
                         } else if let Some(vertex) = state.hovered_vertex {
                             Message::PushChange(Change::MoveVertex {
