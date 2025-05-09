@@ -26,7 +26,20 @@ pub enum Message {
     ChangeStyle(StyleSetting),
     ClearPressedKeys,
     ToggleEditMode,
-    MoveElement { index: usize, delta: Coord<f32> },
+    MoveElement {
+        index: usize,
+        delta: Coord<f32>,
+    },
+    MoveFace {
+        index: usize,
+        face: usize,
+        delta: Coord<f32>,
+    },
+    MoveVertex {
+        index: usize,
+        vertex: usize,
+        delta: Coord<f32>,
+    },
     SaveLayout(Option<PathBuf>),
     SaveStyle(Option<PathBuf>),
     SetHeight(f32),
@@ -98,7 +111,15 @@ pub enum StyleSetting {
 
 #[derive(Debug, Clone)]
 pub enum Change {
-    MoveElement { index: usize, delta: Coord<f32> },
+    MoveElement {
+        index: usize,
+        delta: Coord<f32>,
+    },
+    MoveFace {
+        index: usize,
+        face: usize,
+        delta: Coord<f32>,
+    },
 }
 
 #[derive(Debug, Clone)]

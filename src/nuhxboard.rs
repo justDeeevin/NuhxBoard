@@ -342,10 +342,18 @@ impl NuhxBoard {
                 self.edit_mode = !self.edit_mode;
             }
             Message::MoveElement { index, delta } => {
-                debug!("Moving element {index} ({},{})", delta.x, delta.y);
+                debug!(delta = ?(delta.x, delta.y), index, "Moving element");
                 self.layout.elements[index].translate(delta, self.settings.update_text_position);
                 self.caches[index].clear();
             }
+            Message::MoveFace { index, face, delta } => {
+                debug!(index, face, delta = ?(delta.x, delta.y), "Moving face");
+                let mut def =
+                    CommonDefinitionMut::try_from(&mut self.layout.elements[index]).unwrap();
+                def.translate_face(face, delta);
+                self.caches[index].clear();
+            }
+            Message::MoveVertex { .. } => todo!(),
             Message::SaveLayout(file) => {
                 info!(?file, "Saving layout");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
@@ -409,6 +417,13 @@ impl NuhxBoard {
                                 .translate(-delta, self.settings.update_text_position);
                             self.caches[index].clear();
                         }
+                        Change::MoveFace { index, face, delta } => {
+                            let mut def =
+                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
+                                    .unwrap();
+                            def.translate_face(face, -delta);
+                            self.caches[index].clear();
+                        }
                     }
                 }
             }
@@ -420,6 +435,13 @@ impl NuhxBoard {
                         Change::MoveElement { index, delta } => {
                             self.layout.elements[index]
                                 .translate(delta, self.settings.update_text_position);
+                        }
+                        Change::MoveFace { index, face, delta } => {
+                            let mut def =
+                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
+                                    .unwrap();
+                            def.translate_face(face, delta);
+                            self.caches[index].clear();
                         }
                     }
                 }
@@ -1269,6 +1291,7 @@ impl NuhxBoard {
                     Err(_) => return Task::none(),
                 };
                 if time_diff.as_millis() < 10 {
+                    trace!("Mouse move event ignored due to time diff");
                     return Task::none();
                 }
 

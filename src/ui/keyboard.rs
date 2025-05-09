@@ -475,6 +475,26 @@ impl<'a> Keyboard<'a> {
     fn bounds(&self) -> Rectangle {
         Rectangle::with_size(Size::new(self.width, self.height))
     }
+
+    fn face_move_delta(&self, face: usize, index: usize, delta: Coord<f32>) -> Coord<f32> {
+        let def = CommonDefinitionRef::try_from(&self.layout.elements[index]).unwrap();
+        let polygon = Polygon::new(LineString::from(def.boundaries.clone()), vec![]);
+        let face_line = polygon.exterior().lines().nth(face).unwrap();
+        let face_vec = Vector3::new(
+            face_line.end.x - face_line.start.x,
+            face_line.end.y - face_line.start.y,
+            0.0,
+        );
+        let u = Vector3::new(0.0, 0.0, 1.0);
+        let mut ortho = face_vec.cross(&u).normalize();
+        let delta_vec = Vector3::new(delta.x, delta.y, 0.0);
+        let comp = delta_vec.dot(&ortho) / ortho.magnitude();
+        ortho *= comp;
+        Coord {
+            x: ortho.x,
+            y: ortho.y,
+        }
+    }
 }
 
 impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
@@ -611,7 +631,10 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
 
                                     let bounds = Polygon::new(LineString::from(vertices), vec![]);
 
-                                    if cursor_position.is_within(&bounds) {
+                                    if cursor_position.is_within(&bounds)
+                                        && (state.selected_element == Some(index)
+                                            || state.selected_element.is_none())
+                                    {
                                         let exterior = bounds.exterior();
                                         if !(exterior.coords().enumerate().any(|(i, vertex)| {
                                             if Euclidean.distance(cursor_position, *vertex)
@@ -677,15 +700,21 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                         }
                     }
                     Interaction::Dragging => {
-                        if state.held_element.is_some() {
+                        if let Some(index) = state.held_element {
                             let delta = cursor_position - state.previous_cursor_position;
                             state.previous_cursor_position = cursor_position;
                             state.delta_accumulator.x += delta.x;
                             state.delta_accumulator.y += delta.y;
-                            shell.publish(Message::MoveElement {
-                                index: state.held_element.unwrap(),
-                                delta,
-                            });
+
+                            if let Some(face) = state.hovered_face {
+                                shell.publish(Message::MoveFace {
+                                    index,
+                                    face,
+                                    delta: self.face_move_delta(face, index, delta),
+                                });
+                            } else {
+                                shell.publish(Message::MoveElement { index, delta });
+                            }
                             return Status::Captured;
                         }
                     }
@@ -715,10 +744,15 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 if state.delta_accumulator != Coord::default() {
                     if let Some(message) = state.held_element.map(|index| {
-                        Message::PushChange(Change::MoveElement {
-                            index,
-                            delta: state.delta_accumulator,
-                        })
+                        if let Some(face) = state.hovered_face {
+                            let delta = self.face_move_delta(face, index, state.delta_accumulator);
+                            Message::PushChange(Change::MoveFace { index, face, delta })
+                        } else {
+                            Message::PushChange(Change::MoveElement {
+                                index,
+                                delta: state.delta_accumulator,
+                            })
+                        }
                     }) {
                         shell.publish(message);
                     }

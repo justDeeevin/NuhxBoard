@@ -1,3 +1,4 @@
+use geo::Coord;
 pub use ordered_float::OrderedFloat;
 use schemars::{json_schema, JsonSchema};
 use serde::{Deserialize, Serialize};
@@ -75,6 +76,17 @@ pub struct CommonDefinition {
     pub text: String,
 }
 
+impl CommonDefinition {
+    pub fn translate_face(&mut self, face: usize, delta: Coord<f32>) {
+        self.boundaries[face] += delta;
+        if face == self.boundaries.len() - 1 {
+            self.boundaries[0] += delta;
+        } else {
+            self.boundaries[face + 1] += delta;
+        }
+    }
+}
+
 impl From<KeyboardKeyDefinition> for CommonDefinition {
     fn from(val: KeyboardKeyDefinition) -> Self {
         CommonDefinition {
@@ -149,6 +161,17 @@ pub struct CommonDefinitionMut<'a> {
     pub text_position: &'a mut SerializablePoint,
     pub boundaries: &'a mut Vec<SerializablePoint>,
     pub key_codes: &'a mut Vec<u32>,
+}
+
+impl CommonDefinitionMut<'_> {
+    pub fn translate_face(&mut self, face: usize, delta: Coord<f32>) {
+        self.boundaries[face] += delta;
+        if face == self.boundaries.len() - 1 {
+            self.boundaries[0] += delta;
+        } else {
+            self.boundaries[face + 1] += delta;
+        }
+    }
 }
 
 impl<'a> From<&'a mut KeyboardKeyDefinition> for CommonDefinitionMut<'a> {
@@ -258,6 +281,13 @@ impl std::ops::AddAssign<geo::Coord<f32>> for SerializablePoint {
     fn add_assign(&mut self, rhs: geo::Coord<f32>) {
         self.x += rhs.x;
         self.y += rhs.y;
+    }
+}
+
+impl std::ops::SubAssign<geo::Coord<f32>> for SerializablePoint {
+    fn sub_assign(&mut self, rhs: geo::Coord<f32>) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
     }
 }
 
