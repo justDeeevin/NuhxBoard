@@ -712,6 +712,12 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                     face,
                                     delta: self.face_move_delta(face, index, delta),
                                 });
+                            } else if let Some(vertex) = state.hovered_vertex {
+                                shell.publish(Message::MoveVertex {
+                                    index,
+                                    vertex,
+                                    delta,
+                                })
                             } else {
                                 shell.publish(Message::MoveElement { index, delta });
                             }
@@ -747,6 +753,12 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                         if let Some(face) = state.hovered_face {
                             let delta = self.face_move_delta(face, index, state.delta_accumulator);
                             Message::PushChange(Change::MoveFace { index, face, delta })
+                        } else if let Some(vertex) = state.hovered_vertex {
+                            Message::PushChange(Change::MoveVertex {
+                                index,
+                                vertex,
+                                delta: state.delta_accumulator,
+                            })
                         } else {
                             Message::PushChange(Change::MoveElement {
                                 index,

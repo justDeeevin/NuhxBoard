@@ -353,7 +353,16 @@ impl NuhxBoard {
                 def.translate_face(face, delta);
                 self.caches[index].clear();
             }
-            Message::MoveVertex { .. } => todo!(),
+            Message::MoveVertex {
+                index,
+                vertex,
+                delta,
+            } => {
+                debug!(index, vertex, delta = ?(delta.x, delta.y), "Moving vertex");
+                let def = CommonDefinitionMut::try_from(&mut self.layout.elements[index]).unwrap();
+                def.boundaries[vertex] += delta;
+                self.caches[index].clear();
+            }
             Message::SaveLayout(file) => {
                 info!(?file, "Saving layout");
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
@@ -424,6 +433,17 @@ impl NuhxBoard {
                             def.translate_face(face, -delta);
                             self.caches[index].clear();
                         }
+                        Change::MoveVertex {
+                            index,
+                            vertex,
+                            delta,
+                        } => {
+                            let def =
+                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
+                                    .unwrap();
+                            def.boundaries[vertex] -= delta;
+                            self.caches[index].clear();
+                        }
                     }
                 }
             }
@@ -441,6 +461,17 @@ impl NuhxBoard {
                                 CommonDefinitionMut::try_from(&mut self.layout.elements[index])
                                     .unwrap();
                             def.translate_face(face, delta);
+                            self.caches[index].clear();
+                        }
+                        Change::MoveVertex {
+                            index,
+                            vertex,
+                            delta,
+                        } => {
+                            let def =
+                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
+                                    .unwrap();
+                            def.boundaries[vertex] += delta;
                             self.caches[index].clear();
                         }
                     }

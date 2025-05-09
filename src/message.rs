@@ -120,6 +120,11 @@ pub enum Change {
         face: usize,
         delta: Coord<f32>,
     },
+    MoveVertex {
+        index: usize,
+        vertex: usize,
+        delta: Coord<f32>,
+    },
 }
 
 #[derive(Debug, Clone)]
