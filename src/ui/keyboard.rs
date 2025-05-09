@@ -524,13 +524,12 @@ impl<'a> Keyboard<'a> {
                     0.0,
                 );
                 let u = Vector3::new(0.0, 0.0, 1.0);
-                let mut ortho = face_vec.cross(&u).normalize();
+                let ortho = face_vec.cross(&u);
                 let delta_vec = Vector3::new(delta.x, delta.y, 0.0);
-                let comp = delta_vec.dot(&ortho) / ortho.magnitude();
-                ortho *= comp;
+                let proj = (delta_vec.dot(&ortho) / ortho.magnitude().powi(2)) * ortho;
                 Coord {
-                    x: ortho.x,
-                    y: ortho.y,
+                    x: proj.x,
+                    y: proj.y,
                 }
             }
             Err(def) => {
