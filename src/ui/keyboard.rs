@@ -28,7 +28,8 @@ use crate::{
 
 const BALL_TO_RADIUS_RATIO: f32 = 0.2;
 const HOVER_EDGE_DISTANCE: f32 = 6.0;
-const HOVER_EDGE_THICKNESS: f32 = 4.0;
+const HOVER_FACE_THICKNESS: f32 = 4.0;
+const HOVER_VERTEX_THICKNESS: f32 = 6.0;
 
 pub struct Keyboard<'a> {
     app: &'a NuhxBoard,
@@ -359,7 +360,7 @@ impl<'a> Keyboard<'a> {
                                     45.0 / 255.0,
                                     0.0,
                                 )),
-                                width: HOVER_EDGE_THICKNESS,
+                                width: HOVER_FACE_THICKNESS,
                                 ..Default::default()
                             },
                         );
@@ -368,7 +369,7 @@ impl<'a> Keyboard<'a> {
                             &path,
                             canvas::Stroke {
                                 style: canvas::Style::Solid(Color::BLACK),
-                                width: HOVER_EDGE_THICKNESS,
+                                width: HOVER_FACE_THICKNESS,
                                 ..Default::default()
                             },
                         );
@@ -378,10 +379,10 @@ impl<'a> Keyboard<'a> {
                     let vertex = shape.exterior().coords().nth(vertex).unwrap();
                     let path = Path::rectangle(
                         iced::Point {
-                            x: vertex.x - (HOVER_EDGE_THICKNESS / 2.0),
-                            y: vertex.y - (HOVER_EDGE_THICKNESS / 2.0),
+                            x: vertex.x - (HOVER_VERTEX_THICKNESS / 2.0),
+                            y: vertex.y - (HOVER_VERTEX_THICKNESS / 2.0),
                         },
-                        iced::Size::new(HOVER_EDGE_THICKNESS, HOVER_EDGE_THICKNESS),
+                        iced::Size::new(HOVER_VERTEX_THICKNESS, HOVER_VERTEX_THICKNESS),
                     );
                     if state.selected_element == Some(index) {
                         frame.fill(
