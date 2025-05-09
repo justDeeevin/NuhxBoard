@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.6.1](https://github.com/justdeeevin/nuhxboard/compare/v0.6.0...HEAD) - Unreleased
 
+This release doesn't change too much for you guys, but it includes a lot of under-the-hood improvements.
+
 ### Added
 
 - Element dimensions can now be changed by clicking and dragging.
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Handling of null values for `KeyStyle.pressed` and `KeyStyle.loose`. [#13](https://github.com/justdeeevin/nuhxboard/pull/13)
 - Improper layering behavior with image backgrounds. [034646d](https://github.com/justdeeevin/nuhxboard/commit/034646d01be4a8ae00a81ef9efcdf5178b03e05b)
+- macOS support (PROBABLY. I don't have a modern Mac to test on, and I had to rely on virtualization for testing).
 
 ## [v0.6.0](https://github.com/justdeeevin/nuhxboard/releases/v0.6.0) - 2025-12-24
 
