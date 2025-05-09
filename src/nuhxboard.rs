@@ -1149,7 +1149,6 @@ impl NuhxBoard {
         Task::none()
     }
 
-    /// See canvas.rs:478
     fn update_fonts(&self) {
         let mut new_fonts = HashSet::new();
         new_fonts.insert(self.style.default_key_style.loose.font.font_family.clone());
