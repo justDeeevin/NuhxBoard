@@ -4,7 +4,7 @@ use crate::{
     ui::{app::*, popups::*},
 };
 use display_info::DisplayInfo;
-use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect, Vector2DOps};
+use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
     advanced::{graphics::core::SmolStr, subscription},
     widget::canvas::Cache,
