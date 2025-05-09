@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.6.1](https://github.com/justdeeevin/nuhxboard/compare/v0.6.0...HEAD) - Unreleased
 
+### Added
+
+- Element dimensions can now be changed by clicking and dragging.
+
 ### Changed
 
 - Config now lives in `~/.config/nuhxboard/` instead of `~/.local/share/nuhxboard/`. [a3d72c2](https://github.com/justdeeevin/nuhxboard/commit/a3d72c29c8191630602dd32a4c0a0d8aa7248c13)
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Handling of null values for `KeyStyle.pressed` and `KeyStyle.loose`. [#13](https://github.com/justdeeevin/nuhxboard/pull/13)
+- Improper layering behavior with image backgrounds. [034646d](https://github.com/justdeeevin/nuhxboard/commit/034646d01be4a8ae00a81ef9efcdf5178b03e05b)
 
 ## [v0.6.0](https://github.com/justdeeevin/nuhxboard/releases/v0.6.0) - 2025-12-24
 
