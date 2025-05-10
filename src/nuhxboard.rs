@@ -12,13 +12,13 @@ use iced::{
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
-use nuhxboard_logic::{listener::RedevSubscriber, mouse_button_code_convert};
+use nuhxboard_logic::{listener::RdevinSubscriber, mouse_button_code_convert};
 use nuhxboard_types::{
     layout::*,
     settings::*,
     style::{self, *},
 };
-use redev::keycodes::windows::code_from_key as win_keycode_from_key;
+use rdevin::keycodes::windows::code_from_key as win_keycode_from_key;
 use smol::Timer;
 use std::{
     collections::{HashMap, HashSet},
@@ -911,7 +911,7 @@ impl NuhxBoard {
 
     pub fn subscription(&self) -> Subscription<Message> {
         Subscription::batch([
-            subscription::from_recipe(RedevSubscriber).map(Message::Listener),
+            subscription::from_recipe(RdevinSubscriber).map(Message::Listener),
             iced::keyboard::on_key_press(|key, modifiers| {
                 if key == iced::keyboard::Key::Character(SmolStr::new("z"))
                     && ((std::env::consts::OS == "macos" && modifiers.command())
@@ -1192,13 +1192,13 @@ impl NuhxBoard {
         }
     }
 
-    fn input_event(&mut self, event: redev::Event) -> Task<Message> {
+    fn input_event(&mut self, event: rdevin::Event) -> Task<Message> {
         let mut captured_key = None;
         let mut out = Task::none();
         match event.event_type {
-            redev::EventType::KeyPress(key) => {
+            rdevin::EventType::KeyPress(key) => {
                 debug!(?key, "Key pressed");
-                if key == redev::Key::CapsLock {
+                if key == rdevin::Key::CapsLock {
                     self.true_caps = !self.true_caps;
                     if self.settings.capitalization == Capitalization::Follow {
                         self.caps = !self.caps;
@@ -1213,7 +1213,7 @@ impl NuhxBoard {
                 }
                 captured_key = Some(key);
             }
-            redev::EventType::KeyRelease(key) => {
+            rdevin::EventType::KeyRelease(key) => {
                 debug!(?key, "Key released");
                 let Some(key_num) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
@@ -1243,9 +1243,9 @@ impl NuhxBoard {
                     self.caches[*i].clear();
                 }
             }
-            redev::EventType::ButtonPress(button) => {
+            rdevin::EventType::ButtonPress(button) => {
                 debug!(?button, "Button pressed");
-                if button == redev::Button::Unknown(6) || button == redev::Button::Unknown(7) {
+                if button == rdevin::Button::Unknown(6) || button == rdevin::Button::Unknown(7) {
                     return Task::none();
                 }
                 let Ok(button) = mouse_button_code_convert(button) else {
@@ -1258,12 +1258,12 @@ impl NuhxBoard {
                 }
                 captured_key = Some(button);
             }
-            redev::EventType::ButtonRelease(button) => {
+            rdevin::EventType::ButtonRelease(button) => {
                 debug!(?button, "Button released");
                 let Ok(button_num) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
-                if button == redev::Button::Unknown(6) || button == redev::Button::Unknown(7) {
+                if button == rdevin::Button::Unknown(6) || button == rdevin::Button::Unknown(7) {
                     return Task::none();
                 }
                 if !self.pressed_mouse_buttons.contains_key(&button_num) {
@@ -1295,7 +1295,7 @@ impl NuhxBoard {
                     self.caches[*i].clear();
                 }
             }
-            redev::EventType::Wheel { delta_x, delta_y } => {
+            rdevin::EventType::Wheel { delta_x, delta_y } => {
                 debug!("Wheel moved: ({delta_x}, {delta_y})");
                 let button;
                 if delta_x < 0 {
@@ -1324,7 +1324,7 @@ impl NuhxBoard {
                     self.caches[*i].clear();
                 }
             }
-            redev::EventType::MouseMove { x, y } => {
+            rdevin::EventType::MouseMove { x, y } => {
                 debug!("Mouse moved: ({x}, {y})");
                 let (x, y) = (x as f32, y as f32);
 

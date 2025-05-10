@@ -3589,7 +3589,7 @@ dependencies = [
  "nalgebra",
  "nuhxboard-logic",
  "nuhxboard-types",
- "redev",
+ "rdevin",
  "reqwest",
  "schemars",
  "serde_json",
@@ -3610,7 +3610,7 @@ dependencies = [
  "blocking",
  "futures",
  "iced",
- "redev",
+ "rdevin",
  "smol 2.0.2",
  "thiserror 2.0.12",
 ]
@@ -4688,19 +4688,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "read-fonts"
-version = "0.22.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69aacb76b5c29acfb7f90155d39759a29496aebb49395830e928a9703d2eec2f"
-dependencies = [
- "bytemuck",
- "font-types",
-]
-
-[[package]]
-name = "redev"
+name = "rdevin"
 version = "0.1.0"
-source = "git+https://github.com/justdeeevin/redev?rev=124d88a65033bb929057e049844fd65d47e8a293#124d88a65033bb929057e049844fd65d47e8a293"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e24531bad5877ada9f6464949e63433ffb9d24fb3ac6405f810c66ac18b9f82"
 dependencies = [
  "better_default",
  "cocoa",
@@ -4720,6 +4711,16 @@ dependencies = [
  "widestring",
  "winapi",
  "x11",
+]
+
+[[package]]
+name = "read-fonts"
+version = "0.22.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69aacb76b5c29acfb7f90155d39759a29496aebb49395830e928a9703d2eec2f"
+dependencies = [
+ "bytemuck",
+ "font-types",
 ]
 
 [[package]]

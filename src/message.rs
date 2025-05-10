@@ -7,7 +7,7 @@ use nuhxboard_types::{
     settings::{Capitalization, DisplayChoice},
     style::FontStyle,
 };
-use redev::Event;
+use rdevin::Event;
 
 use std::path::PathBuf;
 
@@ -143,9 +143,9 @@ pub enum Setting {
 }
 
 impl Message {
-    pub fn key_release(key: redev::Key) -> Self {
-        Message::Listener(redev::Event {
-            event_type: redev::EventType::KeyRelease(key),
+    pub fn key_release(key: rdevin::Key) -> Self {
+        Message::Listener(rdevin::Event {
+            event_type: rdevin::EventType::KeyRelease(key),
             time: std::time::SystemTime::now(),
             unicode: None,
             platform_code: 0,
@@ -156,9 +156,9 @@ impl Message {
         })
     }
 
-    pub fn button_release(button: redev::Button) -> Self {
-        Message::Listener(redev::Event {
-            event_type: redev::EventType::ButtonRelease(button),
+    pub fn button_release(button: rdevin::Button) -> Self {
+        Message::Listener(rdevin::Event {
+            event_type: rdevin::EventType::ButtonRelease(button),
             time: std::time::SystemTime::now(),
             unicode: None,
             platform_code: 0,

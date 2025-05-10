@@ -18,7 +18,7 @@ use nuhxboard_types::{
     layout::{BoardElement, CommonDefinitionRef},
     settings::Capitalization,
 };
-use redev::keycodes::windows::code_from_key as win_code_from_key;
+use rdevin::keycodes::windows::code_from_key as win_code_from_key;
 use tracing::{debug, trace};
 
 use crate::{
@@ -110,10 +110,10 @@ impl<'a> Keyboard<'a> {
                 {
                     let shift_pressed = self
                         .pressed_keys
-                        .contains_key(&win_code_from_key(redev::Key::ShiftLeft).unwrap())
+                        .contains_key(&win_code_from_key(rdevin::Key::ShiftLeft).unwrap())
                         || self
                             .pressed_keys
-                            .contains_key(&win_code_from_key(redev::Key::ShiftRight).unwrap());
+                            .contains_key(&win_code_from_key(rdevin::Key::ShiftRight).unwrap());
                     match def.change_on_caps {
                         true => match self.caps
                             ^ (shift_pressed
