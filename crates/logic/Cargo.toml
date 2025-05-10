@@ -12,7 +12,7 @@ keywords.workspace = true
 [dependencies]
 futures.workspace = true
 iced.workspace = true
-redev.workspace = true
+rdevin.workspace = true
 async-stream = "0.3.6"
 smol.workspace = true
 thiserror.workspace = true
