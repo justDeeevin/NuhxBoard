@@ -33,7 +33,7 @@ license = false
 eula = false
 
 [dependencies]
-iced-multi-window = "1.1.0"
+iced-multi-window = { path = "./crates/iced-multi-window", version = "1.1.0" }
 smol.workspace = true
 color-eyre = { version = "0.6.3", default-features = false }
 display-info.workspace = true
@@ -70,7 +70,7 @@ debug = ["iced/debug"]
 
 [workspace]
 resolver = "2"
-members = ["crates/logic", "crates/types"]
+members = ["crates/logic", "crates/types", "crates/iced-multi-window"]
 
 [workspace.package]
 version = "0.6.1"
