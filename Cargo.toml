@@ -41,7 +41,6 @@ futures.workspace = true
 geo.workspace = true
 home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
-iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
 reqwest = { version = "0.12.15", features = ["blocking"] }
 serde_json.workspace = true
@@ -57,7 +56,7 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 tracing-appender = "0.2.3"
 clap = { version = "4.5.36", features = ["derive"] }
-iced_graphics = { version = "0.13.0", features = ["geometry"] }
+iced_graphics = { git = "https://github.com/iced-rs/iced", rev = "7a97773f1796fa7889435c78305d287449dd05a4" }
 colorgrad.workspace = true
 
 [build-dependencies]
@@ -83,7 +82,7 @@ categories = ["visualization"]
 
 [workspace.dependencies]
 geo = "0.30.0"
-iced = "0.13.1"
+iced = { git = "https://github.com/iced-rs/iced", rev = "7a97773f1796fa7889435c78305d287449dd05a4" }
 serde_json = "1.0.140"
 futures = "0.3.31"
 rdevin = "0.1.0"

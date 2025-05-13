@@ -6,7 +6,7 @@ use iced::{
     advanced::{layout::Node, widget::tree, Renderer as _, Widget},
     mouse,
     widget::{
-        canvas::{self, event::Status, Geometry},
+        canvas::{self, Geometry},
         image::Handle,
     },
     Color, Element, Event, Length, Rectangle, Renderer, Size,
@@ -341,8 +341,8 @@ impl<'a> Keyboard<'a> {
                 color: current_style.text.into(),
                 size: iced::Pixels(current_style.font.size),
                 font: current_style.font.as_iced(&FONTS).unwrap(),
-                horizontal_alignment: iced::alignment::Horizontal::Center,
-                vertical_alignment: iced::alignment::Vertical::Center,
+                align_x: iced::widget::text::Alignment::Center,
+                align_y: iced::alignment::Vertical::Center,
                 shaping: iced::widget::text::Shaping::Advanced,
                 ..Default::default()
             });
@@ -546,6 +546,10 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
         Size::new(Length::Fixed(self.width), Length::Fixed(self.height))
     }
 
+    fn tag(&self) -> tree::Tag {
+        tree::Tag::of::<State>()
+    }
+
     fn layout(
         &self,
         _tree: &mut iced::advanced::widget::Tree,
@@ -607,35 +611,31 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
         }
     }
 
-    fn on_event(
+    fn update(
         &mut self,
         state: &mut iced::advanced::widget::Tree,
-        event: iced::Event,
+        event: &iced::Event,
         _layout: iced::advanced::Layout<'_>,
         cursor: iced::advanced::mouse::Cursor,
         _renderer: &Renderer,
         _clipboard: &mut dyn iced::advanced::Clipboard,
         shell: &mut iced::advanced::Shell<'_, Message>,
         _viewport: &Rectangle,
-    ) -> Status {
+    ) {
         let state = state.state.downcast_mut::<State>();
         if !self.edit_mode {
-            return if self.hovered_element.is_some() {
+            if self.hovered_element.is_some() {
                 shell.publish(Message::UpdateHoveredElement(None));
-                Status::Captured
             } else if state.selected_element.is_some() {
                 state.selected_element = None;
-                Status::Captured
             } else if state.held_element.is_some() {
                 state.held_element = None;
-                Status::Captured
-            } else {
-                Status::Ignored
-            };
+            }
+            return;
         }
 
         let Some(cursor_position) = cursor.position_in(self.bounds()) else {
-            return Status::Ignored;
+            return;
         };
 
         let cursor_position = Coord {
@@ -686,7 +686,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                     }
 
                                     if captured {
-                                        return Status::Captured;
+                                        return;
                                     }
                                 }
                                 _ => {
@@ -754,7 +754,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                                                 index,
                                             )));
                                         }
-                                        return Status::Captured;
+                                        return;
                                     }
                                 }
                             }
@@ -764,7 +764,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                             shell.publish(Message::UpdateHoveredElement(None));
                             state.hovered_face = None;
                             state.hovered_vertex = None;
-                            return Status::Captured;
+                            return;
                         }
                     }
                     Interaction::Dragging => {
@@ -794,7 +794,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                             } else {
                                 shell.publish(Message::MoveElement { index, delta });
                             }
-                            return Status::Captured;
+                            return;
                         }
                     }
                 }
@@ -817,8 +817,6 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                     }
                     state.selected_element = None;
                 }
-
-                return Status::Captured;
             }
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 if state.delta_accumulator != Coord::default() {
@@ -870,7 +868,6 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
             }
             _ => {}
         }
-        Status::Ignored
     }
 }
 

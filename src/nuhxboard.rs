@@ -546,17 +546,7 @@ impl NuhxBoard {
             }
             Message::Open(window) => {
                 info!(id = window.id(), "Opening new window");
-                if window == LoadKeyboard {
-                    self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
-                        .unwrap()
-                        .map(|r| r.unwrap())
-                        .filter(|entry| {
-                            entry.file_type().unwrap().is_dir() && entry.file_name() != "global"
-                        })
-                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                        .collect::<Vec<_>>();
-                    self.keyboard_category_options.sort();
-                } else if window == SaveStyleAs {
+                if window == SaveStyleAs {
                     self.save_style_as_global =
                         self.style_options[self.style_choice.unwrap()].is_global();
                 }
@@ -877,11 +867,6 @@ impl NuhxBoard {
                 });
 
                 self.caches[element_i].clear();
-
-                return self
-                    .windows
-                    .close_all_of(Box::new(RectangleDialog { index: element_i }))
-                    .map(|_| Message::None);
             }
             Message::StartDetecting(element) => {
                 debug!(element, "Detection begun for element");

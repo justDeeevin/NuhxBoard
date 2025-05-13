@@ -98,12 +98,10 @@ fn main() -> color_eyre::Result<()> {
         fs::create_dir_all(&global_path)?;
     }
 
-    // Runs the app, initializing state using NuhxBoard::new
-    iced::daemon(NuhxBoard::title, NuhxBoard::update, NuhxBoard::view)
+    iced::daemon(NuhxBoard::new, NuhxBoard::update, NuhxBoard::view)
         .theme(NuhxBoard::theme)
         .subscription(NuhxBoard::subscription)
         .font(iced_fonts::REQUIRED_FONT_BYTES)
-        .run_with(NuhxBoard::new)?;
-
+        .run()?;
     Ok(())
 }
