@@ -6,6 +6,8 @@
 
 <a href="https://github.com/iced-rs/iced"><img alt="The Iced logo" src="https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg" width="130"></a>
 
+[Changelog](CHANGELOG.md)
+
 ## Goals
 
 [Nohboard](https://github.com/ThoNohT/NohBoard) is great! But it’s only for Windows. The only alternative is [Tiyenti’s KBDisplay](https://github.com/Tiyenti/kbdisplay), which is quite nice, but limited in functionality. My primary goal with this project is to replicate the functionality of NohBoard in a cross-compatible manner. More specifically, I want to be able to feed in any NohBoard config file and have near-identical output to NohBoard.
