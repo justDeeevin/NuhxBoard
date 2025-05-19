@@ -52,7 +52,7 @@ nuhxboard-logic = { path = "crates/logic", version = "0.6.1" }
 rdevin.workspace = true
 nalgebra = "0.33.2"
 thiserror.workspace = true
-confy = "0.6.1"
+confy = "1.0.0"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 tracing-appender = "0.2.3"
