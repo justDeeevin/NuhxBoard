@@ -25,14 +25,14 @@ struct Args {
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     let args = Args::parse();
-    let registry = tracing_subscriber::registry().with(tracing_subscriber::fmt::layer());
     if !args.iced_tracing {
+        let registry = tracing_subscriber::registry().with(tracing_subscriber::fmt::layer());
         let level = std::env::var("RUST_LOG").unwrap_or("INFO".to_owned());
         let filter =
             filter::Targets::new().with_target("nuhxboard", level.parse().unwrap_or(Level::INFO));
         registry.with(filter).init();
     } else {
-        registry.init();
+        tracing_subscriber::fmt::init();
     }
 
     let config_path = KEYBOARDS_PATH.parent().wrap_err("Config exists in root?")?;
