@@ -45,7 +45,7 @@ iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
 reqwest = { version = "0.12.15", features = ["blocking"] }
 serde_json.workspace = true
-zip = "2.6.1"
+zip = "3.0.0"
 iced_fonts = "0.2.1"
 nuhxboard-types = { path = "crates/types", version = "0.6.1" }
 nuhxboard-logic = { path = "crates/logic", version = "0.6.1" }
