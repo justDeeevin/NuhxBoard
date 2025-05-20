@@ -13,5 +13,5 @@ rust-version = "1.72.1"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
-dyn-clone = "1.0.17"
+dyn-clone = "1.0.19"
 iced.workspace = true
