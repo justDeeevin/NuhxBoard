@@ -1379,10 +1379,7 @@ impl NuhxBoard {
         if let Some(key) = captured_key {
             debug!(?key, "Key captured, updating layout def");
             for i in &self.detecting {
-                let BoardElement::KeyboardKey(def) = &mut self.layout.elements[*i] else {
-                    continue;
-                };
-                def.key_codes.push(key);
+                self.number_input.keycode.insert(*i, key);
             }
             self.detecting.clear();
         }
