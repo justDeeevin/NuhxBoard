@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.6.1](https://github.com/justdeeevin/nuhxboard/compare/v0.6.0...HEAD) - Unreleased
+## [v0.6.1](https://github.com/justDeeevin/NuhxBoard/tree/v0.6.1) - 2025-05-19
 
 This release doesn't change too much for you guys, but it includes a lot of under-the-hood improvements.
 
