@@ -11,7 +11,7 @@ keywords.workspace = true
 
 [dependencies]
 futures.workspace = true
-iced.workspace = true
+iced = { workspace = true, features = ["advanced"] }
 rdevin.workspace = true
 async-stream = "0.3.6"
 smol.workspace = true
