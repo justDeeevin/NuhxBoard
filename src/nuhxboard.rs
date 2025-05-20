@@ -21,7 +21,7 @@ use nuhxboard_types::{
 use rdevin::keycodes::windows::code_from_key as win_keycode_from_key;
 use smol::Timer;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fs::{self, File},
     path::PathBuf,
     sync::{Arc, LazyLock, RwLock},
@@ -734,16 +734,17 @@ impl NuhxBoard {
                             }
                         }
                         ElementProperty::Keycode(i, v) => {
+                            let mut set = BTreeSet::from_iter(def.key_codes.clone());
                             if let Some(v) = v {
                                 if mouse_key {
-                                    def.key_codes[0] = v;
-                                } else {
-                                    def.key_codes.push(v);
+                                    set.clear();
                                 }
+                                set.insert(v);
                             } else {
-                                def.key_codes.remove(i);
+                                set.remove(&def.key_codes[i]);
                                 self.selections.keycode.remove(&element_i);
                             }
+                            *def.key_codes = set.into_iter().collect();
                         }
                         _ => handeled = false,
                     }
