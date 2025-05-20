@@ -59,7 +59,6 @@
               xorg.libXi
               xorg.libXrandr
               xorg.libXtst
-              openssl
               wayland
               libxkbcommon
               libevdev

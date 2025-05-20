@@ -43,7 +43,11 @@ home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
 iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
-reqwest = { version = "0.12.15", features = ["blocking"] }
+reqwest = { version = "0.12.15", default-features = false, features = [
+  "json",
+  "blocking",
+  "rustls-tls",
+] }
 serde_json.workspace = true
 zip = "3.0.0"
 iced_fonts = "0.2.1"
