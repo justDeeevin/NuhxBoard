@@ -3493,7 +3493,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard"
-version = "0.6.1"
+version = "1.0.0"
 dependencies = [
  "clap",
  "color-eyre",
@@ -3526,7 +3526,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard-logic"
-version = "0.6.1"
+version = "1.0.0"
 dependencies = [
  "async-channel 2.3.1",
  "async-stream",
@@ -3540,7 +3540,7 @@ dependencies = [
 
 [[package]]
 name = "nuhxboard-types"
-version = "0.6.1"
+version = "1.0.0"
 dependencies = [
  "bitflags 2.9.1",
  "colorgrad",
