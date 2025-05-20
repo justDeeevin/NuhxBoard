@@ -13,6 +13,7 @@ use std::{
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct Style {
+    /// Background color of the window. Will be overridden by background image if present.
     pub background_color: NohRgb,
     pub background_image_file_name: Option<String>,
     pub default_key_style: DefaultKeyStyle,
@@ -153,6 +154,7 @@ pub struct KeySubStyle {
     pub text: NohRgb,
     pub outline: NohRgb,
     pub show_outline: bool,
+    /// Outline thickness in pixels.
     pub outline_width: u32,
     pub font: Font,
     pub background_image_file_name: Option<String>,
@@ -162,6 +164,7 @@ pub struct KeySubStyle {
 #[serde(rename_all = "PascalCase")]
 pub struct Font {
     pub font_family: String,
+    /// Font size in pixels.
     pub size: f32,
     pub style: FontStyle,
 }

@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct Layout {
-    /// Doesn't do anything
+    /// No actual meaning. Kept for parity with NohBoard layout files.
     pub version: Option<u8>,
-    /// Window width
+    /// Width of the window in pixels
     pub width: f32,
-    /// Window height
+    /// Height of the window in pixels
     pub height: f32,
     pub elements: Vec<BoardElement>,
 }
@@ -57,11 +57,17 @@ impl BoardElement {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct KeyboardKeyDefinition {
+    /// Unique id of the element. Used by style files.
     pub id: u32,
+    /// Vertices of the element. Used to draw a polygon for the background if no image is
+    /// supplied, and always used for graphical editing.
     pub boundaries: Vec<SerializablePoint>,
+    /// The position of the top-left corner of the text. **Window-relative, not
+    /// element-relative**.
     pub text_position: SerializablePoint,
     pub key_codes: Vec<u32>,
     pub text: String,
+    /// Text to display when Shift is held.
     pub shift_text: String,
     pub change_on_caps: bool,
 }
@@ -69,8 +75,13 @@ pub struct KeyboardKeyDefinition {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct CommonDefinition {
+    /// Unique id of the element. Used by style files.
     pub id: u32,
+    /// Vertices of the element. Used to draw a polygon for the background if no image is
+    /// supplied, and always used for graphical editing.
     pub boundaries: Vec<SerializablePoint>,
+    /// The position of the top-left corner of the text. **Window-relative, not
+    /// element-relative**.
     pub text_position: SerializablePoint,
     pub key_codes: Vec<u32>,
     pub text: String,
@@ -213,8 +224,11 @@ impl<'a> TryFrom<&'a mut BoardElement> for CommonDefinitionMut<'a> {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicatorDefinition {
+    /// Unique id of the element. Used by style files.
     pub id: u32,
+    /// Position of the center of the indicator.
     pub location: SerializablePoint,
+    /// Radius of the outer ring.
     pub radius: f32,
 }
 

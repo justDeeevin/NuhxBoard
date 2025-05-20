@@ -10,12 +10,12 @@
       }
     },
     "Height": {
-      "description": "Window height",
+      "description": "Height of the window in pixels",
       "type": "number",
       "format": "float"
     },
     "Version": {
-      "description": "Doesn't do anything",
+      "description": "No actual meaning. Kept for parity with NohBoard layout files.",
       "type": [
         "integer",
         "null"
@@ -24,7 +24,7 @@
       "minimum": 0
     },
     "Width": {
-      "description": "Window width",
+      "description": "Width of the window in pixels",
       "type": "number",
       "format": "float"
     }
@@ -96,12 +96,14 @@
       "type": "object",
       "properties": {
         "Boundaries": {
+          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\n supplied, and always used for graphical editing.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/SerializablePoint"
           }
         },
         "Id": {
+          "description": "Unique id of the element. Used by style files.",
           "type": "integer",
           "format": "uint32",
           "minimum": 0
@@ -118,6 +120,7 @@
           "type": "string"
         },
         "TextPosition": {
+          "description": "The position of the top-left corner of the text. **Window-relative, not\n element-relative**.",
           "$ref": "#/$defs/SerializablePoint"
         }
       },
@@ -133,6 +136,7 @@
       "type": "object",
       "properties": {
         "Boundaries": {
+          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\n supplied, and always used for graphical editing.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/SerializablePoint"
@@ -142,6 +146,7 @@
           "type": "boolean"
         },
         "Id": {
+          "description": "Unique id of the element. Used by style files.",
           "type": "integer",
           "format": "uint32",
           "minimum": 0
@@ -155,12 +160,14 @@
           }
         },
         "ShiftText": {
+          "description": "Text to display when Shift is held.",
           "type": "string"
         },
         "Text": {
           "type": "string"
         },
         "TextPosition": {
+          "description": "The position of the top-left corner of the text. **Window-relative, not\n element-relative**.",
           "$ref": "#/$defs/SerializablePoint"
         }
       },
@@ -178,14 +185,17 @@
       "type": "object",
       "properties": {
         "Id": {
+          "description": "Unique id of the element. Used by style files.",
           "type": "integer",
           "format": "uint32",
           "minimum": 0
         },
         "Location": {
+          "description": "Position of the center of the indicator.",
           "$ref": "#/$defs/SerializablePoint"
         },
         "Radius": {
+          "description": "Radius of the outer ring.",
           "type": "number",
           "format": "float"
         }

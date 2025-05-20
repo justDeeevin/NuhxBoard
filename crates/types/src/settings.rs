@@ -7,15 +7,22 @@ pub struct Settings {
     pub capitalization: Capitalization,
     pub follow_for_caps_sensitive: bool,
     pub follow_for_caps_insensitive: bool,
+    /// Name of the category to use.
     pub category: String,
+    /// Index of the keyboard to use.
     pub keyboard: usize,
+    /// Index of the style to use.
     pub style: usize,
+    /// Whether to treat the cursor's distance from the center of the screen as its velocity.
     pub mouse_from_center: bool,
     pub mouse_sensitivity: f32,
+    /// Minimum number of milliseconds that a key should be highlighted.
     pub min_press_time: u64,
     pub scroll_hold_time: u64,
     pub window_title: String,
     pub display_choice: DisplayChoice,
+    /// Whether to update the text position of an element when it is moved in the graphical
+    /// editor.
     pub update_text_position: bool,
 }
 

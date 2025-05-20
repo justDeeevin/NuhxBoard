@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "BackgroundColor": {
+      "description": "Background color of the window. Will be overridden by background image if present.",
       "$ref": "#/$defs/NohRgb"
     },
     "BackgroundImageFileName": {
@@ -87,6 +88,7 @@
           "type": "string"
         },
         "Size": {
+          "description": "Font size in pixels.",
           "type": "number",
           "format": "float"
         },
@@ -149,6 +151,7 @@
           "$ref": "#/$defs/NohRgb"
         },
         "OutlineWidth": {
+          "description": "Outline thickness in pixels.",
           "type": "integer",
           "format": "uint32",
           "minimum": 0
