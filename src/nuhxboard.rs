@@ -27,7 +27,7 @@ use std::{
     sync::{Arc, LazyLock, RwLock},
     time::{Duration, Instant},
 };
-use tracing::{debug, info, trace};
+use tracing::{debug, debug_span, info, info_span, trace};
 
 macro_rules! key_style_change {
     ($self:expr, $state:ident, $block:block, $id:ident) => {
@@ -138,7 +138,8 @@ pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
 
 impl NuhxBoard {
     pub fn new() -> (Self, Task<Message>) {
-        info!("Startup");
+        let span = info_span!("startup");
+        let _guard = span.enter();
         let mut errors = Vec::new();
 
         info!("Loading settings");
@@ -222,6 +223,8 @@ impl NuhxBoard {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        let span = debug_span!("update");
+        let guard = span.enter();
         match message {
             Message::Listener(event) => {
                 debug!("Input event");
@@ -269,11 +272,13 @@ impl NuhxBoard {
                 self.keyboard_options.sort();
 
                 if self.startup {
+                    drop(guard);
                     return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
                 }
             }
             Message::LoadLayout(layout) => {
                 info!(layout, "Layout changed");
+                drop(guard);
                 return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {

@@ -13,7 +13,7 @@ use std::{
 use clap::Parser;
 use color_eyre::eyre::ContextCompat;
 use nuhxboard::*;
-use tracing::{debug, info, Level};
+use tracing::{debug, debug_span, info, Level};
 use tracing_subscriber::{filter, prelude::*};
 
 #[derive(Parser)]
@@ -57,6 +57,8 @@ fn main() -> color_eyre::Result<()> {
         let mut keyboards_archive = zip::ZipArchive::new(keyboards_file).unwrap();
 
         info!("Extracting sample keyboards");
+        let span = debug_span!("unzip");
+        let _guard = span.enter();
         let len = keyboards_archive.len();
         for i in 1..=len {
             let mut file = keyboards_archive.by_index(i - 1).unwrap();
