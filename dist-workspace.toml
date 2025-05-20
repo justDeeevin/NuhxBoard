@@ -17,3 +17,9 @@ pr-run-mode = "plan"
 [dist.dependencies.apt]
 libxi-dev = '*'
 libxtst-dev = '*'
+
+[dist.github-custom-runners]
+global = "ubuntu-latest"
+x86_64-unknown-linux-gnu = "ubuntu-latest"
+aarch64-unknown-linux-gnu = "ubuntu-latest"
+aarch64-pc-windows-msvc = "ubuntu-latest"
