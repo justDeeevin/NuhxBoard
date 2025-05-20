@@ -332,11 +332,6 @@ You can use CTRL+Z to undo element movements, and CTRL+SHIFT+Z to redo them.
 
 NuhxBoard will lack native Wayland support for the foreseeable future. This is due to the fact that Wayland provides no protocol for global input listening. However, through XWayland, NuhxBoard will still receive events when X11 applications have focus. The staggering majority of games with some version of Linux support (be it through proton or native support) use X11, so the primary usecase for NuhxBoard (being game recording) still works well enough.
 
-### MacOS
-
-Doesn’t work right now. :(\
-Support is in the works.
-
 ## Demo
 
 https://github.com/justDeeevin/NuhxBoard/assets/90054389/36dc9cf6-3b23-435c-a742-18dddf9c7c19
