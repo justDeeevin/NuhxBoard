@@ -27,7 +27,7 @@ fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
     if !args.iced_tracing {
         let registry = tracing_subscriber::registry().with(tracing_subscriber::fmt::layer());
-        let level = std::env::var("RUST_LOG").unwrap_or("INFO".to_owned());
+        let level = std::env::var("RUST_LOG").unwrap_or_default();
         let filter =
             filter::Targets::new().with_target("nuhxboard", level.parse().unwrap_or(Level::INFO));
         registry.with(filter).init();
