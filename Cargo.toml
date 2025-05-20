@@ -19,7 +19,6 @@ exclude = [
   "flake.*",
   "justfile",
   "keyboards.zip",
-  "media",
   "schemas",
   "wix",
   "CHANGELOG.md",
