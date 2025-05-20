@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Being able to add duplicate keycodes to a keyboard key element. [860176c](https://github.com/justdeeevin/nuhxboard/commit/860176c72ca21106c3a71146a7304e33f2110227)
 - Keycode detection behavior not matching NohBoard. [4aa8985](https://github.com/justdeeevin/nuhxboard/commit/4aa8985500e9d425426abd44e720a49126d75c66)
+- Behavior of elements with multiple keycodes. They now require all keycodes to be pressed to be highlighted. [84aeb64](https://github.com/justdeeevin/nuhxboard/commit/84aeb645efbc22cf55cac23b8b86a06476b0a234)
 
 ## [v0.6.1](https://github.com/justDeeevin/NuhxBoard/releases/v0.6.1) - 2025-05-19
 
