@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.0](https://github.com/justdeeevin/nuhxboard/compare/v0.6.1...HEAD) - Unrelased
+
+### Fixed
+
+- Being able to add duplicate keycodes to a keyboard key element. [860176c](https://github.com/justdeeevin/nuhxboard/commit/860176c72ca21106c3a71146a7304e33f2110227)
+- Keycode detection behavior not matching NohBoard. [4aa8985](https://github.com/justdeeevin/nuhxboard/commit/4aa8985500e9d425426abd44e720a49126d75c66)
+
 ## [v0.6.1](https://github.com/justDeeevin/NuhxBoard/releases/v0.6.1) - 2025-05-19
 
 This release doesn't change too much for you guys, but it includes a lot of under-the-hood improvements.
