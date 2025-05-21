@@ -65,13 +65,13 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
         column![
             row![
                 text("Category: "),
-                text_input("", &app.text_input.save_keyboard_as_category,).on_input(|v| {
+                text_input("", &app.save_keyboard_as_category,).on_input(|v| {
                     Message::ChangeTextInput(TextInputType::SaveKeyboardAsCategory, v)
                 })
             ],
             row![
                 text("Name: "),
-                text_input("", &app.text_input.save_keyboard_as_name,)
+                text_input("", &app.save_keyboard_as_name,)
                     .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
             button("Save").on_press(Message::SaveLayout(Some(
@@ -114,7 +114,7 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
         column![
             row![
                 text("Name: "),
-                text_input("", &app.text_input.save_style_as_name,)
+                text_input("", &app.save_style_as_name,)
                     .on_input(|v| Message::ChangeTextInput(TextInputType::SaveStyleAsName, v))
             ],
             checkbox("Save as global", app.save_style_as_global)

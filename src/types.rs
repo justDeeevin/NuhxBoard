@@ -31,9 +31,6 @@ pub enum NumberInputType {
 #[derive(Default)]
 pub struct TextInput {
     pub keyboard_background_image: String,
-    pub save_keyboard_as_category: String,
-    pub save_keyboard_as_name: String,
-    pub save_style_as_name: String,
     pub default_loose_key_background_image: String,
     pub default_loose_key_font_family: String,
     pub default_pressed_key_background_image: String,

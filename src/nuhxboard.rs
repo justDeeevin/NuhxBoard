@@ -258,7 +258,7 @@ impl NuhxBoard {
                 }
                 self.settings.category = category.clone();
 
-                self.text_input.save_keyboard_as_category = category;
+                self.save_keyboard_as_category = category;
 
                 if !self.startup {
                     self.keyboard_choice = None;
@@ -505,12 +505,12 @@ impl NuhxBoard {
             Message::ChangeTextInput(input, value) => {
                 debug!(?input, value, "Changing text input");
                 match input {
-                    TextInputType::SaveStyleAsName => self.text_input.save_style_as_name = value,
+                    TextInputType::SaveStyleAsName => self.save_style_as_name = value,
                     TextInputType::SaveKeyboardAsName => {
-                        self.text_input.save_keyboard_as_name = value;
+                        self.save_keyboard_as_name = value;
                     }
                     TextInputType::SaveKeyboardAsCategory => {
-                        self.text_input.save_keyboard_as_category = value;
+                        self.save_keyboard_as_category = value;
                     }
                     TextInputType::KeyboardBackgroundImage => {
                         self.text_input.keyboard_background_image = value;
@@ -1110,7 +1110,7 @@ impl NuhxBoard {
         self.style = Style::default();
         self.update_fonts();
 
-        self.text_input.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
+        self.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
 
         let config_file = match File::open(
             KEYBOARDS_PATH
@@ -1292,7 +1292,7 @@ impl NuhxBoard {
 
         self.update_fonts();
 
-        self.text_input.save_style_as_name = self.style_options[style].name();
+        self.save_style_as_name = self.style_options[style].name();
 
         self.text_input.keyboard_background_image = self
             .style
