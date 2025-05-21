@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- "Save definition as" and "Save style as" not saving to the proper location (Thanks @SortLock for spotting this!). [242e184](https://github.com/justdeeevin/nuhxboard/commit/242e1847f5eed485d1b783509743d8c10573087a)
+- "Save definition as" and "Save style as" not saving to the proper location (Thanks [@SortLock](https://github.com/sortlock) for spotting this!). [242e184](https://github.com/justdeeevin/nuhxboard/commit/242e1847f5eed485d1b783509743d8c10573087a)
 
 ## [v0.6.2](https://github.com/justdeeevin/nuhxboard/releases/v0.6.2) - 2025-05-20
 
