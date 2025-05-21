@@ -29,7 +29,7 @@ This release doesn't change too much for you guys, but it includes a lot of unde
 
 ### Changed
 
-- Config now lives in `~/.config/nuhxboard/` (Linux) or `~/Library/Application Suport/nuhxboard/` (macOS) or `~\AppData\Roaming\nuhxboard\config\` (Windows) instead of `~/.local/share/nuhxboard/`. [a3d72c2](https://github.com/justdeeevin/nuhxboard/commit/a3d72c29c8191630602dd32a4c0a0d8aa7248c13)
+- Config now lives in `~/.config/nuhxboard/` (Linux) or `~/Library/Application Suport/rs.NuhxBoard/` (macOS) or `~\AppData\Roaming\nuhxboard\config\` (Windows) instead of `~/.local/share/nuhxboard/`. [a3d72c2](https://github.com/justdeeevin/nuhxboard/commit/a3d72c29c8191630602dd32a4c0a0d8aa7248c13)
 
 ### Fixed
 
