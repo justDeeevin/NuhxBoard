@@ -302,8 +302,8 @@ impl<'a> Keyboard<'a> {
             None => &self.style.default_key_style.clone().into(),
         };
 
-        let pressed =
-            pressed_button_list.is_superset(&HashSet::from_iter(def.key_codes.iter().copied()));
+        let pressed = !def.key_codes.is_empty()
+            && pressed_button_list.is_superset(&HashSet::from_iter(def.key_codes.iter().copied()));
 
         let current_style = if pressed {
             style
