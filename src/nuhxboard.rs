@@ -253,6 +253,7 @@ impl NuhxBoard {
             Message::ChangeKeyboardCategory(category) => {
                 info!(category, "Keyboard category changed");
                 if category.is_empty() {
+                    self.startup = false;
                     return Task::none();
                 }
                 self.settings.category = category.clone();
