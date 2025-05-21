@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keycode detection behavior not matching NohBoard. [4aa8985](https://github.com/justdeeevin/nuhxboard/commit/4aa8985500e9d425426abd44e720a49126d75c66)
 - Behavior of elements with multiple keycodes. They now require all keycodes to be pressed to be highlighted. [84aeb64](https://github.com/justdeeevin/nuhxboard/commit/84aeb645efbc22cf55cac23b8b86a06476b0a234)
 - Regression: Mouse speed indicators not being re-drawn when the mouse moves. [797fd8e](https://github.com/justdeeevin/nuhxboard/commit/797fd8ef346f97755382540b6c4a0761a7b72ebb)
+- Automatically loading the first layout when changing categories if the cached category is an empty string. [bed6047](https://github.com/justdeeevin/nuhxboard/commit/bed6047a6b40822e1fc62b18dc601fd399c64292)
 
 ## [v0.6.1](https://github.com/justDeeevin/NuhxBoard/releases/v0.6.1) - 2025-05-19
 
