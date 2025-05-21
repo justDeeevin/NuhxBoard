@@ -149,7 +149,13 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                         .size(15)
                         .into(),
                 );
-                if app.hovered_element.is_none() {
+                if app.hovered_element.is_some() {
+                    menu.push(
+                        context_menu_button("Remove Element")
+                            .on_press(Message::RemoveElement)
+                            .into(),
+                    );
+                } else {
                     menu.push(
                         context_menu_button("Add Keyboard Key")
                             .on_press(Message::AddKeyboardKey)

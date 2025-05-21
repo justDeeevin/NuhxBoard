@@ -92,7 +92,7 @@ pub struct NuhxBoard {
     pub caches_by_mouse_button: HashMap<u32, usize>,
     pub caches_by_scroll_button: HashMap<u32, usize>,
     pub caches_by_id: HashMap<u32, usize>,
-    pub mouse_speed_indicator_caches: Vec<usize>,
+    pub mouse_speed_indicator_caches: HashSet<usize>,
     pub layout: Layout,
     pub style: Style,
     /// `{[keycode]: [time_pressed]}`
@@ -184,7 +184,7 @@ impl NuhxBoard {
                 caches_by_mouse_button: HashMap::new(),
                 caches_by_scroll_button: HashMap::new(),
                 caches_by_id: HashMap::new(),
-                mouse_speed_indicator_caches: Vec::new(),
+                mouse_speed_indicator_caches: HashSet::new(),
                 layout,
                 style: Style::default(),
                 pressed_keys: HashMap::new(),
@@ -965,7 +965,7 @@ impl NuhxBoard {
                     bg: Cache::new(),
                 });
                 self.caches_by_id.insert(def.id, index);
-                self.mouse_speed_indicator_caches.push(index);
+                self.mouse_speed_indicator_caches.insert(index);
                 self.layout
                     .elements
                     .push(BoardElement::MouseSpeedIndicator(def));
@@ -981,6 +981,33 @@ impl NuhxBoard {
             } => {
                 if window_id == self.main_window {
                     self.mouse_pos = position;
+                }
+            }
+            Message::RemoveElement => {
+                if let Some(i) = self.hovered_element.take() {
+                    match &self.layout.elements[i] {
+                        BoardElement::KeyboardKey(def) => {
+                            for code in &def.key_codes {
+                                self.caches_by_keycode.remove(code);
+                            }
+                        }
+                        BoardElement::MouseKey(def) => {
+                            for code in &def.key_codes {
+                                self.caches_by_keycode.remove(code);
+                            }
+                        }
+                        BoardElement::MouseScroll(def) => {
+                            for code in &def.key_codes {
+                                self.caches_by_keycode.remove(code);
+                            }
+                        }
+                        BoardElement::MouseSpeedIndicator(_) => {
+                            self.mouse_speed_indicator_caches.remove(&i);
+                        }
+                    }
+                    self.caches_by_id.remove(&self.layout.elements[i].id());
+                    self.caches.remove(i);
+                    self.layout.elements.remove(i);
                 }
             }
         }
@@ -1126,7 +1153,7 @@ impl NuhxBoard {
                         .extend(def.key_codes.iter().map(|c| (*c, i)));
                 }
                 BoardElement::MouseSpeedIndicator(_) => {
-                    self.mouse_speed_indicator_caches.push(i);
+                    self.mouse_speed_indicator_caches.insert(i);
                 }
             }
         }

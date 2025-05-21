@@ -71,6 +71,7 @@ pub enum Message {
         position: iced::Point,
         window_id: window::Id,
     },
+    RemoveElement,
 }
 
 #[derive(Debug, Clone)]
