@@ -317,6 +317,7 @@ In the global context menu, there is a "Settings" button, which opens a window w
 You can graphically manipulate every part of a keyboard layout and style. In the global context menu, press "Start Editing" to enter edit mode. In this mode, you can
 
 - Drag to move elements around
+- Click and drag on the faces and vertices of elements to resize them
 - Change the size of the window with the "Keyboard Properties" button in the edit mode context menu
 - Change the style of the window and default element styles with the "Keyborad Style" button in the edit mode context menu
 - Change various properties of the currently-hovered element with the "Element Properties" button in the edit mode context menu
