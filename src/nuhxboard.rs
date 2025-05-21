@@ -1052,7 +1052,9 @@ impl NuhxBoard {
                     self.caches_by_scroll_button
                         .extend(def.key_codes.iter().map(|c| (*c, i)));
                 }
-                _ => {}
+                BoardElement::MouseSpeedIndicator(_) => {
+                    self.mouse_speed_indicator_caches.push(i);
+                }
             }
         }
 
@@ -1431,6 +1433,7 @@ impl NuhxBoard {
                 self.previous_mouse_position = (x, y);
                 self.previous_mouse_time = current_time;
                 for i in &self.mouse_speed_indicator_caches {
+                    trace!(index = i, "Clearing mouse speed indicator cache");
                     self.caches[*i].clear();
                 }
             }
