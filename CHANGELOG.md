@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.3](https://github.com/justdeeevin/nuhxboard/releases/v0.6.3) - 2025-05-21
+
+### Fixed
+
+- "Save definition as" and "Save style as" not saving to the proper location (Thanks @SortLock for spotting this!). [242e184](https://github.com/justdeeevin/nuhxboard/commit/242e1847f5eed485d1b783509743d8c10573087a)
+
 ## [v0.6.2](https://github.com/justdeeevin/nuhxboard/releases/v0.6.2) - 2025-05-20
 
 ### Added
