@@ -267,9 +267,19 @@ impl JsonSchema for SerializablePoint {
         })
     }
 }
+
 impl From<SerializablePoint> for iced::Point {
     fn from(point: SerializablePoint) -> Self {
         iced::Point::new(*point.x, *point.y)
+    }
+}
+
+impl From<iced::Point> for SerializablePoint {
+    fn from(point: iced::Point) -> Self {
+        Self {
+            x: OrderedFloat(point.x),
+            y: OrderedFloat(point.y),
+        }
     }
 }
 

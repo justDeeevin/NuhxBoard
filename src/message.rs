@@ -3,7 +3,7 @@ use geo::Coord;
 use iced::{window, Color, Theme};
 use iced_multi_window::Window;
 use nuhxboard_types::{
-    layout::SerializablePoint,
+    layout::{BoardElement, SerializablePoint},
     settings::{Capitalization, DisplayChoice},
     style::FontStyle,
 };
@@ -61,7 +61,16 @@ pub enum Message {
     StartDetecting(usize),
     ClearCache(usize),
     ClearAllCaches,
+    AddKeyboardKey,
+    AddMouseKey,
+    AddMouseScroll,
+    AddMouseSpeedIndicator,
     None,
+    RightClick(window::Id),
+    MouseMoved {
+        position: iced::Point,
+        window_id: window::Id,
+    },
 }
 
 #[derive(Debug, Clone)]

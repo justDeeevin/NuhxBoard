@@ -129,7 +129,11 @@ pub struct NuhxBoard {
     pub selections: SelectionLists,
     pub hovered_element: Option<usize>,
     pub detecting: Vec<usize>,
+    pub right_click_pos: iced::Point,
+    pub mouse_pos: iced::Point,
 }
+
+const DEFAULT_KEY_SIZE: f32 = 43.0;
 
 pub const DEFAULT_WINDOW_SIZE: iced::Size = iced::Size {
     width: 200.0,
@@ -212,6 +216,8 @@ impl NuhxBoard {
                 number_input: NumberInput::default(),
                 selections: SelectionLists::default(),
                 detecting: Vec::new(),
+                right_click_pos: iced::Point::default(),
+                mouse_pos: iced::Point::default(),
             },
             Task::batch([
                 Task::perform(async {}, move |_| {
@@ -899,8 +905,50 @@ impl NuhxBoard {
             Message::ClearAllCaches => {
                 self.clear_all_caches();
             }
+            Message::AddKeyboardKey => {
+                let id = self
+                    .layout
+                    .elements
+                    .iter()
+                    .map(|e| e.id())
+                    .max()
+                    .unwrap_or_default()
+                    + 1;
+                self.layout
+                    .elements
+                    .push(BoardElement::KeyboardKey(KeyboardKeyDefinition {
+                        id,
+                        boundaries: vec![
+                            SerializablePoint {
+                                x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
+                                y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
+                            },
+                            SerializablePoint {
+                                x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
+                                y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
+                            },
+                            SerializablePoint {
+                                x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
+                                y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
+                            },
+                            SerializablePoint {
+                                x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
+                                y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
+                            },
+                        ],
+                        text_position: self.right_click_pos.into(),
+                        key_codes: Vec::new(),
+                        text: String::new(),
+                        shift_text: String::new(),
+                        change_on_caps: false,
+                    }))
+            }
         }
         Task::none()
+    }
+
+    fn new_key(&mut self) -> CommonDefinition {
+        todo!()
     }
 
     pub fn view(&self, window: window::Id) -> iced::Element<'_, Message, Theme, Renderer> {
@@ -933,6 +981,18 @@ impl NuhxBoard {
                 }
             }),
             iced::window::close_events().map(Message::Closed),
+            iced::event::listen_with(|e, _, id| match e {
+                iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
+                    iced::mouse::Button::Right,
+                )) => Some(Message::RightClick(id)),
+                iced::Event::Mouse(iced::mouse::Event::CursorMoved { position }) => {
+                    Some(Message::MouseMoved {
+                        position,
+                        window_id: id,
+                    })
+                }
+                _ => None,
+            }),
         ])
     }
 

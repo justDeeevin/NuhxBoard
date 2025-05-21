@@ -117,7 +117,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             ];
 
             if app.edit_mode {
-                menu.append(&mut vec![
+                menu.push(
                     checkbox("Update Text Position", app.settings.update_text_position)
                         .on_toggle(|_| Message::ChangeSetting(Setting::UpdateTextPosition))
                         .style(|theme, status| match status {
@@ -148,6 +148,30 @@ impl Window<NuhxBoard, Theme, Message> for Main {
                         .text_size(12)
                         .size(15)
                         .into(),
+                );
+                if app.hovered_element.is_none() {
+                    menu.push(
+                        context_menu_button("Add Keyboard Key")
+                            .on_press(Message::AddKeyboardKey)
+                            .into(),
+                    );
+                    menu.push(
+                        context_menu_button("Add Mouse Key")
+                            .on_press(Message::AddMouseKey)
+                            .into(),
+                    );
+                    menu.push(
+                        context_menu_button("Add Mouse Scroll")
+                            .on_press(Message::AddMouseScroll)
+                            .into(),
+                    );
+                    menu.push(
+                        context_menu_button("Add Mouse Speed Indicator")
+                            .on_press(Message::AddMouseSpeedIndicator)
+                            .into(),
+                    );
+                }
+                menu.append(&mut vec![
                     seperator().into(),
                     context_menu_button("Keyboard Properties")
                         .on_press_maybe(
