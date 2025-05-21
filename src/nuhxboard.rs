@@ -906,49 +906,122 @@ impl NuhxBoard {
                 self.clear_all_caches();
             }
             Message::AddKeyboardKey => {
-                let id = self
-                    .layout
-                    .elements
-                    .iter()
-                    .map(|e| e.id())
-                    .max()
-                    .unwrap_or_default()
-                    + 1;
+                let common = self.new_key();
+                let index = self.layout.elements.len();
+                self.caches.push(ElementCache {
+                    fg: Cache::new(),
+                    bg: Cache::new(),
+                });
+                self.caches_by_id.insert(common.id, index);
+                self.caches_by_keycode
+                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+
                 self.layout
                     .elements
                     .push(BoardElement::KeyboardKey(KeyboardKeyDefinition {
-                        id,
-                        boundaries: vec![
-                            SerializablePoint {
-                                x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
-                                y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
-                            },
-                            SerializablePoint {
-                                x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
-                                y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
-                            },
-                            SerializablePoint {
-                                x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
-                                y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
-                            },
-                            SerializablePoint {
-                                x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
-                                y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
-                            },
-                        ],
-                        text_position: self.right_click_pos.into(),
-                        key_codes: Vec::new(),
-                        text: String::new(),
+                        id: common.id,
+                        boundaries: common.boundaries,
+                        text_position: common.text_position,
+                        key_codes: common.key_codes,
+                        text: common.text,
                         shift_text: String::new(),
                         change_on_caps: false,
-                    }))
+                    }));
+            }
+            Message::AddMouseKey => {
+                let common = self.new_key();
+                let index = self.layout.elements.len();
+                self.caches.push(ElementCache {
+                    fg: Cache::new(),
+                    bg: Cache::new(),
+                });
+                self.caches_by_id.insert(common.id, index);
+                self.caches_by_mouse_button
+                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+
+                self.layout.elements.push(BoardElement::MouseKey(common));
+            }
+            Message::AddMouseScroll => {
+                let common = self.new_key();
+                let index = self.layout.elements.len();
+                self.caches.push(ElementCache {
+                    fg: Cache::new(),
+                    bg: Cache::new(),
+                });
+                self.caches_by_id.insert(common.id, index);
+                self.caches_by_scroll_button
+                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+                self.layout.elements.push(BoardElement::MouseScroll(common));
+            }
+            Message::AddMouseSpeedIndicator => {
+                let def = MouseSpeedIndicatorDefinition {
+                    id: self.new_id(),
+                    location: self.right_click_pos.into(),
+                    radius: 20.0,
+                };
+                let index = self.layout.elements.len();
+                self.caches.push(ElementCache {
+                    fg: Cache::new(),
+                    bg: Cache::new(),
+                });
+                self.caches_by_id.insert(def.id, index);
+                self.mouse_speed_indicator_caches.push(index);
+                self.layout
+                    .elements
+                    .push(BoardElement::MouseSpeedIndicator(def));
+            }
+            Message::RightClick(window) => {
+                if window == self.main_window {
+                    self.right_click_pos = self.mouse_pos;
+                }
+            }
+            Message::MouseMoved {
+                position,
+                window_id,
+            } => {
+                if window_id == self.main_window {
+                    self.mouse_pos = position;
+                }
             }
         }
         Task::none()
     }
 
-    fn new_key(&mut self) -> CommonDefinition {
-        todo!()
+    fn new_id(&self) -> u32 {
+        self.layout
+            .elements
+            .iter()
+            .map(|e| e.id())
+            .max()
+            .unwrap_or_default()
+            + 1
+    }
+
+    fn new_key(&self) -> CommonDefinition {
+        CommonDefinition {
+            id: self.new_id(),
+            text: String::new(),
+            boundaries: vec![
+                SerializablePoint {
+                    x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
+                    y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
+                },
+                SerializablePoint {
+                    x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
+                    y: (self.right_click_pos.y - DEFAULT_KEY_SIZE / 2.0).into(),
+                },
+                SerializablePoint {
+                    x: (self.right_click_pos.x + DEFAULT_KEY_SIZE / 2.0).into(),
+                    y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
+                },
+                SerializablePoint {
+                    x: (self.right_click_pos.x - DEFAULT_KEY_SIZE / 2.0).into(),
+                    y: (self.right_click_pos.y + DEFAULT_KEY_SIZE / 2.0).into(),
+                },
+            ],
+            text_position: self.right_click_pos.into(),
+            key_codes: Vec::new(),
+        }
     }
 
     pub fn view(&self, window: window::Id) -> iced::Element<'_, Message, Theme, Renderer> {
