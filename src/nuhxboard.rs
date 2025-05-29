@@ -160,6 +160,8 @@ impl NuhxBoard {
         };
 
         let category = settings.category.clone();
+        let keyboard = settings.keyboard;
+        let style = settings.style;
 
         let caps = match settings.capitalization {
             Capitalization::Upper => true,
@@ -169,63 +171,69 @@ impl NuhxBoard {
 
         let mut windows = WindowManager::default();
 
-        debug!("Main window");
         // The app will open the main window on startup. The WindowManager automatically tracks IDs
         // and corresponding window types and runs the correct view, theme, and title logic when
         // necessary.
         let (main_window, window_open_task) = windows.open(Box::new(Main));
 
-        (
-            Self {
-                windows,
-                main_window,
-                caches: Vec::new(),
-                caches_by_keycode: HashMap::new(),
-                caches_by_mouse_button: HashMap::new(),
-                caches_by_scroll_button: HashMap::new(),
-                caches_by_id: HashMap::new(),
-                mouse_speed_indicator_caches: HashSet::new(),
-                layout,
-                style: Style::default(),
-                pressed_keys: HashMap::new(),
-                pressed_mouse_buttons: HashMap::new(),
-                caps,
-                true_caps: false,
-                mouse_velocity: (0.0, 0.0),
-                pressed_scroll_buttons: HashMap::new(),
-                previous_mouse_position: (0.0, 0.0),
-                previous_mouse_time: std::time::SystemTime::now(),
-                keyboard_choice: Some(settings.keyboard),
-                style_choice: Some(settings.style),
-                keyboard_options: Vec::new(),
-                keyboard_category_options: Vec::new(),
-                style_options: Vec::new(),
-                startup: true,
-                settings,
-                display_options: DisplayInfo::all().unwrap(),
-                edit_mode: false,
-                edit_history: Vec::new(),
-                history_depth: 0,
-                save_keyboard_as_category: String::new(),
-                save_keyboard_as_name: String::new(),
-                save_style_as_name: String::new(),
-                save_style_as_global: false,
-                color_pickers: ColorPickers::default(),
-                text_input: TextInput::default(),
-                hovered_element: None,
-                number_input: NumberInput::default(),
-                selections: SelectionLists::default(),
-                detecting: Vec::new(),
-                right_click_pos: iced::Point::default(),
-                mouse_pos: iced::Point::default(),
-            },
-            Task::batch([
-                Task::perform(async {}, move |_| {
-                    Message::ChangeKeyboardCategory(category.clone())
-                }),
-                window_open_task.map(|_| Message::None),
-            ]),
-        )
+        let mut app = Self {
+            windows,
+            main_window,
+            caches: Vec::new(),
+            caches_by_keycode: HashMap::new(),
+            caches_by_mouse_button: HashMap::new(),
+            caches_by_scroll_button: HashMap::new(),
+            caches_by_id: HashMap::new(),
+            mouse_speed_indicator_caches: HashSet::new(),
+            layout,
+            style: Style::default(),
+            pressed_keys: HashMap::new(),
+            pressed_mouse_buttons: HashMap::new(),
+            caps,
+            true_caps: false,
+            mouse_velocity: (0.0, 0.0),
+            pressed_scroll_buttons: HashMap::new(),
+            previous_mouse_position: (0.0, 0.0),
+            previous_mouse_time: std::time::SystemTime::now(),
+            keyboard_choice: Some(settings.keyboard),
+            style_choice: Some(settings.style),
+            keyboard_options: Vec::new(),
+            keyboard_category_options: Vec::new(),
+            style_options: Vec::new(),
+            startup: false,
+            settings,
+            display_options: DisplayInfo::all().unwrap(),
+            edit_mode: false,
+            edit_history: Vec::new(),
+            history_depth: 0,
+            save_keyboard_as_category: String::new(),
+            save_keyboard_as_name: String::new(),
+            save_style_as_name: String::new(),
+            save_style_as_global: false,
+            color_pickers: ColorPickers::default(),
+            text_input: TextInput::default(),
+            hovered_element: None,
+            number_input: NumberInput::default(),
+            selections: SelectionLists::default(),
+            detecting: Vec::new(),
+            right_click_pos: iced::Point::default(),
+            mouse_pos: iced::Point::default(),
+        };
+
+        let mut tasks = Vec::with_capacity(4);
+        let any_category = !category.is_empty();
+        tasks.push(app.update(Message::ChangeKeyboardCategory(category)));
+        if any_category {
+            tasks.extend([
+                app.update(Message::LoadLayout(keyboard)),
+                app.update(Message::LoadStyle(style)),
+            ]);
+        }
+        tasks.push(window_open_task.map(|_| Message::None));
+
+        app.startup = false;
+
+        (app, Task::batch(tasks))
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -253,7 +261,6 @@ impl NuhxBoard {
             Message::ChangeKeyboardCategory(category) => {
                 info!(category, "Keyboard category changed");
                 if category.is_empty() {
-                    self.startup = false;
                     return Task::none();
                 }
                 self.settings.category = category.clone();
@@ -277,11 +284,6 @@ impl NuhxBoard {
                     .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                     .collect();
                 self.keyboard_options.sort();
-
-                if self.startup {
-                    drop(guard);
-                    return self.update(Message::LoadLayout(self.keyboard_choice.unwrap()));
-                }
             }
             Message::LoadLayout(layout) => {
                 info!(layout, "Layout changed");
@@ -1205,23 +1207,13 @@ impl NuhxBoard {
         self.style_options.sort();
         self.style_choice = Some(0);
 
-        let resize_task = window::resize(
+        window::resize(
             self.main_window,
             iced::Size {
                 width: self.layout.width,
                 height: self.layout.height,
             },
-        );
-
-        if self.startup {
-            self.startup = false;
-            Task::batch([
-                resize_task,
-                self.update(Message::LoadStyle(self.settings.style)),
-            ])
-        } else {
-            resize_task
-        }
+        )
     }
 
     fn change_background_image(&mut self, new_image: Option<Option<String>>) {
