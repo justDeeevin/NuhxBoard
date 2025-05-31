@@ -21,6 +21,7 @@
         "null"
       ],
       "format": "uint8",
+      "maximum": 255,
       "minimum": 0
     },
     "Width": {
@@ -96,7 +97,7 @@
       "type": "object",
       "properties": {
         "Boundaries": {
-          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\n supplied, and always used for graphical editing.",
+          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\nsupplied, and always used for graphical editing.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/SerializablePoint"
@@ -120,7 +121,7 @@
           "type": "string"
         },
         "TextPosition": {
-          "description": "The position of the top-left corner of the text. **Window-relative, not\n element-relative**.",
+          "description": "The position of the top-left corner of the text. **Window-relative, not\nelement-relative**.",
           "$ref": "#/$defs/SerializablePoint"
         }
       },
@@ -136,7 +137,7 @@
       "type": "object",
       "properties": {
         "Boundaries": {
-          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\n supplied, and always used for graphical editing.",
+          "description": "Vertices of the element. Used to draw a polygon for the background if no image is\nsupplied, and always used for graphical editing.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/SerializablePoint"
@@ -167,7 +168,7 @@
           "type": "string"
         },
         "TextPosition": {
-          "description": "The position of the top-left corner of the text. **Window-relative, not\n element-relative**.",
+          "description": "The position of the top-left corner of the text. **Window-relative, not\nelement-relative**.",
           "$ref": "#/$defs/SerializablePoint"
         }
       },

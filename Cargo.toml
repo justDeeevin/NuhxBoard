@@ -34,7 +34,7 @@ eula = false
 [dependencies]
 iced-multi-window = { path = "./crates/iced-multi-window", version = "1.1.0" }
 smol.workspace = true
-color-eyre = { version = "0.6.4", default-features = false }
+color-eyre = { version = "0.6.5", default-features = false }
 display-info.workspace = true
 futures.workspace = true
 geo.workspace = true
@@ -42,7 +42,7 @@ home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
 iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
-reqwest = { version = "0.12.15", default-features = false, features = [
+reqwest = { version = "0.12.18", default-features = false, features = [
   "json",
   "blocking",
   "rustls-tls",
@@ -59,8 +59,8 @@ confy = "1.0.0"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 tracing-appender = "0.2.3"
-clap = { version = "4.5.38", features = ["derive"] }
 iced_graphics = { version = "0.13.0", features = ["geometry"] }
+clap = { version = "4.5.39", features = ["derive"] }
 colorgrad.workspace = true
 
 [build-dependencies]
@@ -91,7 +91,7 @@ serde_json = "1.0.140"
 futures = "0.3.31"
 rdevin = "0.1.0"
 display-info = "0.5.4"
-schemars = "1.0.0-alpha.17"
+schemars = "1.0.0-alpha.19"
 smol = "2.0.2"
 thiserror = "2.0.12"
 colorgrad = "0.7.1"
