@@ -8,6 +8,8 @@
 
 [Changelog](CHANGELOG.md)
 
+# NuhxBoard's crates.io package is no longer maintained. To install the newest version, use the latest release on [GitHub](https://github.com/justDeeevin/NuhxBoard).
+
 ## Goals
 
 [Nohboard](https://github.com/ThoNohT/NohBoard) is great! But it’s only for Windows. The only alternative is [Tiyenti’s KBDisplay](https://github.com/Tiyenti/kbdisplay), which is quite nice, but limited in functionality. My primary goal with this project is to replicate the functionality of NohBoard in a cross-compatible manner. More specifically, I want to be able to feed in any NohBoard config file and have near-identical output to NohBoard.
