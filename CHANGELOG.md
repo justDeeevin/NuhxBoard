@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.4](https://github.com/justdeeevin/nuhxboard/releases/v0.6.4) - 2025-05-31
+
+### Fixed
+
+- Crash when attempting to edit a mouse key created with the graphical editor (Thanks again [@SortLock](https://github.com/sortlock)). [#22](https://github.com/justdeeevin/nuhxboard/issues/22)
+
 ## [v0.6.3](https://github.com/justdeeevin/nuhxboard/releases/v0.6.3) - 2025-05-21
 
 ### Fixed
