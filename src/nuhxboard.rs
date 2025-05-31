@@ -932,7 +932,8 @@ impl NuhxBoard {
                     }));
             }
             Message::AddMouseKey => {
-                let common = self.new_key();
+                let mut common = self.new_key();
+                common.key_codes.push(0);
                 let index = self.layout.elements.len();
                 self.caches.push(ElementCache {
                     fg: Cache::new(),
