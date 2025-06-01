@@ -40,7 +40,7 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
                 column![
                     text("Keyboard Layout:"),
                     SelectionList::new_with(
-                        app.keyboard_options.clone().leak(),
+                        &app.keyboard_options,
                         |i, _| Message::LoadLayout(i),
                         12.0,
                         5.0,
@@ -52,7 +52,7 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
                 column![
                     text("Keyboard Style:"),
                     SelectionList::new_with(
-                        app.style_options.clone().leak(),
+                        &app.style_options,
                         |i, _| Message::LoadStyle(i),
                         12.0,
                         5.0,
