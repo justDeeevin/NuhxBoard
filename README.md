@@ -16,7 +16,19 @@ I may add functionality where I think it would fit, but I want to prioritize int
 
 ## Installation
 
-NuhxBoard is currently only on [crates.io](https://crates.io/crates/nuhxboard). It can also be installed with [Cargo Binstall](https://crates.io/crates/cargo-binstall). You can also install NuhxBoard using the option matching your platform on the [latest release page](https://github.com/thepyrotf2/nuhxboard/releases/latest). NixOS users can use the provided flake (output `packages.${system}.nuhxboard` or `packages.${system}.default`).
+### Cargo
+
+`cargo install --git https://github.com/justDeeevin/NuhxBoard`
+
+### Nix
+
+This repository contains a Nix flake. The outputs `packages.${system}.nuhxboard` and `packages.${system}.default` can be added to your system's packages. **These packages will add a desktop entry for NuhxBoard.**
+
+### Manual
+
+You can visit the [latest release](https://github.com/justDeeevin/NuhxBoard/releases/latest) and download the appropriate pre-built binary for your system.
+
+---
 
 NuhxBoard will detect if any app files are missing and replace them automatically. This includes
 
