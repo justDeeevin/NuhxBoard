@@ -23,7 +23,7 @@ use tracing::{debug, trace};
 
 use crate::{
     message::{Change, Message},
-    nuhxboard::{NuhxBoard, FONTS, KEYBOARDS_PATH},
+    nuhxboard::{NuhxBoard, KEYBOARDS_PATH},
 };
 
 const BALL_TO_RADIUS_RATIO: f32 = 0.2;
@@ -337,7 +337,7 @@ impl<'a> Keyboard<'a> {
                 position: def.text_position.clone().into(),
                 color: current_style.text.into(),
                 size: iced::Pixels(current_style.font.size),
-                font: current_style.font.as_iced(&FONTS).unwrap(),
+                font: current_style.font.as_iced(),
                 horizontal_alignment: iced::alignment::Horizontal::Center,
                 vertical_alignment: iced::alignment::Vertical::Center,
                 shaping: iced::widget::text::Shaping::Advanced,

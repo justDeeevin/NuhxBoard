@@ -24,7 +24,7 @@ use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fs::{self, File},
     path::PathBuf,
-    sync::{Arc, LazyLock, RwLock},
+    sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
 use tracing::{debug, debug_span, info, info_span, trace};
@@ -56,12 +56,6 @@ macro_rules! key_style_change {
         $self.clear_cache_by_id($id);
     }
 }
-
-// Iced requires font family names to have a static lifetime. This means that `String`s read from config
-// must be leaked to be used. This data structure acts as a cache of fonts that have been used, so
-// the names only need to be leaked once.
-pub static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
-    LazyLock::new(|| RwLock::new(HashSet::new()));
 
 pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     confy::get_configuration_file_path("NuhxBoard", None)
@@ -1346,12 +1340,6 @@ impl NuhxBoard {
                 })
                 .flatten(),
         );
-
-        for font in new_fonts {
-            if !FONTS.read().unwrap().contains(font.as_str()) {
-                FONTS.write().unwrap().insert(font.leak());
-            }
-        }
     }
 
     fn input_event(&mut self, event: rdevin::Event) -> Task<Message> {
@@ -1551,9 +1539,6 @@ impl NuhxBoard {
             }
             StyleSetting::DefaultLooseKeyFontFamily => {
                 let new_font = self.text_input.default_loose_key_font_family.clone();
-                if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                    FONTS.write().unwrap().insert(new_font.clone().leak());
-                }
                 self.style.default_key_style.loose.font.font_family = new_font;
             }
             StyleSetting::DefaultLooseKeyShowOutline => {
@@ -1572,9 +1557,6 @@ impl NuhxBoard {
             }
             StyleSetting::DefaultPressedKeyFontFamily => {
                 let new_font = self.text_input.default_pressed_key_font_family.clone();
-                if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                    FONTS.write().unwrap().insert(new_font.clone().leak());
-                }
                 self.style.default_key_style.pressed.font.font_family = new_font;
             }
             StyleSetting::DefaultPressedKeyShowOutline => {
@@ -1606,9 +1588,6 @@ impl NuhxBoard {
                     .get(&id)
                     .cloned()
                     .unwrap_or_default();
-                if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                    FONTS.write().unwrap().insert(new_font.clone().leak());
-                }
                 key_style_change!(
                     self,
                     loose,
@@ -1665,9 +1644,6 @@ impl NuhxBoard {
                     .get(&id)
                     .cloned()
                     .unwrap_or_default();
-                if !FONTS.read().unwrap().contains(new_font.as_str()) {
-                    FONTS.write().unwrap().insert(new_font.clone().leak());
-                }
                 key_style_change!(
                     self,
                     pressed,

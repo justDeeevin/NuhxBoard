@@ -1,6 +1,5 @@
 use crate::{message::*, nuhxboard::*, types::*, ui::components::*};
 use iced::{
-    font::Family,
     widget::{button, checkbox, column, pick_list, rich_text, row, span, text, text_input},
     window, Alignment, Font, Padding, Theme,
 };
@@ -1003,29 +1002,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                         ),
                         {
                             let font = &loose.font;
-                            rich_text![span("Pick a font")
-                                .font(Font {
-                                    family: Family::Name(
-                                        FONTS
-                                            .read()
-                                            .unwrap()
-                                            .get(font.font_family.as_str())
-                                            .unwrap()
-                                    ),
-                                    stretch: iced::font::Stretch::Normal,
-                                    weight: if font.style.contains(FontStyle::BOLD) {
-                                        iced::font::Weight::Bold
-                                    } else {
-                                        iced::font::Weight::Normal
-                                    },
-                                    style: if font.style.contains(FontStyle::ITALIC) {
-                                        iced::font::Style::Italic
-                                    } else {
-                                        iced::font::Style::Normal
-                                    },
-                                })
-                                .underline(font.style.contains(FontStyle::UNDERLINE))
-                                .strikethrough(font.style.contains(FontStyle::STRIKETHROUGH))]
+                            rich_text![span("Pick a font").font(font.as_iced())]
                         },
                         labeled_text_input(
                             "Font Family: ",
@@ -1163,26 +1140,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                         {
                             let font = &pressed.font;
                             rich_text![span("Pick a font")
-                                .font(Font {
-                                    family: Family::Name(
-                                        FONTS
-                                            .read()
-                                            .unwrap()
-                                            .get(font.font_family.as_str())
-                                            .unwrap()
-                                    ),
-                                    stretch: iced::font::Stretch::Normal,
-                                    weight: if font.style.contains(FontStyle::BOLD) {
-                                        iced::font::Weight::Bold
-                                    } else {
-                                        iced::font::Weight::Normal
-                                    },
-                                    style: if font.style.contains(FontStyle::ITALIC) {
-                                        iced::font::Style::Italic
-                                    } else {
-                                        iced::font::Style::Normal
-                                    },
-                                })
+                                .font(font.as_iced())
                                 .underline(font.style.contains(FontStyle::UNDERLINE))
                                 .strikethrough(font.style.contains(FontStyle::STRIKETHROUGH))]
                         },

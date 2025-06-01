@@ -9,6 +9,7 @@ use std::{
     collections::{HashMap, HashSet},
     sync::{LazyLock, RwLock},
 };
+use tracing::debug;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(rename_all = "PascalCase")]
@@ -189,14 +190,33 @@ impl From<FontStyle> for iced::font::Style {
     }
 }
 
+// Iced requires font family names to have a static lifetime. This means that `String`s read from config
+// must be leaked to be used. This data structure acts as a cache of fonts that have been used, so
+// the names only need to be leaked once.
+static FONTS: LazyLock<RwLock<HashSet<&'static str>>> =
+    LazyLock::new(|| RwLock::new(HashSet::new()));
+
 impl Font {
-    pub fn as_iced(&self, store: &LazyLock<RwLock<HashSet<&'static str>>>) -> Option<iced::Font> {
-        Some(iced::Font {
-            family: iced::font::Family::Name(store.read().unwrap().get(self.font_family.as_str())?),
+    pub fn as_iced(&self) -> iced::Font {
+        let name: &'static str = {
+            let read = FONTS.read().unwrap();
+            if let Some(name) = read.get(self.font_family.as_str()) {
+                name
+            } else {
+                drop(read);
+
+                let out = self.font_family.clone().leak();
+                debug!(name = out, "Leaked font family");
+                FONTS.write().unwrap().insert(out);
+                out
+            }
+        };
+        iced::Font {
+            family: iced::font::Family::Name(name),
             weight: self.style.into(),
             style: self.style.into(),
             stretch: iced::font::Stretch::Normal,
-        })
+        }
     }
 }
 

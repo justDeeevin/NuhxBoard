@@ -56,7 +56,7 @@ rdevin.workspace = true
 nalgebra = "0.33.2"
 thiserror.workspace = true
 confy = "1.0.0"
-tracing = "0.1.41"
+tracing.workspace = true
 tracing-subscriber = "0.3.19"
 tracing-appender = "0.2.3"
 iced_graphics = { version = "0.13.0", features = ["geometry"] }
@@ -95,7 +95,7 @@ schemars = "1.0.0-alpha.19"
 smol = "2.0.2"
 thiserror = "2.0.12"
 colorgrad = "0.7.1"
-# rust-version = "1.72.0"
+tracing = "0.1.41"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
