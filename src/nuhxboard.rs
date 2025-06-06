@@ -550,6 +550,10 @@ impl NuhxBoard {
                 self.change_style(style);
             }
             Message::ToggleSaveStyleAsGlobal => {
+                debug!(
+                    save_style_as_global = !self.save_style_as_global,
+                    "Toggling save style as global"
+                );
                 self.save_style_as_global = !self.save_style_as_global;
             }
             Message::Open(window) => {
@@ -897,12 +901,15 @@ impl NuhxBoard {
                 self.detecting.push(element);
             }
             Message::ClearCache(i) => {
+                debug!(index = i, "Clearing cache");
                 self.caches[i].clear();
             }
             Message::ClearAllCaches => {
+                debug!("Clearing all caches");
                 self.clear_all_caches();
             }
             Message::AddKeyboardKey => {
+                debug!("Adding keyboard key");
                 let common = self.new_key();
                 let index = self.layout.elements.len();
                 self.caches.push(ElementCache {
@@ -926,6 +933,7 @@ impl NuhxBoard {
                     }));
             }
             Message::AddMouseKey => {
+                debug!("Adding mouse key");
                 let mut common = self.new_key();
                 common.key_codes.push(0);
                 let index = self.layout.elements.len();
@@ -940,6 +948,7 @@ impl NuhxBoard {
                 self.layout.elements.push(BoardElement::MouseKey(common));
             }
             Message::AddMouseScroll => {
+                debug!("Adding mouse scroll");
                 let common = self.new_key();
                 let index = self.layout.elements.len();
                 self.caches.push(ElementCache {
@@ -952,6 +961,7 @@ impl NuhxBoard {
                 self.layout.elements.push(BoardElement::MouseScroll(common));
             }
             Message::AddMouseSpeedIndicator => {
+                debug!("Adding mouse speed indicator");
                 let def = MouseSpeedIndicatorDefinition {
                     id: self.new_id(),
                     location: self.right_click_pos.into(),
@@ -969,6 +979,7 @@ impl NuhxBoard {
                     .push(BoardElement::MouseSpeedIndicator(def));
             }
             Message::RightClick(window) => {
+                debug!(%window, "Right click");
                 if window == self.main_window {
                     self.right_click_pos = self.mouse_pos;
                 }
@@ -977,11 +988,13 @@ impl NuhxBoard {
                 position,
                 window_id,
             } => {
+                trace!(?window_id, ?position, "Mouse moved");
                 if window_id == self.main_window {
                     self.mouse_pos = position;
                 }
             }
             Message::RemoveElement => {
+                debug!("Removing element");
                 if let Some(i) = self.hovered_element.take() {
                     match &self.layout.elements[i] {
                         BoardElement::KeyboardKey(def) => {
