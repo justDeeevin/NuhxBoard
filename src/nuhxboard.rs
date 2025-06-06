@@ -1018,6 +1018,22 @@ impl NuhxBoard {
                     }
                     self.caches_by_id.remove(&self.layout.elements[i].id());
                     self.caches.remove(i);
+                    for cache in self
+                        .caches_by_keycode
+                        .values_mut()
+                        .chain(self.caches_by_id.values_mut())
+                        .chain(self.caches_by_scroll_button.values_mut())
+                        .chain(self.caches_by_mouse_button.values_mut())
+                    {
+                        if *cache > i {
+                            *cache -= 1;
+                        }
+                    }
+                    self.mouse_speed_indicator_caches = self
+                        .mouse_speed_indicator_caches
+                        .drain()
+                        .map(|cache| if cache > i { cache - 1 } else { cache })
+                        .collect();
                     self.layout.elements.remove(i);
                 }
             }
