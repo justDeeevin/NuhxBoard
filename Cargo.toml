@@ -42,7 +42,7 @@ home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
 iced_aw = "0.12.2"
 image = { version = "0.25.6", features = ["ico"] }
-reqwest = { version = "0.12.18", default-features = false, features = [
+reqwest = { version = "0.12.19", default-features = false, features = [
   "json",
   "blocking",
   "rustls-tls",
@@ -91,10 +91,10 @@ serde_json = "1.0.140"
 futures = "0.3.31"
 rdevin = "0.1.0"
 display-info = "0.5.4"
-schemars = "1.0.0-alpha.19"
+schemars = "1.0.0-alpha.20"
 smol = "2.0.2"
 thiserror = "2.0.12"
-colorgrad = "0.7.1"
+colorgrad = "0.7.2"
 tracing = "0.1.41"
 
 # The profile that 'cargo dist' will build with
