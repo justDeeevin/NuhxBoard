@@ -1,9 +1,5 @@
 # <img src="https://github.com/justDeeevin/NuhxBoard/raw/main/media/NuhxBoard.png" alt="The NuhxBoard logo" width="34" > NuhxBoard
 
-![Crates.io version](https://img.shields.io/crates/v/nuhxboard)
-![Crates.io license](https://img.shields.io/crates/l/nuhxboard)
-![Crates.io downloads](https://img.shields.io/crates/d/nuhxboard)
-
 <a href="https://github.com/iced-rs/iced"><img alt="The Iced logo" src="https://gist.githubusercontent.com/hecrj/ad7ecd38f6e47ff3688a38c79fd108f0/raw/74384875ecbad02ae2a926425e9bcafd0695bade/color.svg" width="130"></a>
 
 [Changelog](CHANGELOG.md)
