@@ -1,11 +1,11 @@
 [package]
 name = "iced-multi-window"
-version = "1.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
-license = "GPL-3.0"
+license = "MIT"
 description = "Utilities for managing many windows in an iced application"
-repository = "https://github.com/justDeeevin/iced-multi-window"
+repository = "https://github.com/justDeeevin/nuhxboard"
 keywords = ["iced", "multi-window", "app", "gui", "refactor"]
 categories = ["gui"]
 readme = "README.md"

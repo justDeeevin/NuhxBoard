@@ -32,7 +32,7 @@ license = false
 eula = false
 
 [dependencies]
-iced-multi-window = { path = "./crates/iced-multi-window", version = "1.1.0" }
+iced-multi-window = { path = "./crates/iced-multi-window", version = "2.0.0" }
 smol.workspace = true
 color-eyre = { version = "0.6.5", default-features = false }
 display-info.workspace = true
