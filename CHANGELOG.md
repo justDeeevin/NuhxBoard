@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - More debug logging messages. [fed9dca](https://github.com/justdeeevin/nuhxboard/commit/fed9dca363bc67264fc2e5e336dea624f513dc5d)
 
+### Changed
+
+- Demoted some debug messages to trace level. The debug log output should now be far less verbose. [a00071a](https://github.com/justdeeevin/nuhxboard/commit/a00071a6f787756025c6f3b5f122ba3917cf52cb)
+
 ### Fixed
 
 - Crash when attempting to render an element with a font whose family was not cached (Thanks again [@SortLock](https://github.com/sortlock)). [cf69ae1](https://github.com/justdeeevin/nuhxboard/commit/cf69ae159c9e33b2811222fdf8cbe7e761903bcc)
