@@ -27,7 +27,7 @@ use std::{
     sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
-use tracing::{debug, debug_span, info, info_span, trace};
+use tracing::{debug, info, info_span, instrument, trace};
 
 macro_rules! key_style_change {
     ($self:expr, $state:ident, $block:block, $id:ident) => {
@@ -230,13 +230,11 @@ impl NuhxBoard {
         (app, Task::batch(tasks))
     }
 
+    #[instrument(skip_all)]
     pub fn update(&mut self, message: Message) -> Task<Message> {
-        let span = debug_span!("update");
-        let guard = span.enter();
         match message {
             Message::Listener(event) => {
-                debug!("Input event");
-                trace!(?event);
+                trace!(?event, "Input event");
                 return self.input_event(event);
             }
             Message::None => {}
@@ -281,7 +279,6 @@ impl NuhxBoard {
             }
             Message::LoadLayout(layout) => {
                 info!(layout, "Layout changed");
-                drop(guard);
                 return self.load_layout(layout);
             }
             Message::LoadStyle(style) => {
@@ -1504,7 +1501,7 @@ impl NuhxBoard {
                 }
             }
             rdevin::EventType::MouseMove { x, y } => {
-                debug!("Mouse moved: ({x}, {y})");
+                trace!("Mouse moved: ({x}, {y})");
                 let (x, y) = (x as f32, y as f32);
 
                 let current_time = event.time;
