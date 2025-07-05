@@ -61,12 +61,12 @@ pub fn picker_button<'a>(
             Message::ToggleColorPicker(picker),
             move |v| Message::ChangeColor(picker, v)
         ),
-        text(format!(" {}", label))
+        text(format!(" {label}"))
     ]
     .align_y(Alignment::Center)
 }
 
-pub fn context_menu_button(label: &str) -> Button<Message> {
+pub fn context_menu_button(label: &str) -> Button<'_, Message> {
     let text = text(label).size(12);
     button(text)
         .style(|theme, status| match status {

@@ -1277,7 +1277,7 @@ impl NuhxBoard {
             let path = KEYBOARDS_PATH.join(match &self.style_options[style] {
                 StyleChoice::Default => unreachable!(),
                 StyleChoice::Global(style_name) => {
-                    format!("global/{}.style", style_name)
+                    format!("global/{style_name}.style")
                 }
                 StyleChoice::Custom(style_name) => format!(
                     "{}/{}/{}.style",

@@ -31,11 +31,11 @@ pub trait Window<App, Theme, Message, Renderer = iced::Renderer>:
     fn settings(&self) -> window::Settings;
     /// The unique identifier for this window. This includes any internal data.
     fn id(&self) -> String {
-        let data = format!("{:?}", self);
+        let data = format!("{self:?}");
         let data = if let Some(i) = data.find(" {") {
             data[i..].to_string()
         } else {
-            format!("::{}", data)
+            format!("::{data}")
         };
 
         format!("{}{}", type_name::<Self>(), data)

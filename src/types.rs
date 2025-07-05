@@ -170,8 +170,8 @@ impl std::fmt::Display for StyleChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StyleChoice::Default => write!(f, "Global Default"),
-            StyleChoice::Custom(s) => write!(f, "{}", s),
-            StyleChoice::Global(s) => write!(f, "Global: {}", s),
+            StyleChoice::Custom(s) => write!(f, "{s}"),
+            StyleChoice::Global(s) => write!(f, "Global: {s}"),
         }
     }
 }
