@@ -134,23 +134,11 @@ pub enum ColorPicker {
     MouseSpeedIndicator2(u32),
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StyleChoice {
     Default,
     Global(String),
     Custom(String),
-}
-
-impl PartialOrd for StyleChoice {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.to_string().cmp(&other.to_string()))
-    }
-}
-
-impl Ord for StyleChoice {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
 }
 
 impl StyleChoice {
