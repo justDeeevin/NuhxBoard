@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - More debug logging messages. [fed9dca](https://github.com/justdeeevin/nuhxboard/commit/fed9dca363bc67264fc2e5e336dea624f513dc5d)
+- Some better error messages during startup. [32ec03c](https://github.com/justdeeevin/nuhxboard/commit/32ec03c2a494efb9357eeb0bc65cd2071f997d6b)
 
 ### Changed
 
