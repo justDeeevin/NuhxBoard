@@ -228,15 +228,16 @@ impl<'a> Keyboard<'a> {
                         )
                     }
 
-                    if self.mouse_velocity.0 == 0.0 && self.mouse_velocity.1 == 0.0 {
+                    if self.mouse_velocity == Vector2::zeros() {
                         return;
                     }
 
-                    let velocity = Vector2::new(self.mouse_velocity.0, self.mouse_velocity.1);
-                    let normalized_velocity = velocity.normalize();
+                    let normalized_velocity = self.mouse_velocity.normalize();
 
-                    let squashed_magnitude =
-                        (self.settings.mouse_sensitivity * 0.000005 * velocity.magnitude()).tanh();
+                    let squashed_magnitude = (self.settings.mouse_sensitivity
+                        * 0.000005
+                        * self.mouse_velocity.magnitude())
+                    .tanh();
 
                     let ball = Path::circle(
                         {
@@ -249,7 +250,7 @@ impl<'a> Keyboard<'a> {
                     );
 
                     let triangle = indicator_triangle(
-                        velocity,
+                        self.mouse_velocity,
                         def.radius,
                         BALL_TO_RADIUS_RATIO,
                         squashed_magnitude,

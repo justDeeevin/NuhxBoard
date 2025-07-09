@@ -12,6 +12,7 @@ use iced::{
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
+use nalgebra::Vector2;
 use nuhxboard_logic::{listener::RdevinSubscriber, mouse_button_code_convert};
 use nuhxboard_types::{
     layout::*,
@@ -95,10 +96,8 @@ pub struct NuhxBoard {
     pub pressed_mouse_buttons: HashMap<u32, Instant>,
     /// `{[axis]: [releases_queued]}`
     pub pressed_scroll_buttons: HashMap<u32, u32>,
-    /// `(x, y)`
-    pub mouse_velocity: (f32, f32),
-    /// `(x, y)`
-    pub previous_mouse_position: (f32, f32),
+    pub mouse_velocity: Vector2<f32>,
+    pub previous_mouse_position: Coord<f32>,
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
     pub true_caps: bool,
@@ -185,9 +184,9 @@ impl NuhxBoard {
             pressed_mouse_buttons: HashMap::new(),
             caps,
             true_caps: false,
-            mouse_velocity: (0.0, 0.0),
+            mouse_velocity: Vector2::zeros(),
             pressed_scroll_buttons: HashMap::new(),
-            previous_mouse_position: (0.0, 0.0),
+            previous_mouse_position: Coord::zero(),
             previous_mouse_time: std::time::SystemTime::now(),
             keyboard_choice: Some(settings.keyboard),
             style_choice: Some(settings.style),
@@ -1516,14 +1515,14 @@ impl NuhxBoard {
 
                 let previous_pos = match self.settings.mouse_from_center {
                     true => {
-                        let mut center = (0.0, 0.0);
+                        let mut center = Coord::zero();
 
                         for display in &self.display_options {
                             if display.id == self.settings.display_choice.id {
-                                center = (
-                                    display.x as f32 + (display.width as f32 / 2.0),
-                                    display.y as f32 + (display.height as f32 / 2.0),
-                                )
+                                center = Coord {
+                                    x: display.x as f32 + (display.width as f32 / 2.0),
+                                    y: display.y as f32 + (display.height as f32 / 2.0),
+                                }
                             }
                         }
                         center
@@ -1531,14 +1530,14 @@ impl NuhxBoard {
                     false => self.previous_mouse_position,
                 };
 
-                let position_diff = (x - previous_pos.0, y - previous_pos.1);
+                let position_diff = (x - previous_pos.x, y - previous_pos.y);
                 trace!(?position_diff);
 
-                self.mouse_velocity = (
+                self.mouse_velocity = Vector2::new(
                     position_diff.0 / time_diff.as_secs_f32(),
                     position_diff.1 / time_diff.as_secs_f32(),
                 );
-                self.previous_mouse_position = (x, y);
+                self.previous_mouse_position = Coord { x, y };
                 self.previous_mouse_time = current_time;
                 for i in &self.mouse_speed_indicator_caches {
                     trace!(index = i, "Clearing mouse speed indicator cache");
