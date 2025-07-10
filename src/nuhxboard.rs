@@ -145,11 +145,11 @@ impl NuhxBoard {
     pub fn new() -> (Self, Task<Message>) {
         let span = info_span!("startup");
         let _guard = span.enter();
-        let mut errors = Vec::new();
+        let mut settings_error = None;
 
         info!("Loading settings");
         let settings: Settings = confy::load("NuhxBoard", None).unwrap_or_else(|e| {
-            errors.push(NuhxBoardError::SettingsParse(Arc::new(e)));
+            settings_error = Some(NuhxBoardError::SettingsParse(Arc::new(e)));
             Settings::default()
         });
 
@@ -221,9 +221,12 @@ impl NuhxBoard {
             mouse_pos: iced::Point::default(),
         };
 
-        let mut tasks = Vec::with_capacity(4);
+        let mut tasks = Vec::with_capacity(5);
         let any_category = !category.is_empty();
         tasks.push(app.update(Message::ChangeKeyboardCategory(category)));
+        if let Some(error) = settings_error {
+            tasks.push(app.error(error));
+        }
         if any_category {
             tasks.extend([
                 app.update(Message::LoadLayout(keyboard)),
