@@ -25,6 +25,7 @@ use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fs::{self, File},
     path::PathBuf,
+    rc::Rc,
     sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
@@ -77,17 +78,24 @@ impl ElementCache {
         self.fg.clear();
         self.bg.clear();
     }
+
+    pub fn new_rc() -> Rc<Self> {
+        Rc::new(Self {
+            fg: Cache::new(),
+            bg: Cache::new(),
+        })
+    }
 }
 
 pub struct NuhxBoard {
     pub windows: WindowManager<Self, Theme, Message>,
     pub main_window: window::Id,
-    pub caches: Vec<ElementCache>,
-    pub caches_by_keycode: HashMap<u32, usize>,
-    pub caches_by_mouse_button: HashMap<u32, usize>,
-    pub caches_by_scroll_button: HashMap<u32, usize>,
-    pub caches_by_id: HashMap<u32, usize>,
-    pub mouse_speed_indicator_caches: HashSet<usize>,
+    pub caches: Vec<Rc<ElementCache>>,
+    pub caches_by_keycode: HashMap<u32, Rc<ElementCache>>,
+    pub caches_by_mouse_button: HashMap<u32, Rc<ElementCache>>,
+    pub caches_by_scroll_button: HashMap<u32, Rc<ElementCache>>,
+    pub caches_by_id: HashMap<u32, Rc<ElementCache>>,
+    pub mouse_speed_indicator_caches: HashMap<u32, Rc<ElementCache>>,
     pub layout: Layout,
     pub style: Style,
     /// `{[keycode]: [time_pressed]}`
@@ -177,7 +185,7 @@ impl NuhxBoard {
             caches_by_mouse_button: HashMap::new(),
             caches_by_scroll_button: HashMap::new(),
             caches_by_id: HashMap::new(),
-            mouse_speed_indicator_caches: HashSet::new(),
+            mouse_speed_indicator_caches: HashMap::new(),
             layout,
             style: Style::default(),
             pressed_keys: HashMap::new(),
@@ -906,15 +914,10 @@ impl NuhxBoard {
             }
             Message::AddKeyboardKey => {
                 debug!("Adding keyboard key");
-                let common = self.new_key();
-                let index = self.layout.elements.len();
-                self.caches.push(ElementCache {
-                    fg: Cache::new(),
-                    bg: Cache::new(),
-                });
-                self.caches_by_id.insert(common.id, index);
+                let common = self.new_def();
+                let cache = self.new_cache(common.id);
                 self.caches_by_keycode
-                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+                    .extend(common.key_codes.iter().map(|c| (*c, cache.clone())));
 
                 self.layout
                     .elements
@@ -930,30 +933,20 @@ impl NuhxBoard {
             }
             Message::AddMouseKey => {
                 debug!("Adding mouse key");
-                let mut common = self.new_key();
+                let mut common = self.new_def();
                 common.key_codes.push(0);
-                let index = self.layout.elements.len();
-                self.caches.push(ElementCache {
-                    fg: Cache::new(),
-                    bg: Cache::new(),
-                });
-                self.caches_by_id.insert(common.id, index);
+                let cache = self.new_cache(common.id);
                 self.caches_by_mouse_button
-                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+                    .extend(common.key_codes.iter().map(|c| (*c, cache.clone())));
 
                 self.layout.elements.push(BoardElement::MouseKey(common));
             }
             Message::AddMouseScroll => {
                 debug!("Adding mouse scroll");
-                let common = self.new_key();
-                let index = self.layout.elements.len();
-                self.caches.push(ElementCache {
-                    fg: Cache::new(),
-                    bg: Cache::new(),
-                });
-                self.caches_by_id.insert(common.id, index);
+                let common = self.new_def();
+                let cache = self.new_cache(common.id);
                 self.caches_by_scroll_button
-                    .extend(common.key_codes.iter().map(|c| (*c, index)));
+                    .extend(common.key_codes.iter().map(|c| (*c, cache.clone())));
                 self.layout.elements.push(BoardElement::MouseScroll(common));
             }
             Message::AddMouseSpeedIndicator => {
@@ -963,13 +956,8 @@ impl NuhxBoard {
                     location: self.right_click_pos.into(),
                     radius: 20.0,
                 };
-                let index = self.layout.elements.len();
-                self.caches.push(ElementCache {
-                    fg: Cache::new(),
-                    bg: Cache::new(),
-                });
-                self.caches_by_id.insert(def.id, index);
-                self.mouse_speed_indicator_caches.insert(index);
+                let cache = self.new_cache(def.id);
+                self.mouse_speed_indicator_caches.insert(def.id, cache);
                 self.layout
                     .elements
                     .push(BoardElement::MouseSpeedIndicator(def));
@@ -991,47 +979,33 @@ impl NuhxBoard {
             }
             Message::RemoveElement => {
                 debug!("Removing element");
-                if let Some(i) = self.hovered_element.take() {
-                    match &self.layout.elements[i] {
-                        BoardElement::KeyboardKey(def) => {
-                            for code in &def.key_codes {
-                                self.caches_by_keycode.remove(code);
-                            }
-                        }
-                        BoardElement::MouseKey(def) => {
-                            for code in &def.key_codes {
-                                self.caches_by_keycode.remove(code);
-                            }
-                        }
-                        BoardElement::MouseScroll(def) => {
-                            for code in &def.key_codes {
-                                self.caches_by_keycode.remove(code);
-                            }
-                        }
-                        BoardElement::MouseSpeedIndicator(_) => {
-                            self.mouse_speed_indicator_caches.remove(&i);
+                let Some(i) = self.hovered_element.take() else {
+                    return Task::none();
+                };
+                let element = &self.layout.elements[i];
+                match element {
+                    BoardElement::KeyboardKey(def) => {
+                        for code in &def.key_codes {
+                            self.caches_by_keycode.remove(code);
                         }
                     }
-                    self.caches_by_id.remove(&self.layout.elements[i].id());
-                    self.caches.remove(i);
-                    for cache in self
-                        .caches_by_keycode
-                        .values_mut()
-                        .chain(self.caches_by_id.values_mut())
-                        .chain(self.caches_by_scroll_button.values_mut())
-                        .chain(self.caches_by_mouse_button.values_mut())
-                    {
-                        if *cache > i {
-                            *cache -= 1;
+                    BoardElement::MouseKey(def) => {
+                        for code in &def.key_codes {
+                            self.caches_by_mouse_button.remove(code);
                         }
                     }
-                    self.mouse_speed_indicator_caches = self
-                        .mouse_speed_indicator_caches
-                        .drain()
-                        .map(|cache| if cache > i { cache - 1 } else { cache })
-                        .collect();
-                    self.layout.elements.remove(i);
+                    BoardElement::MouseScroll(def) => {
+                        for code in &def.key_codes {
+                            self.caches_by_scroll_button.remove(code);
+                        }
+                    }
+                    BoardElement::MouseSpeedIndicator(def) => {
+                        self.mouse_speed_indicator_caches.remove(&def.id);
+                    }
                 }
+                self.caches_by_id.remove(&element.id());
+                self.caches.remove(i);
+                self.layout.elements.remove(i);
             }
         }
         Task::none()
@@ -1047,7 +1021,7 @@ impl NuhxBoard {
             + 1
     }
 
-    fn new_key(&self) -> CommonDefinition {
+    fn new_def(&self) -> CommonDefinition {
         CommonDefinition {
             id: self.new_id(),
             text: String::new(),
@@ -1072,6 +1046,13 @@ impl NuhxBoard {
             text_position: self.right_click_pos.into(),
             key_codes: Vec::new(),
         }
+    }
+
+    fn new_cache(&mut self, id: u32) -> Rc<ElementCache> {
+        let cache = ElementCache::new_rc();
+        self.caches.push(cache.clone());
+        self.caches_by_id.insert(id, cache.clone());
+        cache
     }
 
     pub fn view(&self, window: window::Id) -> iced::Element<'_, Message, Theme, Renderer> {
@@ -1158,25 +1139,26 @@ impl NuhxBoard {
         self.caches_by_mouse_button.clear();
         self.caches_by_scroll_button.clear();
         self.mouse_speed_indicator_caches.clear();
-        for (i, e) in self.layout.elements.iter().enumerate() {
-            self.caches_by_id.insert(e.id(), i);
-            let (fg, bg) = std::array::from_fn(|_| Cache::new()).into();
-            self.caches.push(ElementCache { fg, bg });
+        for e in &self.layout.elements {
+            let cache = ElementCache::new_rc();
+            self.caches.push(cache.clone());
+            self.caches_by_id.insert(e.id(), cache.clone());
+
             match e {
                 BoardElement::KeyboardKey(def) => {
                     self.caches_by_keycode
-                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                        .extend(def.key_codes.iter().map(|c| (*c, cache.clone())));
                 }
                 BoardElement::MouseKey(def) => {
                     self.caches_by_mouse_button
-                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                        .extend(def.key_codes.iter().map(|c| (*c, cache.clone())));
                 }
                 BoardElement::MouseScroll(def) => {
                     self.caches_by_scroll_button
-                        .extend(def.key_codes.iter().map(|c| (*c, i)));
+                        .extend(def.key_codes.iter().map(|c| (*c, cache.clone())));
                 }
-                BoardElement::MouseSpeedIndicator(_) => {
-                    self.mouse_speed_indicator_caches.insert(i);
+                BoardElement::MouseSpeedIndicator(def) => {
+                    self.mouse_speed_indicator_caches.insert(def.id, cache);
                 }
             }
         }
@@ -1383,8 +1365,8 @@ impl NuhxBoard {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
                 self.pressed_keys.insert(key, Instant::now());
-                if let Some(i) = self.caches_by_keycode.get(&key) {
-                    self.caches[*i].clear();
+                if let Some(cache) = self.caches_by_keycode.get(&key) {
+                    cache.clear();
                 }
                 captured_key = Some(key);
             }
@@ -1414,8 +1396,8 @@ impl NuhxBoard {
                 }
                 debug!("Disabling key highlight");
                 self.pressed_keys.remove(&key_num);
-                if let Some(i) = self.caches_by_keycode.get(&key_num) {
-                    self.caches[*i].clear();
+                if let Some(cache) = self.caches_by_keycode.get(&key_num) {
+                    cache.clear();
                 }
             }
             rdevin::EventType::ButtonPress(button) => {
@@ -1428,8 +1410,8 @@ impl NuhxBoard {
                 };
 
                 self.pressed_mouse_buttons.insert(button, Instant::now());
-                if let Some(i) = self.caches_by_mouse_button.get(&button) {
-                    self.caches[*i].clear();
+                if let Some(cache) = self.caches_by_mouse_button.get(&button) {
+                    cache.clear();
                 }
                 captured_key = Some(button);
             }
@@ -1466,8 +1448,8 @@ impl NuhxBoard {
                 }
                 debug!("Disabling button highlight");
                 self.pressed_mouse_buttons.remove(&button_num);
-                if let Some(i) = self.caches_by_mouse_button.get(&button_num) {
-                    self.caches[*i].clear();
+                if let Some(cache) = self.caches_by_mouse_button.get(&button_num) {
+                    cache.clear();
                 }
             }
             rdevin::EventType::Wheel { delta_x, delta_y } => {
@@ -1495,8 +1477,8 @@ impl NuhxBoard {
                     )),
                     move |_| Message::ReleaseScroll(button),
                 );
-                if let Some(i) = self.caches_by_scroll_button.get(&button) {
-                    self.caches[*i].clear();
+                if let Some(cache) = self.caches_by_scroll_button.get(&button) {
+                    cache.clear();
                 }
             }
             rdevin::EventType::MouseMove { x, y } => {
@@ -1539,9 +1521,9 @@ impl NuhxBoard {
                 );
                 self.previous_mouse_position = Coord { x, y };
                 self.previous_mouse_time = current_time;
-                for i in &self.mouse_speed_indicator_caches {
-                    trace!(index = i, "Clearing mouse speed indicator cache");
-                    self.caches[*i].clear();
+                trace!("Clearing mouse speed indicator caches");
+                for cache in self.mouse_speed_indicator_caches.values() {
+                    cache.clear();
                 }
             }
         }
@@ -1768,8 +1750,8 @@ impl NuhxBoard {
     }
 
     fn clear_cache_by_id(&self, id: u32) {
-        if let Some(i) = self.caches_by_id.get(&id) {
-            self.caches[*i].clear();
+        if let Some(cache) = self.caches_by_id.get(&id) {
+            cache.clear();
         }
     }
 }
