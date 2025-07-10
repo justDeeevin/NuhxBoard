@@ -22,7 +22,7 @@ use nuhxboard_types::{
 use rdevin::keycodes::windows::code_from_key as win_keycode_from_key;
 use smol::Timer;
 use std::{
-    collections::{BTreeSet, HashMap, HashSet},
+    collections::{BTreeSet, HashMap},
     fs::{self, File},
     path::PathBuf,
     rc::Rc,
@@ -1111,7 +1111,6 @@ impl NuhxBoard {
 
         self.keyboard_choice = Some(keyboard);
         self.style = Style::default();
-        self.update_fonts();
 
         self.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
 
@@ -1284,8 +1283,6 @@ impl NuhxBoard {
 
         self.change_background_image(None);
 
-        self.update_fonts();
-
         self.save_style_as_name = self.style_options[style].name();
 
         self.text_input.keyboard_background_image = self
@@ -1310,43 +1307,6 @@ impl NuhxBoard {
 
         self.clear_all_caches();
         Task::none()
-    }
-
-    fn update_fonts(&self) {
-        let mut new_fonts = HashSet::new();
-        new_fonts.insert(self.style.default_key_style.loose.font.font_family.clone());
-        new_fonts.insert(
-            self.style
-                .default_key_style
-                .pressed
-                .font
-                .font_family
-                .clone(),
-        );
-        new_fonts.extend(
-            self.style
-                .element_styles
-                .iter()
-                .filter_map(|(_, style)| match style {
-                    style::ElementStyle::KeyStyle(key_style) => Some(
-                        [
-                            if let Some(loose) = &key_style.loose {
-                                loose.font.font_family.clone()
-                            } else {
-                                Font::default().font_family
-                            },
-                            if let Some(pressed) = &key_style.pressed {
-                                pressed.font.font_family.clone()
-                            } else {
-                                Font::default().font_family
-                            },
-                        ]
-                        .into_iter(),
-                    ),
-                    style::ElementStyle::MouseSpeedIndicatorStyle(_) => None,
-                })
-                .flatten(),
-        );
     }
 
     fn input_event(&mut self, event: rdevin::Event) -> Task<Message> {
