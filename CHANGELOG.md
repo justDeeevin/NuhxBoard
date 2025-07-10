@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Crash when trying to re-render some elements after removing an element with the graphical editor. [#23](https://github.com/justdeeevin/nuhxboard/issues/23)
 - Small memory leak. [7a80b39](https://github.com/justdeeevin/nuhxboard/commit/7a80b3950c8b3f77b3175d96c967271a50981f7f)
 - Random crash related to the comparison of a certain struct. [4950284](https://github.com/justdeeevin/nuhxboard/commit/49502841ca8a81ee040b4162a85f00fb30f08395)
+- Errors when loading settings not being reported with a popup. [ade74cf](https://github.com/justdeeevin/nuhxboard/commit/ade74cf6d94542e8945dfe93fa89159fdf8c419b)
+- Elements not being re-drawn on undo/redo. [563ecd1](https://github.com/justdeeevin/nuhxboard/commit/563ecd1ed3125bb2e104a51580fe5f53562178fa)
 
 ## [v0.6.4](https://github.com/justdeeevin/nuhxboard/releases/v0.6.4) - 2025-05-31
 
