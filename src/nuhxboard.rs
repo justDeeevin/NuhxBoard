@@ -440,69 +440,20 @@ impl NuhxBoard {
                 debug!("Undo");
                 if self.history_depth < self.edit_history.len() {
                     self.history_depth += 1;
-                    match self.edit_history[self.edit_history.len() - self.history_depth] {
-                        Change::MoveElement { index, delta } => {
-                            self.layout.elements[index]
-                                .translate(-delta, self.settings.update_text_position);
-                            self.caches[index].clear();
-                        }
-                        Change::MoveFace { index, face, delta } => {
-                            match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
-                                Ok(mut def) => {
-                                    def.translate_face(face, -delta);
-                                }
-                                Err(def) => {
-                                    def.radius -= delta.x;
-                                }
-                            }
-                            self.caches[index].clear();
-                        }
-                        Change::MoveVertex {
-                            index,
-                            vertex,
-                            delta,
-                        } => {
-                            let def =
-                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
-                                    .unwrap();
-                            def.boundaries[vertex] -= delta;
-                            self.caches[index].clear();
-                        }
-                    }
+                    self.apply_change(
+                        self.edit_history[self.edit_history.len() - self.history_depth].clone(),
+                        true,
+                    );
                 }
             }
             Message::Redo => {
                 debug!("Redo");
                 if self.history_depth > 0 {
                     self.history_depth -= 1;
-                    match self.edit_history[self.edit_history.len() - self.history_depth - 1] {
-                        Change::MoveElement { index, delta } => {
-                            self.layout.elements[index]
-                                .translate(delta, self.settings.update_text_position);
-                        }
-                        Change::MoveFace { index, face, delta } => {
-                            match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
-                                Ok(mut def) => {
-                                    def.translate_face(face, delta);
-                                }
-                                Err(def) => {
-                                    def.radius += delta.x;
-                                }
-                            }
-                            self.caches[index].clear();
-                        }
-                        Change::MoveVertex {
-                            index,
-                            vertex,
-                            delta,
-                        } => {
-                            let def =
-                                CommonDefinitionMut::try_from(&mut self.layout.elements[index])
-                                    .unwrap();
-                            def.boundaries[vertex] += delta;
-                            self.caches[index].clear();
-                        }
-                    }
+                    self.apply_change(
+                        self.edit_history[self.edit_history.len() - self.history_depth - 1].clone(),
+                        false,
+                    );
                 }
             }
             Message::ChangeTextInput(input, value) => {
@@ -1716,5 +1667,39 @@ impl NuhxBoard {
         if let Some(cache) = self.caches_by_id.get(&id) {
             cache.clear();
         }
+    }
+
+    fn apply_change(&mut self, change: Change, undo: bool) {
+        let signum = if undo { -1.0 } else { 1.0 };
+        let clear_index = match change {
+            Change::MoveElement { index, delta } => {
+                self.layout.elements[index]
+                    .translate(delta * signum, self.settings.update_text_position);
+                index
+            }
+            Change::MoveFace { index, face, delta } => {
+                match CommonDefinitionMut::try_from(&mut self.layout.elements[index]) {
+                    Ok(mut def) => {
+                        def.translate_face(face, delta * signum);
+                    }
+                    Err(def) => {
+                        def.radius += delta.x * signum;
+                    }
+                }
+                self.caches[index].clear();
+                index
+            }
+            Change::MoveVertex {
+                index,
+                vertex,
+                delta,
+            } => {
+                let def = CommonDefinitionMut::try_from(&mut self.layout.elements[index]).unwrap();
+                def.boundaries[vertex] += delta * signum;
+                self.caches[index].clear();
+                index
+            }
+        };
+        self.caches[clear_index].clear();
     }
 }
