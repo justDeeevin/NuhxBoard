@@ -109,8 +109,8 @@ pub struct NuhxBoard {
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
     pub true_caps: bool,
-    pub style_choice: Option<usize>,
     pub layout_choice: Option<usize>,
+    pub style_choice: usize,
     pub layout_options: Vec<String>,
     pub keyboard_category_options: Vec<String>,
     pub style_options: Vec<StyleChoice>,
@@ -196,8 +196,8 @@ impl NuhxBoard {
             pressed_scroll_buttons: HashMap::new(),
             previous_mouse_position: Coord::zero(),
             previous_mouse_time: std::time::SystemTime::now(),
-            style_choice: Some(settings.style),
             layout_choice: Some(settings.keyboard),
+            style_choice: settings.style,
             layout_options: Vec::new(),
             keyboard_category_options: Vec::new(),
             style_options: Vec::new(),
@@ -222,18 +222,17 @@ impl NuhxBoard {
         };
 
         let mut tasks = Vec::with_capacity(5);
-        let any_category = !category.is_empty();
-        tasks.push(app.update(Message::ChangeKeyboardCategory(category)));
-        if let Some(error) = settings_error {
-            tasks.push(app.error(error));
-        }
-        if any_category {
+        if !category.is_empty() {
             tasks.extend([
+                app.update(Message::ChangeKeyboardCategory(category)),
                 app.update(Message::LoadLayout(keyboard)),
                 app.update(Message::LoadStyle(style)),
             ]);
         }
         tasks.push(window_open_task.map(|_| Message::None));
+        if let Some(error) = settings_error {
+            tasks.push(app.error(error));
+        }
 
         app.startup = false;
 
@@ -244,27 +243,25 @@ impl NuhxBoard {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::Listener(event) => {
-                trace!(?event, "Input event");
                 return self.input_event(event);
             }
             Message::None => {}
             Message::ReleaseScroll(button) => {
                 debug!(button, "Scroll release");
-                match self.pressed_scroll_buttons.get_mut(&button).unwrap() {
-                    1 => {
+                match self.pressed_scroll_buttons.get_mut(&button) {
+                    None => {}
+                    Some(1) => {
                         debug!("Disabling scroll highlight");
                         self.pressed_scroll_buttons.remove(&button);
                     }
-                    n => {
+                    Some(n) => {
                         *n -= 1;
                     }
                 }
             }
             Message::ChangeKeyboardCategory(category) => {
                 info!(category, "Keyboard category changed");
-                if category.is_empty() {
-                    return Task::none();
-                }
+                assert!(!category.is_empty());
                 self.settings.category = category.clone();
 
                 self.save_keyboard_as_category = category;
@@ -272,7 +269,7 @@ impl NuhxBoard {
                 if !self.startup {
                     self.layout_choice = None;
                     self.settings.keyboard = 0;
-                    self.style_choice = None;
+                    self.style_choice = 0;
                     self.settings.style = 0;
                     self.style_options = Vec::new();
                 }
@@ -280,10 +277,13 @@ impl NuhxBoard {
                 self.layout_options = fs::read_dir(KEYBOARDS_PATH.join(&self.settings.category))
                     .unwrap()
                     .map(|r| r.unwrap())
-                    .filter(|entry| {
-                        entry.file_type().unwrap().is_dir() && entry.file_name() != "images"
+                    .filter_map(|entry| {
+                        if entry.file_type().unwrap().is_dir() && entry.file_name() != "images" {
+                            Some(entry.file_name().to_str().unwrap().to_owned())
+                        } else {
+                            None
+                        }
                     })
-                    .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                     .collect();
                 self.layout_options.sort();
             }
@@ -399,8 +399,8 @@ impl NuhxBoard {
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
-                    self.style_options[self.style_choice.unwrap()]
                     self.layout_options[self.layout_choice.unwrap()],
+                    self.style_options[self.style_choice]
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
@@ -519,16 +519,19 @@ impl NuhxBoard {
                 if window == LoadKeyboard {
                     self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
                         .unwrap()
-                        .map(|r| r.unwrap())
-                        .filter(|entry| {
-                            entry.file_type().unwrap().is_dir() && entry.file_name() != "global"
+                        .filter_map(|r| {
+                            let entry = r.unwrap();
+                            if entry.file_type().unwrap().is_dir() && entry.file_name() != "global"
+                            {
+                                Some(entry.file_name().to_str().unwrap().to_owned())
+                            } else {
+                                None
+                            }
                         })
-                        .map(|entry| entry.file_name().to_str().unwrap().to_owned())
-                        .collect::<Vec<_>>();
+                        .collect();
                     self.keyboard_category_options.sort();
                 } else if window == SaveStyleAs {
-                    self.save_style_as_global =
-                        self.style_options[self.style_choice.unwrap()].is_global();
+                    self.save_style_as_global = self.style_options[self.style_choice].is_global();
                 }
                 return self.windows.open(window).1.map(|_| Message::None);
             }
@@ -680,7 +683,7 @@ impl NuhxBoard {
                     element,
                     BoardElement::MouseKey(_) | BoardElement::MouseScroll(_)
                 );
-                let mut handeled = true;
+                let mut handled = true;
                 if let Ok(def) = CommonDefinitionMut::try_from(&mut *element) {
                     match property {
                         ElementProperty::Text(ref v) => *def.text = v.clone(),
@@ -711,12 +714,12 @@ impl NuhxBoard {
                             }
                             *def.key_codes = set.into_iter().collect();
                         }
-                        _ => handeled = false,
+                        _ => handled = false,
                     }
                 } else {
-                    handeled = false;
+                    handled = false;
                 }
-                if !handeled {
+                if !handled {
                     match element {
                         BoardElement::KeyboardKey(def) => match property {
                             ElementProperty::ShiftText(v) => def.shift_text = v,
@@ -1124,30 +1127,12 @@ impl NuhxBoard {
                     .join(&self.layout_options[index]),
             )
             .unwrap()
-            .map(|r| r.unwrap())
-            .filter(|entry| entry.file_type().unwrap().is_file())
-            .filter(|entry| entry.path().extension() == Some(std::ffi::OsStr::new("style")))
-            .map(|entry| {
-                StyleChoice::Custom(
-                    entry
-                        .path()
-                        .file_stem()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_owned(),
-                )
-            })
-            .collect(),
-        );
-        self.style_options.append(
-            &mut fs::read_dir(KEYBOARDS_PATH.join("global"))
-                .unwrap()
-                .map(|r| r.unwrap())
-                .filter(|entry| entry.file_type().unwrap().is_file())
-                .filter(|entry| entry.path().extension() == Some(std::ffi::OsStr::new("style")))
-                .map(|entry| {
-                    StyleChoice::Global(
+            .filter_map(|r| {
+                let entry = r.unwrap();
+                if entry.file_type().unwrap().is_file()
+                    && entry.path().extension() == Some(std::ffi::OsStr::new("style"))
+                {
+                    Some(StyleChoice::Custom(
                         entry
                             .path()
                             .file_stem()
@@ -1155,12 +1140,37 @@ impl NuhxBoard {
                             .to_str()
                             .unwrap()
                             .to_owned(),
-                    )
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+        );
+        self.style_options.append(
+            &mut fs::read_dir(KEYBOARDS_PATH.join("global"))
+                .unwrap()
+                .filter_map(|r| {
+                    let entry = r.unwrap();
+                    if entry.file_type().unwrap().is_file()
+                        && entry.path().extension() == Some(std::ffi::OsStr::new("style"))
+                    {
+                        Some(StyleChoice::Custom(
+                            entry
+                                .path()
+                                .file_stem()
+                                .unwrap()
+                                .to_str()
+                                .unwrap()
+                                .to_owned(),
+                        ))
+                    } else {
+                        None
+                    }
                 })
                 .collect(),
         );
-        self.style_options.sort();
-        self.style_choice = Some(0);
+        self.style_choice = 0;
 
         window::resize(
             self.main_window,
@@ -1203,7 +1213,7 @@ impl NuhxBoard {
     fn load_style(&mut self, style: usize) -> Task<Message> {
         self.settings.style = style;
 
-        self.style_choice = Some(style);
+        self.style_choice = style;
 
         if self.style_options[style] == StyleChoice::Default {
             self.style = Style::default();
@@ -1235,6 +1245,7 @@ impl NuhxBoard {
             };
         }
 
+        // Refreshes the background image
         self.change_background_image(None);
 
         self.save_style_as_name = self.style_options[style].name();
@@ -1263,6 +1274,7 @@ impl NuhxBoard {
         Task::none()
     }
 
+    #[instrument(level = "trace", skip_all, fields(event = ?event.event_type))]
     fn input_event(&mut self, event: rdevin::Event) -> Task<Message> {
         let mut captured_key = None;
         let mut out = Task::none();
@@ -1275,94 +1287,81 @@ impl NuhxBoard {
                         self.caps = !self.caps;
                     }
                 }
-                let Some(key) = win_keycode_from_key(key) else {
+                let Some(keycode) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
-                self.pressed_keys.insert(key, Instant::now());
-                if let Some(cache) = self.caches_by_keycode.get(&key) {
+                self.pressed_keys.insert(keycode, Instant::now());
+                if let Some(cache) = self.caches_by_keycode.get(&keycode) {
                     cache.clear();
                 }
-                captured_key = Some(key);
+                if !self.detecting.is_empty() {
+                    captured_key = Some(keycode);
+                }
             }
             rdevin::EventType::KeyRelease(key) => {
                 debug!(?key, "Key released");
-                let Some(key_num) = win_keycode_from_key(key) else {
+                let Some(keycode) = win_keycode_from_key(key) else {
                     return self.error(NuhxBoardError::UnknownKey(key));
                 };
-                if !self.pressed_keys.contains_key(&key_num) {
+                let Some(elapsed) = self.pressed_keys.get(&keycode).map(Instant::elapsed) else {
                     return Task::none();
-                }
-                if self
-                    .pressed_keys
-                    .get(&key_num)
-                    .unwrap()
-                    .elapsed()
-                    .as_millis()
-                    < self.settings.min_press_time.into()
-                {
+                };
+                if elapsed.as_millis() < self.settings.min_press_time.into() {
                     return Task::perform(
-                        Timer::after(
-                            Duration::from_millis(self.settings.min_press_time)
-                                - self.pressed_keys.get(&key_num).unwrap().elapsed(),
-                        ),
+                        Timer::after(Duration::from_millis(self.settings.min_press_time) - elapsed),
                         move |_| Message::key_release(key),
                     );
                 }
                 debug!("Disabling key highlight");
-                self.pressed_keys.remove(&key_num);
-                if let Some(cache) = self.caches_by_keycode.get(&key_num) {
+                self.pressed_keys.remove(&keycode);
+                if let Some(cache) = self.caches_by_keycode.get(&keycode) {
                     cache.clear();
                 }
             }
             rdevin::EventType::ButtonPress(button) => {
                 debug!(?button, "Button pressed");
+                // Scroll wheel
                 if button == rdevin::Button::Unknown(6) || button == rdevin::Button::Unknown(7) {
                     return Task::none();
                 }
-                let Ok(button) = mouse_button_code_convert(button) else {
+                let Ok(button_code) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
 
-                self.pressed_mouse_buttons.insert(button, Instant::now());
-                if let Some(cache) = self.caches_by_mouse_button.get(&button) {
+                self.pressed_mouse_buttons
+                    .insert(button_code, Instant::now());
+                if let Some(cache) = self.caches_by_mouse_button.get(&button_code) {
                     cache.clear();
                 }
-                captured_key = Some(button);
+                if !self.detecting.is_empty() {
+                    captured_key = Some(button_code);
+                }
             }
             rdevin::EventType::ButtonRelease(button) => {
                 debug!(?button, "Button released");
-                let Ok(button_num) = mouse_button_code_convert(button) else {
+                let Ok(button_code) = mouse_button_code_convert(button) else {
                     return self.error(NuhxBoardError::UnknownButton(button));
                 };
+                // Scroll wheel
                 if button == rdevin::Button::Unknown(6) || button == rdevin::Button::Unknown(7) {
                     return Task::none();
                 }
-                if !self.pressed_mouse_buttons.contains_key(&button_num) {
-                    return Task::none();
-                }
-                if self
+                let Some(elapsed) = self
                     .pressed_mouse_buttons
-                    .get(&button_num)
-                    .unwrap()
-                    .elapsed()
-                    .as_millis()
-                    < self.settings.min_press_time.into()
-                {
+                    .get(&button_code)
+                    .map(Instant::elapsed)
+                else {
+                    return Task::none();
+                };
+                if elapsed.as_millis() < self.settings.min_press_time.into() {
                     return Task::perform(
-                        Timer::after(
-                            Duration::from_millis(self.settings.min_press_time)
-                                - self
-                                    .pressed_mouse_buttons
-                                    .get(&button_num)
-                                    .unwrap()
-                                    .elapsed(),
-                        ),
+                        Timer::after(Duration::from_millis(self.settings.min_press_time) - elapsed),
                         move |_| Message::button_release(button),
                     );
                 }
                 debug!("Disabling button highlight");
-                self.pressed_mouse_buttons.remove(&button_num);
-                if let Some(cache) = self.caches_by_mouse_button.get(&button_num) {
+                self.pressed_mouse_buttons.remove(&button_code);
+                if let Some(cache) = self.caches_by_mouse_button.get(&button_code) {
                     cache.clear();
                 }
             }
@@ -1383,7 +1382,9 @@ impl NuhxBoard {
                     .entry(button)
                     .and_modify(|v| *v += 1)
                     .or_insert(1);
-                captured_key = Some(button);
+                if !self.detecting.is_empty() {
+                    captured_key = Some(button);
+                }
 
                 out = Task::perform(
                     Timer::after(std::time::Duration::from_millis(
@@ -1411,17 +1412,18 @@ impl NuhxBoard {
 
                 let previous_pos = match self.settings.mouse_from_center {
                     true => {
-                        let mut center = Coord::zero();
+                        let mut center = None;
 
                         for display in &self.display_options {
                             if display.id == self.settings.display_choice.id {
-                                center = Coord {
+                                center = Some(Coord {
                                     x: display.x as f32 + (display.width as f32 / 2.0),
                                     y: display.y as f32 + (display.height as f32 / 2.0),
-                                }
+                                });
+                                break;
                             }
                         }
-                        center
+                        center.expect("No display found with selected ID")
                     }
                     false => self.previous_mouse_position,
                 };

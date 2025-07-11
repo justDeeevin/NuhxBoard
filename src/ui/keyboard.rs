@@ -3,7 +3,7 @@ use std::{collections::HashSet, ops::Deref};
 use colorgrad::Gradient;
 use geo::{BoundingRect, Coord, Distance, Euclidean, LineString, Polygon, Within};
 use iced::{
-    advanced::{layout::Node, widget::tree, Renderer as _, Widget},
+    advanced::{layout::Node, widget::tree, Renderer as _, Shell, Widget},
     mouse,
     widget::{
         canvas::{self, event::Status, Geometry},
@@ -18,7 +18,7 @@ use nuhxboard_types::{
     layout::{BoardElement, CommonDefinitionRef},
     settings::Capitalization,
 };
-use rdevin::keycodes::windows::code_from_key as win_code_from_key;
+use rdevin::keycodes::windows::code_from_key as win_keycode_from_key;
 use tracing::{debug, trace};
 
 use crate::{
@@ -30,6 +30,7 @@ const BALL_TO_RADIUS_RATIO: f32 = 0.2;
 const HOVER_EDGE_DISTANCE: f32 = 6.0;
 const HOVER_FACE_THICKNESS: f32 = 4.0;
 const HOVER_VERTEX_THICKNESS: f32 = 6.0;
+const MOUSE_SPEED_MAGNITUDE_DOWNSCALE: f32 = 0.000005;
 
 pub struct Keyboard<'a> {
     app: &'a NuhxBoard,
@@ -96,6 +97,11 @@ impl<'a> Keyboard<'a> {
         Self { width, height, app }
     }
 
+    fn shift_text(&self, follow: bool, shift_pressed: bool) -> bool {
+        self.caps
+            ^ (shift_pressed && (self.settings.capitalization == Capitalization::Follow || follow))
+    }
+
     /// Returns `(fg, bg)`
     fn draw_element(
         &self,
@@ -110,26 +116,22 @@ impl<'a> Keyboard<'a> {
                 {
                     let shift_pressed = self
                         .pressed_keys
-                        .contains_key(&win_code_from_key(rdevin::Key::ShiftLeft).unwrap())
+                        .contains_key(&win_keycode_from_key(rdevin::Key::ShiftLeft).unwrap())
                         || self
                             .pressed_keys
-                            .contains_key(&win_code_from_key(rdevin::Key::ShiftRight).unwrap());
-                    match def.change_on_caps {
-                        true => match self.caps
-                            ^ (shift_pressed
-                                && (self.settings.capitalization == Capitalization::Follow
-                                    || self.settings.follow_for_caps_sensitive))
-                        {
-                            true => def.shift_text.clone(),
-                            false => def.text.clone(),
-                        },
-                        false => match shift_pressed
-                            && (self.settings.capitalization == Capitalization::Follow
-                                || self.settings.follow_for_caps_insensitive)
-                        {
-                            true => def.shift_text.clone(),
-                            false => def.text.clone(),
-                        },
+                            .contains_key(&win_keycode_from_key(rdevin::Key::ShiftRight).unwrap());
+                    if def.change_on_caps {
+                        if self.shift_text(self.settings.follow_for_caps_sensitive, shift_pressed) {
+                            def.shift_text.clone()
+                        } else {
+                            def.text.clone()
+                        }
+                    } else if self
+                        .shift_text(self.settings.follow_for_caps_insensitive, shift_pressed)
+                    {
+                        def.shift_text.clone()
+                    } else {
+                        def.text.clone()
                     }
                 },
                 self.pressed_keys.keys().cloned().collect(),
@@ -235,7 +237,7 @@ impl<'a> Keyboard<'a> {
                     let normalized_velocity = self.mouse_velocity.normalize();
 
                     let squashed_magnitude = (self.settings.mouse_sensitivity
-                        * 0.000005
+                        * MOUSE_SPEED_MAGNITUDE_DOWNSCALE
                         * self.mouse_velocity.magnitude())
                     .tanh();
 
@@ -318,9 +320,7 @@ impl<'a> Keyboard<'a> {
                 .unwrap_or(&self.style.default_key_style.loose)
         };
 
-        let mut boundaries = def.boundaries.clone();
-        boundaries.push(boundaries[0].clone());
-        let shape = Polygon::new(LineString::from(boundaries), vec![]);
+        let shape = Polygon::new(LineString::from(def.boundaries.clone()), vec![]);
 
         let key = Path::new(|builder| {
             builder.move_to(def.boundaries[0].clone().into());
@@ -537,6 +537,112 @@ impl<'a> Keyboard<'a> {
             }
         }
     }
+
+    fn no_interaction(
+        &self,
+        state: &mut State,
+        cursor_position: Coord<f32>,
+        shell: &mut Shell<'_, Message>,
+    ) -> Status {
+        state.previous_cursor_position = cursor_position;
+        for (index, element) in self.layout.elements.iter().enumerate() {
+            match CommonDefinitionRef::try_from(element) {
+                Ok(def) => {
+                    let bounds = Polygon::new(LineString::from(def.boundaries.clone()), vec![]);
+
+                    if cursor_position.is_within(&bounds)
+                        && (state.selected_element == Some(index)
+                            || state.selected_element.is_none())
+                    {
+                        let exterior = bounds.exterior();
+                        if !(exterior.coords().enumerate().any(|(i, vertex)| {
+                            if Euclidean.distance(cursor_position, *vertex) <= HOVER_EDGE_DISTANCE {
+                                if state.set_hovered_vertex(i) {
+                                    debug!(index, vertex = i, "Setting hovered vertex");
+                                    shell.publish(Message::ClearCache(index));
+                                }
+                                true
+                            } else {
+                                false
+                            }
+                        }) || exterior.lines().enumerate().any(|(i, face)| {
+                            if Euclidean.distance(cursor_position, &face) <= HOVER_EDGE_DISTANCE {
+                                if state.set_hovered_face(i) {
+                                    debug!(index, face = i, "Setting hovered face");
+                                    shell.publish(Message::ClearCache(index));
+                                }
+                                true
+                            } else {
+                                false
+                            }
+                        })) {
+                            let mut clear = false;
+                            if state.hovered_face.is_some() {
+                                debug!(index, "Clearing hovered face");
+                                state.hovered_face = None;
+                                clear = true;
+                            }
+                            if state.hovered_vertex.is_some() {
+                                debug!(index, "Clearing hovered vertex");
+                                state.hovered_vertex = None;
+                                clear = true;
+                            }
+                            if clear {
+                                shell.publish(Message::ClearCache(index));
+                            }
+                        }
+
+                        if self.hovered_element != Some(index) {
+                            shell.publish(Message::UpdateHoveredElement(Some(index)));
+                        }
+                        return Status::Captured;
+                    }
+                }
+                Err(def) => {
+                    let mut captured = false;
+                    if Euclidean.distance(cursor_position, Coord::from(def.location.clone()))
+                        < def.radius
+                    {
+                        if self.hovered_element != Some(index) {
+                            shell.publish(Message::UpdateHoveredElement(Some(index)));
+                        }
+
+                        captured = true;
+                    }
+                    if ((def.radius - HOVER_EDGE_DISTANCE)..(def.radius + HOVER_EDGE_DISTANCE))
+                        .contains(
+                            &Euclidean.distance(cursor_position, Coord::from(def.location.clone())),
+                        )
+                    {
+                        if state.hovered_face.is_none() {
+                            debug!(index, "Hovering mouse speed indicator edge");
+                            state.hovered_face = Some(0);
+                            shell.publish(Message::ClearCache(index));
+                            captured = true;
+                        }
+                    } else if state.hovered_face.is_some() {
+                        debug!(index, "Leaving mouse speed indicator edge");
+                        state.hovered_face = None;
+                        shell.publish(Message::ClearCache(index));
+                        captured = true;
+                    }
+
+                    if captured {
+                        return Status::Captured;
+                    }
+                }
+            }
+        }
+
+        if self.hovered_element.is_some() {
+            shell.publish(Message::UpdateHoveredElement(None));
+            state.hovered_face = None;
+            state.hovered_vertex = None;
+            Status::Captured
+        } else {
+            Status::Ignored
+        }
+    }
 }
 
 impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
@@ -616,6 +722,9 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
         shell: &mut iced::advanced::Shell<'_, Message>,
         _viewport: &Rectangle,
     ) -> Status {
+        let Event::Mouse(event) = event else {
+            return Status::Ignored;
+        };
         let state = state.state.downcast_mut::<State>();
         if !self.edit_mode {
             return if self.hovered_element.is_some() {
@@ -642,128 +751,10 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
         };
 
         match event {
-            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+            mouse::Event::CursorMoved { .. } => {
                 match state.interaction {
                     Interaction::None => {
-                        state.previous_cursor_position = cursor_position;
-                        for (index, element) in self.layout.elements.iter().enumerate() {
-                            match element {
-                                BoardElement::MouseSpeedIndicator(def) => {
-                                    let mut captured = false;
-                                    if Euclidean.distance(
-                                        cursor_position,
-                                        Coord::from(def.location.clone()),
-                                    ) < def.radius
-                                    {
-                                        if self.hovered_element != Some(index) {
-                                            shell.publish(Message::UpdateHoveredElement(Some(
-                                                index,
-                                            )));
-                                        }
-
-                                        captured = true;
-                                    }
-                                    if ((def.radius - HOVER_EDGE_DISTANCE)
-                                        ..(def.radius + HOVER_EDGE_DISTANCE))
-                                        .contains(&Euclidean.distance(
-                                            cursor_position,
-                                            Coord::from(def.location.clone()),
-                                        ))
-                                    {
-                                        if state.hovered_face.is_none() {
-                                            debug!(index, "Hovering mouse speed indicator edge");
-                                            state.hovered_face = Some(0);
-                                            shell.publish(Message::ClearCache(index));
-                                            captured = true;
-                                        }
-                                    } else if state.hovered_face.is_some() {
-                                        debug!(index, "Leaving mouse speed indicator edge");
-                                        state.hovered_face = None;
-                                        shell.publish(Message::ClearCache(index));
-                                        captured = true;
-                                    }
-
-                                    if captured {
-                                        return Status::Captured;
-                                    }
-                                }
-                                _ => {
-                                    let mut vertices = CommonDefinitionRef::try_from(element)
-                                        .unwrap()
-                                        .boundaries
-                                        .clone();
-
-                                    vertices.push(vertices[0].clone());
-
-                                    let bounds = Polygon::new(LineString::from(vertices), vec![]);
-
-                                    if cursor_position.is_within(&bounds)
-                                        && (state.selected_element == Some(index)
-                                            || state.selected_element.is_none())
-                                    {
-                                        let exterior = bounds.exterior();
-                                        if !(exterior.coords().enumerate().any(|(i, vertex)| {
-                                            if Euclidean.distance(cursor_position, *vertex)
-                                                <= HOVER_EDGE_DISTANCE
-                                            {
-                                                if state.set_hovered_vertex(i) {
-                                                    debug!(
-                                                        index,
-                                                        vertex = i,
-                                                        "Setting hovered vertex"
-                                                    );
-                                                    shell.publish(Message::ClearCache(index));
-                                                }
-                                                true
-                                            } else {
-                                                false
-                                            }
-                                        }) || exterior.lines().enumerate().any(|(i, face)| {
-                                            if Euclidean.distance(cursor_position, &face)
-                                                <= HOVER_EDGE_DISTANCE
-                                            {
-                                                if state.set_hovered_face(i) {
-                                                    debug!(index, face = i, "Setting hovered face");
-                                                    shell.publish(Message::ClearCache(index));
-                                                }
-                                                true
-                                            } else {
-                                                false
-                                            }
-                                        })) {
-                                            let mut clear = false;
-                                            if state.hovered_face.is_some() {
-                                                debug!(index, "Clearing hovered face");
-                                                state.hovered_face = None;
-                                                clear = true;
-                                            }
-                                            if state.hovered_vertex.is_some() {
-                                                debug!(index, "Clearing hovered vertex");
-                                                state.hovered_vertex = None;
-                                                clear = true;
-                                            }
-                                            if clear {
-                                                shell.publish(Message::ClearCache(index));
-                                            }
-                                        }
-
-                                        if self.hovered_element != Some(index) {
-                                            shell.publish(Message::UpdateHoveredElement(Some(
-                                                index,
-                                            )));
-                                        }
-                                        return Status::Captured;
-                                    }
-                                }
-                            }
-                        }
-
-                        if self.hovered_element.is_some() {
-                            shell.publish(Message::UpdateHoveredElement(None));
-                            state.hovered_face = None;
-                            state.hovered_vertex = None;
-                            return Status::Captured;
-                        }
+                        return self.no_interaction(state, cursor_position, shell);
                     }
                     Interaction::Dragging => {
                         if let Some(index) = state.held_element {
@@ -798,7 +789,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                 }
                 state.previous_cursor_position = cursor_position;
             }
-            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+            mouse::Event::ButtonPressed(mouse::Button::Left) => {
                 state.interaction = Interaction::Dragging;
 
                 if state.selected_element.is_none() {
@@ -818,7 +809,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
 
                 return Status::Captured;
             }
-            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+            mouse::Event::ButtonReleased(mouse::Button::Left) => {
                 if state.delta_accumulator != Coord::default() {
                     if let Some(message) = state.held_element.map(|index| {
                         if let Some(face) = state.hovered_face {
