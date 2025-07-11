@@ -9,6 +9,7 @@ pub struct Settings {
     pub follow_for_caps_insensitive: bool,
     /// Name of the category to use.
     pub category: String,
+    // TODO: rename to `layout_index`. necessitates a major version bump since it'll break configs
     /// Index of the keyboard to use.
     pub keyboard: usize,
     /// Index of the style to use.

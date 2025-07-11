@@ -67,6 +67,7 @@ pub static KEYBOARDS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         .join("keyboards")
 });
 
+// TODO: selectively clear fg or bg depending on the context
 #[derive(Default)]
 pub struct ElementCache {
     pub fg: Cache,
