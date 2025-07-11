@@ -70,13 +70,13 @@ impl Window<NuhxBoard, Theme, Message> for SaveDefinitionAs {
             ],
             row![
                 text("Name: "),
-                text_input("", &app.save_keyboard_as_name,)
+                text_input("", &app.save_layout_as_name,)
                     .on_input(|v| Message::ChangeTextInput(TextInputType::SaveKeyboardAsName, v))
             ],
             button("Save").on_press(Message::SaveLayout(Some(
                 KEYBOARDS_PATH
                     .join(&app.save_keyboard_as_category)
-                    .join(&app.save_keyboard_as_name)
+                    .join(&app.save_layout_as_name)
                     .join("keyboard.json")
             ))),
         ]
@@ -124,7 +124,7 @@ impl Window<NuhxBoard, Theme, Message> for SaveStyleAs {
                     .join(format!("{}.style", &app.save_style_as_name)),
                 false => KEYBOARDS_PATH
                     .join(&app.settings.category)
-                    .join(&app.keyboard_options[app.keyboard_choice.unwrap()])
+                    .join(&app.layout_options[app.layout_choice.unwrap()])
                     .join(format!("{}.style", &app.save_style_as_name)),
             }))),
         ]

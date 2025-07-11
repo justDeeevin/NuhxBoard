@@ -109,9 +109,9 @@ pub struct NuhxBoard {
     pub previous_mouse_time: std::time::SystemTime,
     pub caps: bool,
     pub true_caps: bool,
-    pub keyboard_choice: Option<usize>,
     pub style_choice: Option<usize>,
-    pub keyboard_options: Vec<String>,
+    pub layout_choice: Option<usize>,
+    pub layout_options: Vec<String>,
     pub keyboard_category_options: Vec<String>,
     pub style_options: Vec<StyleChoice>,
     pub startup: bool,
@@ -121,7 +121,7 @@ pub struct NuhxBoard {
     pub edit_history: Vec<Change>,
     pub history_depth: usize,
     pub save_keyboard_as_category: String,
-    pub save_keyboard_as_name: String,
+    pub save_layout_as_name: String,
     pub save_style_as_name: String,
     pub save_style_as_global: bool,
     pub color_pickers: ColorPickers,
@@ -196,9 +196,9 @@ impl NuhxBoard {
             pressed_scroll_buttons: HashMap::new(),
             previous_mouse_position: Coord::zero(),
             previous_mouse_time: std::time::SystemTime::now(),
-            keyboard_choice: Some(settings.keyboard),
             style_choice: Some(settings.style),
-            keyboard_options: Vec::new(),
+            layout_choice: Some(settings.keyboard),
+            layout_options: Vec::new(),
             keyboard_category_options: Vec::new(),
             style_options: Vec::new(),
             startup: false,
@@ -208,7 +208,7 @@ impl NuhxBoard {
             edit_history: Vec::new(),
             history_depth: 0,
             save_keyboard_as_category: String::new(),
-            save_keyboard_as_name: String::new(),
+            save_layout_as_name: String::new(),
             save_style_as_name: String::new(),
             save_style_as_global: false,
             color_pickers: ColorPickers::default(),
@@ -270,14 +270,14 @@ impl NuhxBoard {
                 self.save_keyboard_as_category = category;
 
                 if !self.startup {
-                    self.keyboard_choice = None;
+                    self.layout_choice = None;
                     self.settings.keyboard = 0;
                     self.style_choice = None;
                     self.settings.style = 0;
                     self.style_options = Vec::new();
                 }
 
-                self.keyboard_options = fs::read_dir(KEYBOARDS_PATH.join(&self.settings.category))
+                self.layout_options = fs::read_dir(KEYBOARDS_PATH.join(&self.settings.category))
                     .unwrap()
                     .map(|r| r.unwrap())
                     .filter(|entry| {
@@ -285,7 +285,7 @@ impl NuhxBoard {
                     })
                     .map(|entry| entry.file_name().to_str().unwrap().to_owned())
                     .collect();
-                self.keyboard_options.sort();
+                self.layout_options.sort();
             }
             Message::LoadLayout(layout) => {
                 info!(layout, "Layout changed");
@@ -388,7 +388,7 @@ impl NuhxBoard {
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/keyboard.json",
                     self.settings.category,
-                    self.keyboard_options[self.keyboard_choice.unwrap()]
+                    self.layout_options[self.layout_choice.unwrap()]
                 )));
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
@@ -399,8 +399,8 @@ impl NuhxBoard {
                 let path = file.unwrap_or(KEYBOARDS_PATH.join(format!(
                     "{}/{}/{}.style",
                     self.settings.category,
-                    self.keyboard_options[self.keyboard_choice.unwrap()],
                     self.style_options[self.style_choice.unwrap()]
+                    self.layout_options[self.layout_choice.unwrap()],
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
@@ -461,7 +461,7 @@ impl NuhxBoard {
                 match input {
                     TextInputType::SaveStyleAsName => self.save_style_as_name = value,
                     TextInputType::SaveKeyboardAsName => {
-                        self.save_keyboard_as_name = value;
+                        self.save_layout_as_name = value;
                     }
                     TextInputType::SaveKeyboardAsCategory => {
                         self.save_keyboard_as_category = value;
@@ -1059,19 +1059,19 @@ impl NuhxBoard {
         command.map(|_| Message::None)
     }
 
-    fn load_layout(&mut self, keyboard: usize) -> Task<Message> {
+    fn load_layout(&mut self, index: usize) -> Task<Message> {
         self.edit_mode = false;
-        self.settings.keyboard = keyboard;
+        self.settings.keyboard = index;
 
-        self.keyboard_choice = Some(keyboard);
+        self.layout_choice = Some(index);
         self.style = Style::default();
 
-        self.save_keyboard_as_name = self.keyboard_options[keyboard].clone();
+        self.save_layout_as_name = self.layout_options[index].clone();
 
-        let config_file = match File::open(
+        let layout_file = match File::open(
             KEYBOARDS_PATH
                 .join(&self.settings.category)
-                .join(&self.keyboard_options[keyboard])
+                .join(&self.layout_options[index])
                 .join("keyboard.json"),
         ) {
             Ok(file) => file,
@@ -1080,7 +1080,7 @@ impl NuhxBoard {
             }
         };
 
-        self.layout = match serde_json::from_reader(config_file) {
+        self.layout = match serde_json::from_reader(layout_file) {
             Ok(config) => config,
             Err(e) => {
                 return self.error(NuhxBoardError::LayoutParse(Arc::new(e)));
@@ -1121,7 +1121,7 @@ impl NuhxBoard {
             &mut fs::read_dir(
                 KEYBOARDS_PATH
                     .join(&self.settings.category)
-                    .join(&self.keyboard_options[keyboard]),
+                    .join(&self.layout_options[index]),
             )
             .unwrap()
             .map(|r| r.unwrap())
@@ -1216,7 +1216,7 @@ impl NuhxBoard {
                 StyleChoice::Custom(style_name) => format!(
                     "{}/{}/{}.style",
                     self.settings.category,
-                    self.keyboard_options[self.keyboard_choice.unwrap()],
+                    self.layout_options[self.layout_choice.unwrap()],
                     style_name
                 ),
             });

@@ -40,12 +40,12 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
                 column![
                     text("Keyboard Layout:"),
                     SelectionList::new_with(
-                        &app.keyboard_options,
+                        &app.layout_options,
                         |i, _| Message::LoadLayout(i),
                         12.0,
                         5.0,
                         iced_aw::style::selection_list::primary,
-                        app.keyboard_choice,
+                        app.layout_choice,
                         iced::Font::default(),
                     )
                 ],
@@ -57,7 +57,7 @@ impl Window<NuhxBoard, Theme, Message> for LoadKeyboard {
                         12.0,
                         5.0,
                         iced_aw::style::selection_list::primary,
-                        app.style_choice,
+                        Some(app.style_choice),
                         iced::Font::default(),
                     )
                 ],
