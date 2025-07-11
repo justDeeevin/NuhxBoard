@@ -1457,17 +1457,23 @@ impl NuhxBoard {
         match style {
             StyleSetting::DefaultMouseSpeedIndicatorOutlineWidth(width) => {
                 self.style.default_mouse_speed_indicator_style.outline_width = width;
+                self.mouse_speed_indicator_caches
+                    .values()
+                    .for_each(|c| c.clear());
             }
             StyleSetting::DefaultLooseKeyFontFamily => {
                 let new_font = self.text_input.default_loose_key_font_family.clone();
                 self.style.default_key_style.loose.font.font_family = new_font;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultLooseKeyShowOutline => {
                 self.style.default_key_style.loose.show_outline =
                     !self.style.default_key_style.loose.show_outline;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultLooseKeyOutlineWidth(width) => {
                 self.style.default_key_style.loose.outline_width = width;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultLooseKeyBackgroundImage => {
                 let image = self.text_input.default_loose_key_background_image.clone();
@@ -1475,17 +1481,21 @@ impl NuhxBoard {
                     .default_key_style
                     .loose
                     .background_image_file_name = if image.is_empty() { None } else { Some(image) };
+                self.clear_all_caches();
             }
             StyleSetting::DefaultPressedKeyFontFamily => {
                 let new_font = self.text_input.default_pressed_key_font_family.clone();
                 self.style.default_key_style.pressed.font.font_family = new_font;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultPressedKeyShowOutline => {
                 self.style.default_key_style.pressed.show_outline =
                     !self.style.default_key_style.pressed.show_outline;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultPressedKeyOutlineWidth(width) => {
                 self.style.default_key_style.pressed.outline_width = width;
+                self.clear_all_caches();
             }
             StyleSetting::DefaultPressedKeyBackgroundImage => {
                 let image = self.text_input.default_pressed_key_background_image.clone();
@@ -1493,6 +1503,7 @@ impl NuhxBoard {
                     .default_key_style
                     .pressed
                     .background_image_file_name = if image.is_empty() { None } else { Some(image) };
+                self.clear_all_caches();
             }
             StyleSetting::KeyboardBackgroundImage => {
                 let image = self.text_input.keyboard_background_image.clone();
@@ -1517,6 +1528,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::LooseKeyShowOutline(id) => {
                 key_style_change!(
@@ -1527,6 +1539,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::LooseKeyOutlineWidth { id, width } => {
                 key_style_change!(
@@ -1537,6 +1550,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::LooseKeyBackgroundImage(id) => {
                 let image = self
@@ -1557,6 +1571,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::PressedKeyFontFamily(id) => {
                 let new_font = self
@@ -1573,6 +1588,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::PressedKeyShowOutline(id) => {
                 key_style_change!(
@@ -1583,6 +1599,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::PressedKeyOutlineWidth { id, width } => {
                 key_style_change!(
@@ -1593,6 +1610,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::PressedKeyBackgroundImage(id) => {
                 let image = self
@@ -1613,6 +1631,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::LooseKeyFontStyle {
                 id,
@@ -1626,6 +1645,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::PressedKeyFontStyle {
                 id,
@@ -1639,6 +1659,7 @@ impl NuhxBoard {
                     },
                     id
                 );
+                self.clear_cache_by_id(id);
             }
             StyleSetting::MouseSpeedIndicatorOutlineWidth { id, width } => {
                 let mut style = self.style.default_mouse_speed_indicator_style.clone();
@@ -1653,6 +1674,7 @@ impl NuhxBoard {
                         key.outline_width = width;
                     })
                     .or_insert(style::ElementStyle::MouseSpeedIndicatorStyle(style));
+                self.clear_cache_by_id(id);
             }
         }
     }
