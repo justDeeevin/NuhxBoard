@@ -1398,7 +1398,7 @@ impl NuhxBoard {
                 }
             }
             rdevin::EventType::MouseMove { x, y } => {
-                trace!("Mouse moved: ({x}, {y})");
+                trace!("Mouse moved");
                 let (x, y) = (x as f32, y as f32);
 
                 let current_time = event.time;
