@@ -98,7 +98,7 @@
             ];
 
             postInstall = ''
-              install -Dm644 ${src}/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
+              install -Dm644 ${src}/media/NuhxBoard.png $out/share/icons/hicolor/128x128/apps/NuhxBoard.png
               wrapProgram $out/bin/nuhxboard --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath commonArgs.buildInputs}"
             '';
           }
