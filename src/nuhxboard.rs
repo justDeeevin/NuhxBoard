@@ -162,7 +162,7 @@ impl NuhxBoard {
         };
 
         let category = settings.category.clone();
-        let keyboard = settings.keyboard;
+        let keyboard = settings.layout_index;
         let style = settings.style;
 
         let caps = match settings.capitalization {
@@ -197,7 +197,7 @@ impl NuhxBoard {
             pressed_scroll_buttons: HashMap::new(),
             previous_mouse_position: Coord::zero(),
             previous_mouse_time: std::time::SystemTime::now(),
-            layout_choice: Some(settings.keyboard),
+            layout_choice: Some(settings.layout_index),
             style_choice: settings.style,
             layout_options: Vec::new(),
             keyboard_category_options: Vec::new(),
@@ -269,7 +269,7 @@ impl NuhxBoard {
 
                 if !self.startup {
                     self.layout_choice = None;
-                    self.settings.keyboard = 0;
+                    self.settings.layout_index = 0;
                     self.style_choice = 0;
                     self.settings.style = 0;
                     self.style_options = Vec::new();
@@ -1072,7 +1072,7 @@ impl NuhxBoard {
         }
 
         self.edit_mode = false;
-        self.settings.keyboard = index;
+        self.settings.layout_index = index;
 
         self.layout_choice = Some(index);
         self.style = Style::default();

@@ -9,9 +9,8 @@ pub struct Settings {
     pub follow_for_caps_insensitive: bool,
     /// Name of the category to use.
     pub category: String,
-    // TODO: rename to `layout_index`. necessitates a major version bump since it'll break configs
-    /// Index of the keyboard to use.
-    pub keyboard: usize,
+    #[serde(alias = "keyboard")]
+    pub layout_index: usize,
     /// Index of the style to use.
     pub style: usize,
     /// Whether to treat the cursor's distance from the center of the screen as its velocity.
@@ -42,7 +41,7 @@ impl Default for Settings {
             follow_for_caps_sensitive: false,
             follow_for_caps_insensitive: false,
             category: String::new(),
-            keyboard: 0,
+            layout_index: 0,
             style: 0,
             mouse_from_center: false,
             mouse_sensitivity: 50.0,
