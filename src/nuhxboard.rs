@@ -1064,6 +1064,13 @@ impl NuhxBoard {
     }
 
     fn load_layout(&mut self, index: usize) -> Task<Message> {
+        if index >= self.layout_options.len() {
+            return self.error(NuhxBoardError::LayoutOpen(Arc::new(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Provided layout index is out of bounds",
+            ))));
+        }
+
         self.edit_mode = false;
         self.settings.keyboard = index;
 
@@ -1212,6 +1219,13 @@ impl NuhxBoard {
     }
 
     fn load_style(&mut self, style: usize) -> Task<Message> {
+        if style >= self.style_options.len() {
+            return self.error(NuhxBoardError::StyleOpen(Arc::new(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Provided style index is out of bounds",
+            ))));
+        }
+
         self.settings.style = style;
 
         self.style_choice = style;
