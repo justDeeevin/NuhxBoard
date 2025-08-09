@@ -223,6 +223,7 @@ impl NuhxBoard {
         };
 
         let mut tasks = Vec::with_capacity(5);
+        tasks.push(window_open_task.map(|_| Message::None));
         if !category.is_empty() {
             tasks.extend([
                 app.update(Message::ChangeKeyboardCategory(category)),
@@ -230,7 +231,6 @@ impl NuhxBoard {
                 app.update(Message::LoadStyle(style)),
             ]);
         }
-        tasks.push(window_open_task.map(|_| Message::None));
         if let Some(error) = settings_error {
             tasks.push(app.error(error));
         }
