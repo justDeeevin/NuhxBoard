@@ -1,5 +1,6 @@
 use super::{components::*, keyboard::Keyboard, popups::*};
-use crate::{message::*, nuhxboard::*};
+use crate::{message::*, nuhxboard::*, Args};
+use clap::Parser;
 use iced::{
     widget::{
         checkbox, column, container, horizontal_space, image::Handle, pick_list, radio, row, text,
@@ -81,11 +82,16 @@ impl Window<NuhxBoard, Theme, Message> for Main {
     fn settings(&self) -> window::Settings {
         let icon_image = image::load_from_memory(IMAGE).unwrap();
         let icon = window::icon::from_rgba(icon_image.to_rgba8().to_vec(), 256, 256).unwrap();
+        let icon = if Args::parse().iced_tracing {
+            None
+        } else {
+            Some(icon)
+        };
 
         window::Settings {
             size: DEFAULT_WINDOW_SIZE,
             // resizable: false,
-            icon: Some(icon),
+            icon,
             ..window::Settings::default()
         }
     }
