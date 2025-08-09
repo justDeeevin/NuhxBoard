@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# v0.6.6 - [2025-08-08](https://github.com/justdeeevin/nuhxboard/releases/v0.6.6)
+## v0.6.6 - [2025-08-08](https://github.com/justdeeevin/nuhxboard/releases/v0.6.6)
 
-## Added
+### Added
 
 - Some better error messages during startup. [32ec03c](https://github.com/justdeeevin/nuhxboard/commit/32ec03c2a494efb9357eeb0bc65cd2071f997d6b)
 
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Demoted some debug messages to trace level. The debug log output should now be far less verbose. [a00071a](https://github.com/justdeeevin/nuhxboard/commit/a00071a6f787756025c6f3b5f122ba3917cf52cb)
 
-## Fixed
+### Fixed
 
 - Crash when attempting to load a style or layout on startup that doesn't exist. [#30](https://github.com/justdeeevin/nuhxboard/issues/30)
 - Random crash related to the comparison of a certain struct. [4950284](https://github.com/justdeeevin/nuhxboard/commit/49502841ca8a81ee040b4162a85f00fb30f08395)
