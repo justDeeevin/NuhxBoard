@@ -2542,12 +2542,10 @@ dependencies = [
 [[package]]
 name = "iced_aw"
 version = "0.12.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "582c517a94ce3205da98e9c10b26bb71aa36b7d7d084441d826dc912711d1bac"
+source = "git+https://github.com/iced-rs/iced_aw?rev=c2fdd66e31b6f00948c0e1f237e8e17bfb349211#c2fdd66e31b6f00948c0e1f237e8e17bfb349211"
 dependencies = [
  "cfg-if",
  "chrono",
- "getrandom 0.3.3",
  "iced",
  "iced_fonts",
  "itertools 0.14.0",

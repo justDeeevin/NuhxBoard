@@ -40,7 +40,7 @@ futures.workspace = true
 geo.workspace = true
 home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
-iced_aw = "0.12.2"
+iced_aw = { git = "https://github.com/iced-rs/iced_aw", rev = "c2fdd66e31b6f00948c0e1f237e8e17bfb349211" }
 image = { version = "0.25.6", features = ["ico"] }
 reqwest = { version = "0.12.22", default-features = false, features = [
   "json",
