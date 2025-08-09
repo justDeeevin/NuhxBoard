@@ -368,6 +368,7 @@ impl<'a> Keyboard<'a> {
             }
             if self.hovered_element == Some(index) {
                 // FIXME: for some reason the hovered face isn't being drawn
+                // ...linux only. 😶
                 if let Some(face) = state.hovered_face {
                     let face = shape.exterior().lines().nth(face).unwrap();
                     let path = Path::line(
