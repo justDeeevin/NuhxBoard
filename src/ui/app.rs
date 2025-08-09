@@ -90,7 +90,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
 
         window::Settings {
             size: DEFAULT_WINDOW_SIZE,
-            // resizable: false,
+            resizable: cfg!(debug_assertions),
             icon,
             ..window::Settings::default()
         }
