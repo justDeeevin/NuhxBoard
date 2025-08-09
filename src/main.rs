@@ -123,6 +123,7 @@ fn main() -> color_eyre::Result<()> {
     iced::daemon(NuhxBoard::title, NuhxBoard::update, NuhxBoard::view)
         .theme(NuhxBoard::theme)
         .subscription(NuhxBoard::subscription)
+        .font(iced_fonts::REQUIRED_FONT_BYTES)
         .run_with(NuhxBoard::new)?;
 
     Ok(())
