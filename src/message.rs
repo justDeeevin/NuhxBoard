@@ -1,4 +1,4 @@
-use crate::{nuhxboard::*, types::*};
+use crate::{nuhxboard::*, types::*, ui::popups::Action};
 use geo::Coord;
 use iced::{window, Color, Theme};
 use iced_multi_window::Window;
@@ -17,6 +17,7 @@ pub enum Message {
     CloseAllOf(Box<dyn Window<NuhxBoard, Theme, Message>>),
     Exit,
     Closed(window::Id),
+    CloseRequested,
     Listener(Event),
     ReleaseScroll(u32),
     LoadStyle(usize),
@@ -72,6 +73,8 @@ pub enum Message {
         window_id: window::Id,
     },
     RemoveElement,
+    Commit(Action),
+    CancelDiscard(Action),
 }
 
 #[derive(Debug, Clone)]

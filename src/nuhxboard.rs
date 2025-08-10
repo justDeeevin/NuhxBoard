@@ -133,6 +133,8 @@ pub struct NuhxBoard {
     pub detecting: Vec<usize>,
     pub right_click_pos: iced::Point,
     pub mouse_pos: iced::Point,
+    pub layout_commited: bool,
+    pub style_commited: bool,
 }
 
 const DEFAULT_KEY_SIZE: f32 = 43.0;
@@ -220,6 +222,8 @@ impl NuhxBoard {
             detecting: Vec::new(),
             right_click_pos: iced::Point::default(),
             mouse_pos: iced::Point::default(),
+            layout_commited: true,
+            style_commited: true,
         };
 
         let mut tasks = Vec::with_capacity(5);
@@ -394,6 +398,7 @@ impl NuhxBoard {
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.layout).unwrap();
+                self.layout_commited = true;
             }
             Message::SaveStyle(file) => {
                 info!(?file, "Saving style");
@@ -405,6 +410,7 @@ impl NuhxBoard {
                 )));
                 let mut file = File::create(path).unwrap();
                 serde_json::to_writer_pretty(&mut file, &self.style).unwrap();
+                self.style_commited = true;
             }
             Message::SetHeight(height) => {
                 debug!(height, "Setting height");
@@ -436,6 +442,7 @@ impl NuhxBoard {
                     self.history_depth = 0;
                 }
                 self.edit_history.push(change);
+                self.layout_commited = false;
             }
             Message::Undo => {
                 debug!("Undo");
@@ -472,35 +479,27 @@ impl NuhxBoard {
                     }
                     TextInputType::DefaultLooseKeyBackgroundImage => {
                         self.text_input.default_loose_key_background_image = value;
-                        self.clear_all_caches();
                     }
                     TextInputType::DefaultLooseKeyFontFamily => {
                         self.text_input.default_loose_key_font_family = value;
-                        self.clear_all_caches();
                     }
                     TextInputType::DefaultPressedKeyBackgroundImage => {
                         self.text_input.default_pressed_key_background_image = value;
-                        self.clear_all_caches();
                     }
                     TextInputType::DefaultPressedKeyFontFamily => {
                         self.text_input.default_pressed_key_font_family = value;
-                        self.clear_all_caches();
                     }
                     TextInputType::LooseBackgroundImage(id) => {
                         self.text_input.loose_background_image.insert(id, value);
-                        self.clear_cache_by_id(id);
                     }
                     TextInputType::LooseFontFamily(id) => {
                         self.text_input.loose_font_family.insert(id, value);
-                        self.clear_cache_by_id(id);
                     }
                     TextInputType::PressedBackgroundImage(id) => {
                         self.text_input.pressed_background_image.insert(id, value);
-                        self.clear_cache_by_id(id);
                     }
                     TextInputType::PressedFontFamily(id) => {
                         self.text_input.pressed_font_family.insert(id, value);
-                        self.clear_cache_by_id(id);
                     }
                 }
             }
@@ -518,6 +517,17 @@ impl NuhxBoard {
             Message::Open(window) => {
                 info!(id = window.id(), "Opening new window");
                 if window == LoadKeyboard {
+                    if (!self.layout_commited || !self.style_commited)
+                        && !self
+                            .windows
+                            .any_of(&UnsavedChangesPopup(Action::LoadKeyboard))
+                    {
+                        return self
+                            .windows
+                            .open(Box::new(UnsavedChangesPopup(Action::LoadKeyboard)))
+                            .1
+                            .map(|_| Message::None);
+                    }
                     self.keyboard_category_options = fs::read_dir(&*KEYBOARDS_PATH)
                         .unwrap()
                         .filter_map(|r| {
@@ -542,23 +552,29 @@ impl NuhxBoard {
             }
             Message::Exit => {
                 info!("Exiting");
-                return window::close(self.main_window);
+                return immediate_task(Message::CloseRequested);
             }
             Message::Closed(window) => {
                 info!(%window, "Window closed");
                 self.windows.was_closed(window);
 
-                if window == self.main_window {
-                    confy::store("nuhxboard", None, self.settings.clone()).unwrap();
-                    if self.windows.empty() {
-                        return iced::exit();
-                    } else {
-                        return self.windows.close_all().map(|_| Message::None);
-                    }
-                }
-
                 if self.windows.empty() {
                     return iced::exit();
+                }
+            }
+            Message::CloseRequested => {
+                if (!self.layout_commited || !self.style_commited)
+                    && !self.windows.any_of(&UnsavedChangesPopup(Action::Exit))
+                {
+                    return self
+                        .windows
+                        .open(Box::new(UnsavedChangesPopup(Action::Exit)))
+                        .1
+                        .map(|_| Message::None);
+                }
+                confy::store("nuhxboard", None, self.settings.clone()).unwrap();
+                if !self.windows.empty() {
+                    return self.windows.close_all().map(|_| Message::None);
                 }
             }
             Message::ChangeColor(picker, color) => {
@@ -662,6 +678,7 @@ impl NuhxBoard {
                         );
                     }
                 }
+                self.style_commited = false;
             }
             Message::ToggleColorPicker(picker) => {
                 debug!(?picker, "Toggling color picker");
@@ -739,6 +756,7 @@ impl NuhxBoard {
                     }
                 }
                 self.caches[element_i].clear();
+                self.layout_commited = false;
             }
             Message::CenterTextPosition(i) => {
                 debug!(element = i, "Centering text position");
@@ -760,6 +778,7 @@ impl NuhxBoard {
                 def.text_position.x = centroid.x().trunc().into();
                 def.text_position.y = centroid.y().trunc().into();
                 self.caches[i].clear();
+                self.layout_commited = false;
             }
             Message::ChangeNumberInput(input_type) => {
                 debug!(?input_type, "Changing number input");
@@ -807,6 +826,7 @@ impl NuhxBoard {
                 def.boundaries.swap(left, right);
                 self.selections.boundary.insert(element_i, right);
                 self.caches[element_i].clear();
+                self.layout_commited = false;
             }
             Message::MakeRectangle(element_i) => {
                 debug!(element_i, "Making rectangle");
@@ -888,6 +908,7 @@ impl NuhxBoard {
                         shift_text: String::new(),
                         change_on_caps: false,
                     }));
+                self.layout_commited = false;
             }
             Message::AddMouseKey => {
                 debug!("Adding mouse key");
@@ -898,6 +919,7 @@ impl NuhxBoard {
                     .extend(common.key_codes.iter().map(|c| (*c, cache.clone())));
 
                 self.layout.elements.push(BoardElement::MouseKey(common));
+                self.layout_commited = false;
             }
             Message::AddMouseScroll => {
                 debug!("Adding mouse scroll");
@@ -906,6 +928,7 @@ impl NuhxBoard {
                 self.caches_by_scroll_button
                     .extend(common.key_codes.iter().map(|c| (*c, cache.clone())));
                 self.layout.elements.push(BoardElement::MouseScroll(common));
+                self.layout_commited = false;
             }
             Message::AddMouseSpeedIndicator => {
                 debug!("Adding mouse speed indicator");
@@ -919,6 +942,7 @@ impl NuhxBoard {
                 self.layout
                     .elements
                     .push(BoardElement::MouseSpeedIndicator(def));
+                self.layout_commited = false;
             }
             Message::RightClick(window) => {
                 debug!(%window, "Right click");
@@ -964,6 +988,30 @@ impl NuhxBoard {
                 self.caches_by_id.remove(&element.id());
                 self.caches.remove(i);
                 self.layout.elements.remove(i);
+                self.layout_commited = false;
+            }
+            Message::Commit(action) => {
+                self.layout_commited = true;
+                self.style_commited = true;
+                match action {
+                    Action::LoadKeyboard => {
+                        return Task::batch([
+                            immediate_task(Message::Open(Box::new(LoadKeyboard))),
+                            self.windows
+                                .close_all_of(Box::new(UnsavedChangesPopup(action)))
+                                .map(|_| Message::None),
+                        ]);
+                    }
+                    Action::Exit => {
+                        return immediate_task(Message::Exit);
+                    }
+                }
+            }
+            Message::CancelDiscard(action) => {
+                return self
+                    .windows
+                    .close_all_of(Box::new(UnsavedChangesPopup(action)))
+                    .map(|_| Message::None);
             }
         }
         Task::none()
@@ -1043,6 +1091,7 @@ impl NuhxBoard {
                 }
             }),
             iced::window::close_events().map(Message::Closed),
+            iced::window::close_requests().map(|_| Message::CloseRequested),
             iced::event::listen_with(|e, _, id| match e {
                 iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
                     iced::mouse::Button::Right,
@@ -1694,6 +1743,7 @@ impl NuhxBoard {
                 self.clear_cache_by_id(id);
             }
         }
+        self.style_commited = false;
     }
 
     fn clear_all_caches(&self) {
@@ -1741,4 +1791,8 @@ impl NuhxBoard {
         };
         self.caches[clear_index].clear();
     }
+}
+
+fn immediate_task(message: Message) -> Task<Message> {
+    Task::perform(std::future::ready(message), |m| m)
 }

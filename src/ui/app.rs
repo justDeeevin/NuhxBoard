@@ -92,6 +92,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             size: DEFAULT_WINDOW_SIZE,
             resizable: cfg!(debug_assertions),
             icon,
+            exit_on_close_request: false,
             ..window::Settings::default()
         }
     }

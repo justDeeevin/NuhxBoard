@@ -6,7 +6,7 @@ use std::error::Error;
 
 use crate::{message::*, nuhxboard::*, types::*};
 use iced::{
-    widget::{column, container, text},
+    widget::{button, column, container, row, text},
     window, Theme,
 };
 use iced_multi_window::Window;
@@ -54,6 +54,71 @@ impl Window<NuhxBoard, Theme, Message> for ErrorPopup {
         .width(iced::Length::Fill)
         .align_x(iced::alignment::Horizontal::Center)
         .align_y(iced::alignment::Vertical::Center)
+        .into()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UnsavedChangesPopup(pub Action);
+
+#[derive(Debug, Clone)]
+pub enum Action {
+    LoadKeyboard,
+    Exit,
+}
+
+impl Action {
+    pub fn present_tense(&self) -> &'static str {
+        match self {
+            Action::LoadKeyboard => "Loading a new keyboard",
+            Action::Exit => "Exiting",
+        }
+    }
+
+    pub fn future_tense(&self) -> &'static str {
+        match self {
+            Action::LoadKeyboard => "load a new keyboard",
+            Action::Exit => "exit",
+        }
+    }
+}
+
+impl Window<NuhxBoard, Theme, Message> for UnsavedChangesPopup {
+    fn settings(&self) -> window::Settings {
+        window::Settings {
+            size: iced::Size {
+                width: 700.0,
+                height: 100.0,
+            },
+            resizable: false,
+            ..window::Settings::default()
+        }
+    }
+
+    fn theme(&self, _app: &NuhxBoard) -> Theme {
+        Theme::Light
+    }
+
+    fn title(&self, _app: &NuhxBoard) -> String {
+        "Discard changes".to_string()
+    }
+
+    fn view<'a>(&'a self, _app: &'a NuhxBoard) -> iced::Element<'a, Message, Theme> {
+        row![column![
+            text(format!(
+                "You have unsaved changes. {} will undo them. Are you sure you want to {}?",
+                self.0.present_tense(),
+                self.0.future_tense()
+            )),
+            row![
+                button("Yes").on_press(Message::Commit(self.0.clone())),
+                button("Cancel").on_press(Message::CancelDiscard(self.0.clone()))
+            ]
+        ]
+        .align_x(iced::Alignment::Center)
+        .width(iced::Length::Fill)]
+        .align_y(iced::Alignment::Center)
+        .height(iced::Length::Fill)
         .into()
     }
 }
