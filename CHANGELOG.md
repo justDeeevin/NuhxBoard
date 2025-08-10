@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.0.0 - [Unreleased](https://github.com/justdeeevin/nuhxboard/compare/v0.6.7...HEAD)
 
+### Added
+
+- Warning popups when trying to load a keyboard or exit with unsaved changes. [0e10d7f](https://github.com/justdeeevin/nuhxboard/commit/0e10d7f152f3c22e61024ff34672f27229bafbcc)
+
 ### Changed
 
 - **BREAKING**: The `keyboard` property of the app settings is now `layout_index`. [8522548](https://github.com/justdeeevin/nuhxboard/commit/852254880f5153bb9b369e7575c8b25d3aff234d)
