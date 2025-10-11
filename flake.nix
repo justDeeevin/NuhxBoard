@@ -31,7 +31,7 @@
 
         inherit (pkgs) lib;
 
-        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default);
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
         iconFilter = path: (builtins.match ".*NuhxBoard.png$" path) != null;
@@ -45,25 +45,23 @@
           inherit src;
           strictDeps = true;
 
-          buildInputs =
-            with pkgs;
-            [
-              expat
-              fontconfig
-              freetype
-              freetype.dev
-              libGL
-              pkg-config
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXi
-              xorg.libXrandr
-              xorg.libXtst
-              wayland
-              libxkbcommon
-              libevdev
-            ]
-            ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
+          buildInputs = with pkgs; [
+            expat
+            fontconfig
+            freetype
+            freetype.dev
+            libGL
+            pkg-config
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXrandr
+            xorg.libXtst
+            xorg.libxcb
+            wayland
+            libxkbcommon
+            libevdev
+          ];
 
           nativeBuildInputs = with pkgs; [
             copyDesktopItems
@@ -72,12 +70,8 @@
           ];
         };
 
-        # Build *just* the cargo dependencies, so we can reuse
-        # all of that work (e.g. via cachix) when running in CI
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-        # Build the actual crate itself, reusing the dependency
-        # artifacts from above.
         nuhxboard = craneLib.buildPackage (
           commonArgs
           // {
@@ -106,15 +100,8 @@
       in
       {
         checks = {
-          # Build the crate as part of `nix flake check` for convenience
           nuhxboard = nuhxboard;
 
-          # Run clippy (and deny all warnings) on the crate source,
-          # again, reusing the dependency artifacts from above.
-          #
-          # Note that this is done as a separate derivation so that
-          # we can block the CI if there are issues here, but not
-          # prevent downstream consumers from building our crate by itself.
           nuhxboard-clippy = craneLib.cargoClippy (
             commonArgs
             // {
@@ -123,22 +110,7 @@
             }
           );
 
-          nuhxboard-doc = craneLib.cargoDoc (commonArgs // { inherit cargoArtifacts; });
-
-          # Check formatting
           nuhxboard-fmt = craneLib.cargoFmt { inherit src; };
-
-          # Run tests with cargo-nextest
-          # Consider setting `doCheck = false` on `nuhxboard` if you do not want
-          # the tests to run twice
-          nuhxboard-nextest = craneLib.cargoNextest (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              partitions = 1;
-              partitionType = "count";
-            }
-          );
         };
 
         packages = {
