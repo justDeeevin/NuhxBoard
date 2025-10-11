@@ -1,13 +1,10 @@
 use crate::{message::*, types::*};
 use iced::{
-    border::Radius,
     font::Weight,
     widget::{button, container, row, text, text::IntoFragment, Button, Container, Row, Text},
-    Alignment, Border, Color, Element, Font, Length,
+    Alignment, Background, Color, Element, Font, Length,
 };
 use iced_aw::{color_picker, widget::InnerBounds, Quad};
-use nuhxboard_types::style::NohRgb;
-
 pub fn labeled_text_input<'a>(
     label: impl IntoFragment<'a>,
     text_input: iced::widget::TextInput<'a, Message>,
@@ -17,14 +14,6 @@ pub fn labeled_text_input<'a>(
 
 pub fn gray_box<'a>(content: impl Into<Element<'a, Message>>) -> Container<'a, Message> {
     container(content)
-        .style(move |_| container::Style {
-            border: Border {
-                color: NohRgb::DEFAULT_GRAY.into(),
-                width: 1.0,
-                radius: Radius::from(0.0),
-            },
-            ..Default::default()
-        })
         .padding(5)
         .width(Length::Fill)
         .align_x(Alignment::Center)
@@ -43,19 +32,11 @@ pub fn picker_button<'a>(
             button("")
                 .width(Length::Fixed(15.0))
                 .height(Length::Fixed(15.0))
-                .style(move |theme, status| match status {
-                    button::Status::Active | button::Status::Hovered => button::Style {
-                        background: Some(iced::Background::Color(color)),
-                        border: Border {
-                            color: Color::BLACK,
-                            width: 1.0,
-                            radius: Radius::new(0)
-                        },
-                        ..button::primary(theme, status)
-                    },
-                    _ => button::primary(theme, status),
-                })
-                .on_press(Message::ToggleColorPicker(picker)),
+                .on_press(Message::ToggleColorPicker(picker))
+                .style(move |theme, status| button::Style {
+                    background: Some(Background::Color(color)),
+                    ..button::primary(theme, status)
+                }),
             Message::ToggleColorPicker(picker),
             move |v| Message::ChangeColor(picker, v)
         ),
@@ -67,35 +48,20 @@ pub fn picker_button<'a>(
 pub fn context_menu_button(label: &str) -> Button<'_, Message> {
     let text = text(label).size(12);
     button(text)
-        .style(|theme, status| match status {
-            button::Status::Active => button::Style {
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                text_color: iced::Color::BLACK,
-                ..button::primary(theme, status)
-            },
-            button::Status::Hovered => button::Style {
-                border: iced::Border {
-                    color: iced::Color::from_rgb(0.0, 0.0, 1.0),
-                    width: 2.0,
-                    radius: 0.into(),
-                },
-                text_color: iced::Color::BLACK,
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                ..button::primary(theme, status)
-            },
-            button::Status::Disabled => button::Style {
-                background: Some(iced::Background::Color(iced::Color::WHITE)),
-                text_color: iced::Color::from_rgb(100.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
-                ..button::primary(theme, status)
-            },
-            _ => button::primary(theme, status),
+        .style(|theme, status| {
+            let primary = button::primary(theme, status);
+            button::Style {
+                text_color: Color::BLACK,
+                background: Some(Background::Color(Color::WHITE)),
+                ..primary
+            }
         })
         .width(Length::Fill)
 }
 
 pub fn seperator() -> Quad {
     Quad {
-        quad_color: iced::Background::Color(Color::from_rgb8(204, 204, 204)),
+        quad_color: Background::Color(Color::from_rgb8(204, 204, 204)),
         height: Length::Fixed(5.0),
         inner_bounds: InnerBounds::Ratio(0.95, 0.2),
         ..Default::default()

@@ -126,32 +126,17 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             if app.edit_mode {
                 menu.push(
                     checkbox("Update Text Position", app.settings.update_text_position)
-                        .on_toggle(|_| Message::ChangeSetting(Setting::UpdateTextPosition))
-                        .style(|theme, status| match status {
-                            checkbox::Status::Active { is_checked } => checkbox::Style {
-                                text_color: Some(iced::Color::BLACK),
-                                background: Background::Color(match is_checked {
-                                    true => iced::Color::from_rgba(0.0, 0.4, 1.0, 0.5),
-                                    false => iced::Color::TRANSPARENT,
-                                }),
-                                border: Border {
-                                    color: iced::Color::BLACK,
-                                    width: 1.0,
-                                    radius: iced::border::Radius::default(),
-                                },
-                                icon_color: iced::Color::BLACK,
+                        .style(|_, _| checkbox::Style {
+                            text_color: Some(Color::BLACK),
+                            background: Background::Color(Color::WHITE),
+                            icon_color: Color::BLACK,
+                            border: Border {
+                                color: Color::BLACK,
+                                width: 1.0,
+                                radius: iced::border::Radius::default(),
                             },
-                            checkbox::Status::Hovered { is_checked: _ } => checkbox::Style {
-                                border: Border {
-                                    color: iced::Color::BLACK,
-                                    width: 2.0,
-                                    radius: iced::border::Radius::default(),
-                                },
-                                text_color: Some(iced::Color::BLACK),
-                                ..checkbox::primary(theme, status)
-                            },
-                            _ => checkbox::primary(theme, status),
                         })
+                        .on_toggle(|_| Message::ChangeSetting(Setting::UpdateTextPosition))
                         .text_size(12)
                         .size(15)
                         .into(),
@@ -241,7 +226,7 @@ impl Window<NuhxBoard, Theme, Message> for Main {
             ]);
             container(Scrollable::new(column(menu)))
                 .style(|theme| container::Style {
-                    background: Some(iced::Background::Color(iced::Color::WHITE)),
+                    background: Some(Background::Color(Color::WHITE)),
                     ..container::bordered_box(theme)
                 })
                 .width(Length::Fixed(150.0))
