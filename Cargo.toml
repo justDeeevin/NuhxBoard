@@ -31,6 +31,12 @@ path-guid = "6BCE453A-D71C-4EF5-A85D-B4A43D72A35F"
 license = false
 eula = false
 
+[patch.crates-io]
+iced = { git = "https://github.com/iced-rs/iced.git", rev = "6279590" }
+iced_core = { git = "https://github.com/iced-rs/iced.git", rev = "6279590" }
+iced_widget = { git = "https://github.com/iced-rs/iced.git", rev = "6279590" }
+iced_graphics = { git = "https://github.com/iced-rs/iced.git", rev = "6279590" }
+
 [dependencies]
 iced-multi-window = { path = "./crates/iced-multi-window", version = "2.0.0" }
 smol.workspace = true
@@ -40,7 +46,7 @@ futures.workspace = true
 geo.workspace = true
 home = "0.5.11"
 iced = { workspace = true, features = ["image", "canvas", "advanced", "smol"] }
-iced_aw = { git = "https://github.com/iced-rs/iced_aw", rev = "c2fdd66e31b6f00948c0e1f237e8e17bfb349211" }
+iced_aw = { git = "https://github.com/iced-rs/iced_aw", rev = "2c2a5c22945c30ed6a9ac71bbc79a77c0624ff99" }
 image = { version = "0.25.8", features = ["ico"] }
 reqwest = { version = "0.12.23", default-features = false, features = [
   "json",
@@ -49,7 +55,6 @@ reqwest = { version = "0.12.23", default-features = false, features = [
 ] }
 serde_json.workspace = true
 zip = "6.0.0"
-iced_fonts = "0.2.1"
 nuhxboard-types = { path = "crates/types", version = "1.0.0" }
 nuhxboard-logic = { path = "crates/logic", version = "1.0.0" }
 rdevin.workspace = true
@@ -59,7 +64,7 @@ confy = "1.0.0"
 tracing.workspace = true
 tracing-subscriber = "0.3.20"
 tracing-appender = "0.2.3"
-iced_graphics = { version = "0.13.0", features = ["geometry"] }
+iced_graphics = { version = "0.14.0-dev", features = ["geometry"] }
 clap = { version = "4.5.48", features = ["derive"] }
 colorgrad.workspace = true
 
@@ -86,7 +91,7 @@ categories = ["visualization"]
 
 [workspace.dependencies]
 geo = "0.31.0"
-iced = "0.13.1"
+iced = "0.14.0-dev"
 serde_json = "1.0.145"
 futures = "0.3.31"
 rdevin = "0.1.0"

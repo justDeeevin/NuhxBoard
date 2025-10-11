@@ -3,7 +3,7 @@ use crate::{message::*, nuhxboard::*, Args};
 use clap::Parser;
 use iced::{
     widget::{
-        checkbox, column, container, horizontal_space, image::Handle, pick_list, radio, row, text,
+        checkbox, column, container, image::Handle, pick_list, radio, row, space::horizontal, text,
         text_input, Image, Scrollable, Stack,
     },
     window, Background, Border, Color, Length, Theme,
@@ -299,22 +299,22 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
         let mut input = vec![
             row![
                 text("Mouse sensitivity: ").size(12),
-                horizontal_space(),
+                horizontal(),
                 number_input(&app.settings.mouse_sensitivity, 0.0.., |v| {
                     Message::ChangeSetting(Setting::MouseSensitivity(v))
                 })
-                .size(12.0)
+                .set_size(12.0)
             ]
             .padding(5)
             .align_y(iced::Alignment::Center)
             .into(),
             row![
                 text("Scroll hold time (ms): ").size(12),
-                horizontal_space(),
+                horizontal(),
                 number_input(&app.settings.scroll_hold_time, 0.., |v| {
                     Message::ChangeSetting(Setting::ScrollHoldTime(v))
                 })
-                .size(12.0)
+                .set_size(12.0)
             ]
             .padding(5)
             .align_y(iced::Alignment::Center)
@@ -348,8 +348,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 number_input(&app.settings.min_press_time, 0.., |v| {
                     Message::ChangeSetting(Setting::MinPressTime(v))
                 })
-                .size(12.0)
-                .width(Length::Shrink),
+                .set_size(12.0),
                 text("ms").size(12)
             ]
             .padding(5)
@@ -395,7 +394,7 @@ impl Window<NuhxBoard, Theme, Message> for SettingsWindow {
                 .text_size(12)
                 .size(15),
             ],
-            horizontal_space(),
+            horizontal(),
             column![
                 text("Still follow shift for").size(12),
                 checkbox(

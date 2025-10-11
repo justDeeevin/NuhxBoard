@@ -120,11 +120,12 @@ fn main() -> color_eyre::Result<()> {
     }
 
     // Runs the app, initializing state using NuhxBoard::new
-    iced::daemon(NuhxBoard::title, NuhxBoard::update, NuhxBoard::view)
+    iced::daemon(NuhxBoard::new, NuhxBoard::update, NuhxBoard::view)
+        .title(NuhxBoard::title)
         .theme(NuhxBoard::theme)
         .subscription(NuhxBoard::subscription)
-        .font(iced_fonts::REQUIRED_FONT_BYTES)
-        .run_with(NuhxBoard::new)?;
+        .font(iced_aw::ICED_AW_FONT_BYTES)
+        .run()?;
 
     Ok(())
 }

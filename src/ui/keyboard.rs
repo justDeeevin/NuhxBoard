@@ -6,7 +6,7 @@ use iced::{
     advanced::{layout::Node, widget::tree, Renderer as _, Shell, Widget},
     mouse,
     widget::{
-        canvas::{self, event::Status, Geometry},
+        canvas::{self, Geometry},
         image::Handle,
     },
     Color, Element, Event, Length, Rectangle, Renderer, Size,
@@ -339,8 +339,8 @@ impl<'a> Keyboard<'a> {
                 color: current_style.text.into(),
                 size: iced::Pixels(current_style.font.size),
                 font: current_style.font.as_iced(),
-                horizontal_alignment: iced::alignment::Horizontal::Center,
-                vertical_alignment: iced::alignment::Vertical::Center,
+                align_x: iced::advanced::text::Alignment::Center,
+                align_y: iced::alignment::Vertical::Center,
                 shaping: iced::widget::text::Shaping::Advanced,
                 ..Default::default()
             });
@@ -545,7 +545,7 @@ impl<'a> Keyboard<'a> {
         state: &mut State,
         cursor_position: Coord<f32>,
         shell: &mut Shell<'_, Message>,
-    ) -> Status {
+    ) {
         state.previous_cursor_position = cursor_position;
         for (index, element) in self.layout.elements.iter().enumerate() {
             match CommonDefinitionRef::try_from(element) {
@@ -597,19 +597,15 @@ impl<'a> Keyboard<'a> {
                         if self.hovered_element != Some(index) {
                             shell.publish(Message::UpdateHoveredElement(Some(index)));
                         }
-                        return Status::Captured;
+                        return;
                     }
                 }
                 Err(def) => {
-                    let mut captured = false;
                     if Euclidean.distance(cursor_position, Coord::from(def.location.clone()))
                         < def.radius
+                        && self.hovered_element != Some(index)
                     {
-                        if self.hovered_element != Some(index) {
-                            shell.publish(Message::UpdateHoveredElement(Some(index)));
-                        }
-
-                        captured = true;
+                        shell.publish(Message::UpdateHoveredElement(Some(index)));
                     }
                     if ((def.radius - HOVER_EDGE_DISTANCE)..(def.radius + HOVER_EDGE_DISTANCE))
                         .contains(
@@ -620,17 +616,11 @@ impl<'a> Keyboard<'a> {
                             debug!(index, "Hovering mouse speed indicator edge");
                             state.hovered_face = Some(0);
                             shell.publish(Message::ClearCache(index));
-                            captured = true;
                         }
                     } else if state.hovered_face.is_some() {
                         debug!(index, "Leaving mouse speed indicator edge");
                         state.hovered_face = None;
                         shell.publish(Message::ClearCache(index));
-                        captured = true;
-                    }
-
-                    if captured {
-                        return Status::Captured;
                     }
                 }
             }
@@ -640,9 +630,6 @@ impl<'a> Keyboard<'a> {
             shell.publish(Message::UpdateHoveredElement(None));
             state.hovered_face = None;
             state.hovered_vertex = None;
-            Status::Captured
-        } else {
-            Status::Ignored
         }
     }
 }
@@ -653,7 +640,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
     }
 
     fn layout(
-        &self,
+        &mut self,
         _tree: &mut iced::advanced::widget::Tree,
         _renderer: &iced::Renderer,
         _limits: &iced::advanced::layout::Limits,
@@ -713,38 +700,34 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
         }
     }
 
-    fn on_event(
+    fn update(
         &mut self,
         state: &mut iced::advanced::widget::Tree,
-        event: iced::Event,
+        event: &iced::Event,
         _layout: iced::advanced::Layout<'_>,
         cursor: iced::advanced::mouse::Cursor,
         _renderer: &Renderer,
         _clipboard: &mut dyn iced::advanced::Clipboard,
         shell: &mut iced::advanced::Shell<'_, Message>,
         _viewport: &Rectangle,
-    ) -> Status {
+    ) {
         let Event::Mouse(event) = event else {
-            return Status::Ignored;
+            return;
         };
         let state = state.state.downcast_mut::<State>();
         if !self.edit_mode {
-            return if self.hovered_element.is_some() {
+            if self.hovered_element.is_some() {
                 shell.publish(Message::UpdateHoveredElement(None));
-                Status::Captured
             } else if state.selected_element.is_some() {
                 state.selected_element = None;
-                Status::Captured
             } else if state.held_element.is_some() {
                 state.held_element = None;
-                Status::Captured
-            } else {
-                Status::Ignored
             };
+            return;
         }
 
         let Some(cursor_position) = cursor.position_in(self.bounds()) else {
-            return Status::Ignored;
+            return;
         };
 
         let cursor_position = Coord {
@@ -785,7 +768,7 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                             } else {
                                 shell.publish(Message::MoveElement { index, delta });
                             }
-                            return Status::Captured;
+                            return;
                         }
                     }
                 }
@@ -808,8 +791,6 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
                     }
                     state.selected_element = None;
                 }
-
-                return Status::Captured;
             }
             mouse::Event::ButtonReleased(mouse::Button::Left) => {
                 if state.delta_accumulator != Coord::default() {
@@ -861,7 +842,6 @@ impl<Theme> Widget<Message, Theme, Renderer> for Keyboard<'_> {
             }
             _ => {}
         }
-        Status::Ignored
     }
 }
 

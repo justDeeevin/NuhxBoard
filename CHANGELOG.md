@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING**: The `keyboard` property of the app settings is now `layout_index`. [8522548](https://github.com/justdeeevin/nuhxboard/commit/852254880f5153bb9b369e7575c8b25d3aff234d)
   The app will still accept the old property and update the name.
+- Migrated to Iced v0.14. [795c8028](https://github.com/justdeeevin/nuhxboard/commit/795c80282347ba536db0ad0449813a3608dc01fc)
 
 ## v0.6.7 - [2025-08-09](https://github.com/justdeeevin/nuhxboard/releases/v0.6.7)
 

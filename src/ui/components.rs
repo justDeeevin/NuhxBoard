@@ -3,7 +3,7 @@ use iced::{
     border::Radius,
     font::Weight,
     widget::{button, container, row, text, text::IntoFragment, Button, Container, Row, Text},
-    Alignment, Border, Color, Element, Font, Length, Shadow,
+    Alignment, Border, Color, Element, Font, Length,
 };
 use iced_aw::{color_picker, widget::InnerBounds, Quad};
 use nuhxboard_types::style::NohRgb;
@@ -18,14 +18,12 @@ pub fn labeled_text_input<'a>(
 pub fn gray_box<'a>(content: impl Into<Element<'a, Message>>) -> Container<'a, Message> {
     container(content)
         .style(move |_| container::Style {
-            background: None,
-            text_color: None,
             border: Border {
                 color: NohRgb::DEFAULT_GRAY.into(),
                 width: 1.0,
                 radius: Radius::from(0.0),
             },
-            shadow: Shadow::default(),
+            ..Default::default()
         })
         .padding(5)
         .width(Length::Fill)

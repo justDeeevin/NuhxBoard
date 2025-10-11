@@ -1,5 +1,6 @@
 use crate::{message::*, nuhxboard::*, types::*, ui::components::*};
 use iced::{
+    never,
     widget::{button, checkbox, column, pick_list, rich_text, row, span, text, text_input},
     window, Alignment, Font, Padding, Theme,
 };
@@ -1003,6 +1004,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                         {
                             let font = &loose.font;
                             rich_text![span("Pick a font").font(font.as_iced())]
+                                .on_link_click(never)
                         },
                         labeled_text_input(
                             "Font Family: ",
@@ -1143,6 +1145,7 @@ impl Window<NuhxBoard, Theme, Message> for ElementStyle {
                                 .font(font.as_iced())
                                 .underline(font.style.contains(FontStyle::UNDERLINE))
                                 .strikethrough(font.style.contains(FontStyle::STRIKETHROUGH))]
+                            .on_link_click(never)
                         },
                         text_input(
                             "",
