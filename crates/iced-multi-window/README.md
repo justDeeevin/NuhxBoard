@@ -4,7 +4,7 @@ Utilities for managing many windows in an `iced` application.
 
 ## Goals
 
-Working with multiple windows in iced can become quite painful quite quickly. If you want to introduce a window type with unique behavior, you may have to make additions in more than five places accross your codebase. Oversights are easy, and most of the mistakes you can make aren't caught by the compiler. This library seeks to ease this experince by making defining and working with multiple windows simpler, more intuitive, and harder to screw up.
+Working with multiple windows in iced can become quite painful quite quickly. If you want to introduce a window type with unique behavior, you may have to make additions in more than five places accross your codebase. Oversights are easy, and most of the mistakes you can make aren't caught by the compiler. This library seeks to ease this experience by making defining and working with multiple windows simpler, more intuitive, and harder to screw up.
 
 ## Usage
 
