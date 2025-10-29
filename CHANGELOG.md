@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The app will still accept the old property and update the name.
 - Migrated to Iced v0.14. [795c8028](https://github.com/justdeeevin/nuhxboard/commit/795c80282347ba536db0ad0449813a3608dc01fc)
 
+### Fixed
+
+- Scroll elements never being un-highlighted. [#38](https://github.com/justdeeevin/nuhxboard/issues/38)
+
 ## v0.6.7 - [2025-08-09](https://github.com/justdeeevin/nuhxboard/releases/v0.6.7)
 
 ### Fixed

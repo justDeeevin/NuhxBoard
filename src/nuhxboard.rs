@@ -258,6 +258,9 @@ impl NuhxBoard {
                     Some(1) => {
                         debug!("Disabling scroll highlight");
                         self.pressed_scroll_buttons.remove(&button);
+                        self.caches_by_scroll_button
+                            .entry(button)
+                            .and_modify(|c| c.clear());
                     }
                     Some(n) => {
                         *n -= 1;
@@ -1456,9 +1459,9 @@ impl NuhxBoard {
                     )),
                     move |_| Message::ReleaseScroll(button),
                 );
-                if let Some(cache) = self.caches_by_scroll_button.get(&button) {
-                    cache.clear();
-                }
+                self.caches_by_scroll_button
+                    .entry(button)
+                    .and_modify(|c| c.clear());
             }
             rdevin::EventType::MouseMove { x, y } => {
                 trace!("Mouse moved");
