@@ -1,5 +1,4 @@
 use async_stream::stream;
-use blocking::unblock;
 use iced::advanced::subscription::Recipe;
 use rdevin::Event;
 use std::hash::Hash;
@@ -19,9 +18,9 @@ impl Recipe for RdevinSubscriber {
     ) -> iced::advanced::graphics::futures::BoxStream<Self::Output> {
         let (tx, rx) = async_channel::unbounded();
 
-        drop(smol::spawn(unblock(|| {
+        std::thread::spawn(|| {
             rdevin::listen(move |e| tx.send_blocking(e).unwrap()).unwrap();
-        })));
+        });
 
         Box::pin(stream! {
             while let Ok(e) = rx.recv().await {

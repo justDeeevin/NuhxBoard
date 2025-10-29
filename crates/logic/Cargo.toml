@@ -14,7 +14,5 @@ futures.workspace = true
 iced = { workspace = true, features = ["advanced"] }
 rdevin.workspace = true
 async-stream = "0.3.6"
-smol.workspace = true
 thiserror.workspace = true
-blocking = "1.6.2"
 async-channel = "2.5.0"

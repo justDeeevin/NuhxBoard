@@ -3433,11 +3433,9 @@ version = "1.0.0"
 dependencies = [
  "async-channel",
  "async-stream",
- "blocking",
  "futures",
  "iced",
  "rdevin",
- "smol",
  "thiserror 2.0.17",
 ]
 
