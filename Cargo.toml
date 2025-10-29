@@ -82,7 +82,7 @@ members = ["crates/logic", "crates/types", "crates/iced-multi-window"]
 
 [workspace.package]
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0"
 authors = ["Devin Droddy <devin.droddy@gmail.com>"]
 repository = "https://github.com/justDeeevin/NuhxBoard"

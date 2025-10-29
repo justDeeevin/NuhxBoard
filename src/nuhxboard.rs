@@ -6,9 +6,10 @@ use crate::{
 use display_info::DisplayInfo;
 use geo::{Centroid, Coord, CoordsIter, LineString, Polygon, Rect};
 use iced::{
+    Renderer, Subscription, Task, Theme,
     advanced::{graphics::core::SmolStr, subscription},
     widget::canvas::Cache,
-    window, Renderer, Subscription, Task, Theme,
+    window,
 };
 use iced_multi_window::WindowManager;
 use image::ImageReader;
@@ -37,7 +38,7 @@ macro_rules! key_style_change {
             .element_styles
             .entry($id)
             .and_modify(|style| {
-                let style::ElementStyle::KeyStyle(ref mut style) = style else {
+                let style::ElementStyle::KeyStyle(style) = style else {
                     panic!()
                 };
                 if let Some($state) = style.$state.as_mut() {
@@ -590,7 +591,7 @@ impl NuhxBoard {
                             .element_styles
                             .get_mut(&$id)
                             .map(|v| {
-                                let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) =
+                                let style::ElementStyle::MouseSpeedIndicatorStyle(key) =
                                     v else {
                                         panic!()
                                     };
@@ -1737,7 +1738,7 @@ impl NuhxBoard {
                     .element_styles
                     .entry(id)
                     .and_modify(|v| {
-                        let style::ElementStyle::MouseSpeedIndicatorStyle(ref mut key) = v else {
+                        let style::ElementStyle::MouseSpeedIndicatorStyle(key) = v else {
                             panic!()
                         };
                         key.outline_width = width;

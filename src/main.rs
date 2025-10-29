@@ -11,9 +11,9 @@ use std::{
 };
 
 use clap::Parser;
-use color_eyre::eyre::{eyre, Context};
+use color_eyre::eyre::{Context, eyre};
 use nuhxboard::*;
-use tracing::{debug, debug_span, info, Level};
+use tracing::{Level, debug, debug_span, info};
 use tracing_subscriber::{filter, prelude::*};
 
 #[derive(Parser)]
@@ -85,11 +85,11 @@ fn main() -> color_eyre::Result<()> {
                 fs::create_dir_all(&outpath)
                     .with_context(|| format!("Failed to create directory {outpath:?}"))?;
             } else {
-                if let Some(p) = outpath.parent() {
-                    if !p.exists() {
-                        fs::create_dir_all(p)
-                            .with_context(|| format!("Failed to create directory {p:?}"))?;
-                    }
+                if let Some(p) = outpath.parent()
+                    && !p.exists()
+                {
+                    fs::create_dir_all(p)
+                        .with_context(|| format!("Failed to create directory {p:?}"))?;
                 }
                 let mut outfile = File::create(&outpath)
                     .with_context(|| format!("Failed to create file {outpath:?}"))?;
