@@ -128,6 +128,8 @@
           ];
 
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath commonArgs.buildInputs;
+
+          RUSTFLAGS = "-Z threads=8";
         };
       }
     );
