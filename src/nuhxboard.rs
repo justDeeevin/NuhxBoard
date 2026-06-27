@@ -1216,7 +1216,7 @@ impl NuhxBoard {
                     if entry.file_type().unwrap().is_file()
                         && entry.path().extension() == Some(std::ffi::OsStr::new("style"))
                     {
-                        Some(StyleChoice::Custom(
+                        Some(StyleChoice::Global(
                             entry
                                 .path()
                                 .file_stem()
