@@ -17,20 +17,47 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        lib = pkgs.lib;
 
         craneLib = crane.mkLib pkgs;
 
-        dylibs = with pkgs; [ libxcb ];
+        libs = with pkgs; [
+          fontconfig
+          libgcc
+          libxcb
+        ];
+
+        dylibs = with pkgs; [
+          # wayland
+          wayland
+          libxkbcommon
+
+          # x11
+          libx11
+          libxcursor
+          libxi
+
+          # gpu
+          libGL
+          vulkan-loader
+        ];
 
         commonArgs = {
-          src = craneLib.cleanCargoSource ./.;
+          src = lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.unions [
+              (craneLib.fileset.commonCargoSources ./.)
+              ./ui
+            ];
+          };
           strictDeps = true;
 
           # TODO: darwin deps
-          buildInputs = [
-          ]
-          ++ dylibs;
-          nativeBuildInputs = with pkgs; [ pkg-config ];
+          buildInputs = [ ] ++ libs;
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+            autoPatchelfHook
+          ];
         };
 
         nuhxboard = craneLib.buildPackage (
@@ -53,7 +80,10 @@
 
         devShells.default = craneLib.devShell {
           checks = self.checks.${system};
-          env.LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath dylibs;
+          env = {
+            LD_LIBRARY_PATH = lib.makeLibraryPath dylibs;
+            SLINT_LIVE_PREVIEW = 1;
+          };
         };
       }
     );

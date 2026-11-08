@@ -1,0 +1,35 @@
+import { Spinner } from "std-widgets.slint";
+export { ErrorPopup } from "error.slint";
+
+export global Loaded {
+    in-out property <string> category;
+    in-out property <[string]> layouts;
+    in-out property <string> layout;
+}
+
+export component Main inherits Window {
+    in property <bool> loading: true;
+    in property <image> background-image;
+    in property <brush> background-color <=> self.background;
+
+    in property <string> t <=> self.title;
+    in-out property <length> w <=> self.width;
+    in-out property <length> h <=> self.height;
+
+    height: 100px;
+    width: 100px;
+
+    if loading: Spinner {
+        indeterminate: true;
+    }
+
+    Image {
+        source: background-image;
+        width: w;
+        height: h;
+    }
+
+    Text {
+        text: "Done";
+    }
+}

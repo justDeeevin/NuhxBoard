@@ -20,6 +20,8 @@ pub struct Settings {
     pub layout: Option<PathSegment>,
     /// The name of the previously-opened style.
     pub style: Option<PathSegment>,
+    /// Whether the previously-opened style was a global.
+    pub global_style: bool,
     /// Whether to treat the cursor's distance from the center of the screen as its velocity.
     pub mouse_from_center: bool,
     #[default = 50.0]

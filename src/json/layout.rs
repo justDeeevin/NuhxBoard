@@ -12,6 +12,7 @@ pub struct Layout {
 }
 
 #[derive(Serialize, Deserialize, Deref, DerefMut)]
+#[serde(rename_all = "PascalCase")]
 pub struct Element {
     pub id: u32,
     #[serde(flatten)]

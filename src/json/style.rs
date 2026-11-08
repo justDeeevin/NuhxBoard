@@ -9,7 +9,7 @@ pub struct Style {
     /// The background color of the window.
     ///
     /// This will be overriden by the [background image](Self::background_image_file_name) if present.
-    #[default(NohRgb { blue: 100.0, ..NohRgb::BLACK })]
+    #[default(NohRgb::BLUE)]
     pub background_color: NohRgb,
     pub background_image_file_name: Option<PathSegment>,
     pub default_key_style: DefaultKeyStyle,
@@ -53,19 +53,19 @@ mod custom_map {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "PascalCase")]
 pub struct NohRgb {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
 }
 
 impl NohRgb {
     pub const BLACK: Self = Self {
-        red: 0.0,
-        green: 0.0,
-        blue: 0.0,
+        red: 0,
+        green: 0,
+        blue: 0,
     };
 
     pub const RED: Self = Self {
@@ -84,16 +84,28 @@ impl NohRgb {
     };
 
     pub const WHITE: Self = Self {
-        red: 255.0,
-        green: 255.0,
-        blue: 255.0,
+        red: 255,
+        green: 255,
+        blue: 255,
     };
 
     pub const DEFAULT_GRAY: Self = Self {
-        red: 100.0,
-        green: 100.0,
-        blue: 100.0,
+        red: 100,
+        green: 100,
+        blue: 100,
     };
+}
+
+impl From<NohRgb> for slint::Color {
+    fn from(value: NohRgb) -> Self {
+        Self::from_rgb_u8(value.red, value.green, value.blue)
+    }
+}
+
+impl From<NohRgb> for slint::Brush {
+    fn from(value: NohRgb) -> Self {
+        Self::SolidColor(value.into())
+    }
 }
 
 #[derive(Serialize, Deserialize)]
