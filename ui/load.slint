@@ -1,0 +1,117 @@
+import { ComboBox, StandardListView, Button } from "std-widgets.slint";
+
+export enum StyleKind { local, global }
+
+export component LoadKeyboard inherits Window {
+    in property <[string]> categories <=> category-picker.model;
+    in-out property <string> category <=> category-picker.current-value;
+
+    in property <[StandardListViewItem]> layouts <=> layout-picker.model;
+    in-out property <int> layout <=> layout-picker.current-item;
+
+    in property <[StandardListViewItem]> global-styles <=> global-style-picker.model;
+    in-out property <int> global-style <=> global-style-picker.current-item;
+
+    in property <[StandardListViewItem]> local-styles <=> local-style-picker.model;
+    in-out property <int> local-style <=> local-style-picker.current-item;
+
+    callback category-changed <=> category-picker.selected;
+    callback layout-changed(string);
+    callback style-changed(StyleKind, string);
+
+    title: "Load Keyboard";
+    default-font-size: 12px;
+    width: 500px;
+    height: self.width;
+
+    VerticalLayout {
+        padding: 15px;
+        spacing: 10px;
+
+        Text {
+            text: "Category:";
+        }
+
+        category-picker := ComboBox {
+            width: 50%;
+            max-height: 1.5rem;
+        }
+
+        HorizontalLayout {
+            spacing: 10px;
+
+            VerticalLayout {
+                width: 50%;
+                spacing: 5px;
+
+                Text {
+                    text: "Keyboard Layout:";
+                }
+
+                Rectangle {
+                    border-width: 1px;
+                    border-color: gray;
+
+                    layout-picker := StandardListView {
+                        current-item-changed(item) => layout-changed(layouts[item].text);
+                    }
+                }
+            }
+
+            VerticalLayout {
+                width: 50%;
+                spacing: 5px;
+
+                Text {
+                    text: "Keyboard Style:";
+                }
+
+                Rectangle {
+                    border-width: 1px;
+                    border-color: gray;
+
+                    VerticalLayout {
+
+                        Text {
+                            text: "Globals";
+                        }
+
+                        global-style-picker := StandardListView {
+                            current-item-changed(item) => {
+                                local-style-picker.current-item = -1;
+                                style-changed(global, global-styles[item].text)
+                            };
+                        }
+                    }
+                }
+
+                Rectangle {
+                    border-width: 1px;
+                    border-color: gray;
+
+                    VerticalLayout {
+                        Text {
+                            text: "Locals";
+                        }
+
+                        local-style-picker := StandardListView {
+                            current-item-changed(item) => {
+                                global-style-picker.current-item = -1;
+                                style-changed(local, local-styles[item].text);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: end;
+
+            Button {
+                text: "Close";
+                clicked => root.close();
+            }
+        }
+    }
+}

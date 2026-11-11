@@ -1,12 +1,7 @@
 import { Spinner } from "std-widgets.slint";
 export { ErrorPopup } from "error.slint";
 export { SettingsPopup } from "settings.slint";
-
-export global Loaded {
-    in-out property <string> category;
-    in-out property <[string]> layouts;
-    in-out property <string> layout;
-}
+export { LoadKeyboard } from "load.slint";
 
 export component Main inherits Window {
     in property <bool> loading: true;
@@ -19,6 +14,7 @@ export component Main inherits Window {
     in-out property <length> h <=> self.height;
 
     callback open-settings;
+    callback open-load;
 
     height: 300px;
     width: 300px;
@@ -44,6 +40,8 @@ export component Main inherits Window {
 
             MenuItem {
                 title: "Load Keyboard";
+
+                activated => open-load();
             }
 
             MenuSeparator { }

@@ -29,7 +29,6 @@ pub enum ElementKind {
         /// Text to show when shift is held
         ///
         /// Also shows when caps lock is enabled and tracked.
-        // TODO: optional?
         shift_text: String,
         /// Whether to show the shift text when caps lock is enabled.
         change_on_caps: bool,

@@ -1,17 +1,16 @@
 import { ScrollView } from "std-widgets.slint";
 export component ErrorPopup inherits Window {
-    in property <string> message;
+    in property <string> message <=> text.text;
 
     width: 400px;
     height: 150px;
 
     ScrollView {
         VerticalLayout {
-            Text {
+            text := Text {
                 horizontal-alignment: center;
                 vertical-alignment: center;
                 wrap: word-wrap;
-                text: "Error: \{message}";
             }
         }
     }

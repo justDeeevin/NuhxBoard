@@ -5,12 +5,12 @@ use async_compression::futures::bufread::GzipDecoder;
 use async_net::TcpStream;
 use async_tar::{Archive, EntryType};
 use futures_rustls::{TlsConnector, pki_types::ServerName, rustls::ClientConfig};
-use futures_util::{AsyncReadExt, StreamExt, TryStreamExt, io::copy};
+use futures_util::{AsyncReadExt, StreamExt, TryFutureExt, TryStreamExt, io::copy};
 use http_body_util::{BodyDataStream, BodyExt, Empty};
 use hyper::{Request, Uri, body::Bytes, client::conn::http1};
 use json::{PathSegment, layout::Layout, settings::Settings, style::Style};
 use rustls_platform_verifier::BuilderVerifierExt;
-use slint::{Image, SharedString, ToSharedString, Weak};
+use slint::{Image, SharedString, ToSharedString, Weak, language::StandardListViewItem};
 use smol_hyper::rt::FuturesIo;
 use std::{
     cell::RefCell,
@@ -34,8 +34,13 @@ static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 fn main() {
-    let app = Main::new().unwrap();
     let settings = Rc::new(RefCell::new(Settings::default()));
+    let categories = Rc::new(RefCell::new(Vec::default()));
+    let layouts = Rc::new(RefCell::new(Vec::default()));
+    let local_styles = Rc::new(RefCell::new(Vec::default()));
+    let global_styles = Rc::new(RefCell::new(Vec::default()));
+
+    let app = Main::new().unwrap();
 
     app.set_version(env!("CARGO_PKG_VERSION").to_shared_string());
 
@@ -64,10 +69,177 @@ fn main() {
         let _ = popup.show();
     });
 
+    let settings_clone = settings.clone();
+    let categories_clone = categories.clone();
+    let layouts_clone = layouts.clone();
+    let local_styles_clone = local_styles.clone();
+    let global_styles_clone = global_styles.clone();
+    let weak = app.as_weak();
+    app.on_open_load(move || {
+        let Ok(popup) = LoadKeyboard::new() else {
+            return;
+        };
+
+        let settings = settings_clone.clone();
+        let layouts = layouts_clone.clone();
+        let weak_popup = popup.as_weak();
+        let app = weak.clone();
+        popup.on_category_changed(move |category| {
+            settings.borrow_mut().category = Some(PathSegment::new(category.clone()).unwrap());
+            app.unwrap().set_loading(true);
+
+            let layouts = layouts.clone();
+            let popup = weak_popup.clone();
+            let app = app.clone();
+            slint::spawn_local(async move {
+                match load_category(&PathSegment::new(category).unwrap()).await {
+                    Ok(options) => {
+                        let items: Vec<_> = options.into_iter().map(Into::into).collect();
+                        popup.unwrap().set_layouts(items.as_slice().into());
+                        *layouts.borrow_mut() = items;
+                    }
+                    Err(e) => ErrorPopup::pop(format!("Failed to load category: {e}")),
+                }
+                app.unwrap().set_loading(false);
+            })
+            .unwrap();
+        });
+
+        let local_styles = local_styles_clone.clone();
+        let settings = settings_clone.clone();
+        let app = weak.clone();
+        let weak_popup = popup.as_weak();
+        popup.on_layout_changed(move |layout| {
+            settings.borrow_mut().layout = Some(PathSegment::new(layout.clone()).unwrap());
+            app.unwrap().set_loading(true);
+
+            let local_styles = local_styles.clone();
+            let settings = settings.clone();
+            let app = app.clone();
+            let popup = weak_popup.clone();
+            slint::spawn_local(async move {
+                match load_layout(
+                    settings.borrow().category.as_ref().unwrap(),
+                    &PathSegment::new(layout).unwrap(),
+                )
+                .await
+                {
+                    Ok((layout, options)) => {
+                        app.unwrap().apply_layout(&layout);
+                        let items: Vec<_> = options.into_iter().map(Into::into).collect();
+                        popup.unwrap().set_local_styles(items.as_slice().into());
+                        *local_styles.borrow_mut() = items;
+                    }
+                    Err(e) => ErrorPopup::pop(format!("Failed to load layout: {e}")),
+                }
+                app.unwrap().set_loading(false);
+            })
+            .unwrap();
+        });
+
+        let settings = settings_clone.clone();
+        let app = weak.clone();
+        popup.on_style_changed(move |kind, name| {
+            settings.borrow_mut().global_style = kind == StyleKind::Global;
+            settings.borrow_mut().style = Some(PathSegment::new(name.clone()).unwrap());
+            app.unwrap().set_loading(true);
+
+            let settings = settings.clone();
+            let app = app.clone();
+            slint::spawn_local(async move {
+                let settings = settings.borrow();
+                let source = match kind {
+                    StyleKind::Global => StyleSource::Global,
+                    StyleKind::Local => StyleSource::Local {
+                        category: settings.category.as_ref().unwrap(),
+                        layout: settings.layout.as_ref().unwrap(),
+                    },
+                };
+                let name = PathSegment::new(name).unwrap();
+                match load_style(source, &name).await {
+                    Ok(style) => app.unwrap().apply_style(source, &name, &style),
+                    Err(e) => ErrorPopup::pop(format!("Failed to load style: {e}")),
+                }
+                app.unwrap().set_loading(false);
+            })
+            .unwrap();
+        });
+
+        popup.set_global_styles(global_styles_clone.borrow().as_slice().into());
+
+        popup.set_categories(categories_clone.borrow().as_slice().into());
+        if let Some(category) = &settings_clone.borrow().category {
+            popup.set_category(category.to_shared_string());
+        }
+
+        let mut layout_index = -1;
+        popup.set_layouts(
+            layouts_clone
+                .borrow()
+                .iter()
+                .enumerate()
+                .map(|(index, name)| {
+                    if settings_clone
+                        .borrow()
+                        .layout
+                        .as_ref()
+                        .map(ToSharedString::to_shared_string)
+                        == Some(name.text.clone())
+                    {
+                        layout_index = index as i32;
+                    }
+                    name.clone()
+                })
+                .collect::<Vec<_>>()
+                .as_slice()
+                .into(),
+        );
+        popup.set_layout(layout_index);
+
+        let mut style_index = -1;
+        popup.set_local_styles(
+            local_styles_clone
+                .borrow()
+                .iter()
+                .enumerate()
+                .map(|(index, name)| {
+                    if settings_clone.borrow().global_style
+                        && settings_clone
+                            .borrow()
+                            .style
+                            .as_ref()
+                            .map(ToSharedString::to_shared_string)
+                            == Some(name.text.clone())
+                    {
+                        style_index = index as i32;
+                    }
+                    name.clone()
+                })
+                .collect::<Vec<_>>()
+                .as_slice()
+                .into(),
+        );
+        popup.set_local_style(style_index);
+
+        let _ = popup.show();
+    });
+
     let weak = app.as_weak();
     let settings_clone = settings.clone();
+    let categories_clone = categories.clone();
+    let layouts_clone = layouts.clone();
+    let local_styles_clone = local_styles.clone();
+    let global_styles_clone = global_styles.clone();
     slint::spawn_local(async move {
-        setup(weak.clone(), settings_clone).await;
+        setup(
+            weak.clone(),
+            settings_clone,
+            categories_clone,
+            layouts_clone,
+            local_styles_clone,
+            global_styles_clone,
+        )
+        .await;
         weak.unwrap().set_loading(false);
     })
     .unwrap();
@@ -75,36 +247,61 @@ fn main() {
     app.run().unwrap();
 }
 
-async fn setup(app: Weak<Main>, settings: Rc<RefCell<Settings>>) {
+async fn setup(
+    app: Weak<Main>,
+    settings: Rc<RefCell<Settings>>,
+    categories: Rc<RefCell<Vec<SharedString>>>,
+    layouts: Rc<RefCell<Vec<StandardListViewItem>>>,
+    local_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
+    global_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
+) {
     let res = get_keyboards().await;
     if let Err(e) = res {
-        ErrorPopup::pop(e);
+        ErrorPopup::pop(format!("Failed to download stock keyboards: {e}"));
     }
     match load_settings().await {
         Ok(s) => *settings.borrow_mut() = s,
-        Err(e) => ErrorPopup::pop(e),
+        Err(e) => ErrorPopup::pop(format!("Failed to load settings: {e}")),
     }
     app.unwrap()
         .set_t(settings.borrow().window_title.to_shared_string());
-    app.unwrap().global::<Loaded>().set_category(
-        settings
-            .borrow()
-            .category
-            .as_deref()
-            .cloned()
-            .map(Into::into)
-            .unwrap_or_default(),
-    );
+    match async_fs::read_dir(NUHXBOARD_PATH.join("keyboards"))
+        .and_then(|entries| {
+            entries
+                .map_ok(|e| e.file_name().display().to_shared_string())
+                .try_collect::<Vec<_>>()
+        })
+        .await
+    {
+        Ok(options) => *categories.borrow_mut() = options,
+        Err(e) => ErrorPopup::pop(format!("Failed to get categories: {e}")),
+    }
+    match async_fs::read_dir(NUHXBOARD_PATH.join("keyboards/global"))
+        .and_then(|entries| {
+            entries
+                .try_filter_map(|entry| {
+                    std::future::ready(Ok(entry
+                        .file_name()
+                        .display()
+                        .to_string()
+                        .strip_suffix(".style")
+                        .map(Into::into)))
+                })
+                .try_collect::<Vec<_>>()
+        })
+        .await
+    {
+        Ok(options) => *global_styles.borrow_mut() = options,
+        Err(e) => ErrorPopup::pop(format!("Failed to get global styles: {e}")),
+    }
+
     let Some(category) = &settings.borrow().category else {
         return;
     };
     match load_category(category).await {
-        Ok(options) => app
-            .unwrap()
-            .global::<Loaded>()
-            .set_layouts(options.as_slice().into()),
+        Ok(options) => *layouts.borrow_mut() = options.into_iter().map(Into::into).collect(),
         Err(e) => {
-            ErrorPopup::pop(e);
+            ErrorPopup::pop(format!("Failed to load category: {e}"));
             return;
         }
     }
@@ -112,8 +309,11 @@ async fn setup(app: Weak<Main>, settings: Rc<RefCell<Settings>>) {
         return;
     };
     match load_layout(category, layout).await {
-        Ok(layout) => app.unwrap().apply_layout(&layout),
-        Err(e) => ErrorPopup::pop(e),
+        Ok((layout, options)) => {
+            app.unwrap().apply_layout(&layout);
+            *local_styles.borrow_mut() = options.into_iter().map(Into::into).collect();
+        }
+        Err(e) => ErrorPopup::pop(format!("Failed to load layout: {e}")),
     }
     let Some(style_name) = &settings.borrow().style else {
         return;
@@ -125,7 +325,7 @@ async fn setup(app: Weak<Main>, settings: Rc<RefCell<Settings>>) {
     };
     match load_style(source, style_name).await {
         Ok(style) => app.unwrap().apply_style(source, style_name, &style),
-        Err(e) => ErrorPopup::pop(e),
+        Err(e) => ErrorPopup::pop(format!("Failed to load style: {e}")),
     }
 }
 
@@ -195,7 +395,10 @@ impl ErrorPopup {
     }
 }
 
-async fn load_layout(category: &PathSegment, layout: &PathSegment) -> Result<Layout> {
+async fn load_layout(
+    category: &PathSegment,
+    layout: &PathSegment,
+) -> Result<(Layout, Vec<SharedString>)> {
     let string = async_fs::read_to_string(
         NUHXBOARD_PATH
             .join("keyboards")
@@ -204,14 +407,33 @@ async fn load_layout(category: &PathSegment, layout: &PathSegment) -> Result<Lay
             .join("keyboard.json"),
     )
     .await?;
-    Ok(serde_json::from_str(&string)?)
+    let mut styles = Vec::default();
+    match async_fs::read_dir(NUHXBOARD_PATH.join("keyboards").join(category).join(layout))
+        .and_then(|entries| {
+            entries
+                .try_filter_map(|entry| {
+                    std::future::ready(Ok(entry
+                        .file_name()
+                        .display()
+                        .to_string()
+                        .strip_suffix(".style")
+                        .map(ToSharedString::to_shared_string)))
+                })
+                .try_collect::<Vec<_>>()
+        })
+        .await
+    {
+        Ok(options) => styles.extend(options),
+        Err(e) => ErrorPopup::pop(format!("Failed to get layouts: {e}")),
+    }
+    Ok((serde_json::from_str(&string)?, styles))
 }
 
 async fn load_category(category: &PathSegment) -> Result<Vec<SharedString>> {
     Ok(
         async_fs::read_dir(NUHXBOARD_PATH.join("keyboards").join(category))
             .await?
-            .map_ok(|e| e.path().file_name().unwrap().display().to_shared_string())
+            .map_ok(|e| e.file_name().display().to_shared_string())
             .try_filter(|name| std::future::ready(name != "global"))
             .try_collect()
             .await?,
@@ -261,7 +483,7 @@ async fn get_keyboards() -> Result<()> {
         .await?;
 
     let (mut sender, conn) = http1::handshake(FuturesIo::new(stream)).await?;
-    slint::spawn_local(conn)?;
+    let conn = slint::spawn_local(conn)?;
 
     let req = Request::builder()
         .header(hyper::header::HOST, uri.authority().unwrap().as_str())
@@ -295,6 +517,8 @@ async fn get_keyboards() -> Result<()> {
             }
         }?;
     }
+
+    conn.abort();
 
     Ok(())
 }
