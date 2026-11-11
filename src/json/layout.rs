@@ -62,7 +62,7 @@ impl ElementKind {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 #[serde(rename_all = "PascalCase")]
 pub struct NohPoint {
     pub x: f32,

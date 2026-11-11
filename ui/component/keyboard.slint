@@ -1,6 +1,18 @@
 export struct Key {
+    id: int,
+    background: brush,
+    background-image: image,
+    bounding-box-pos: Point,
+    bounding-box-size: Size,
     text: string,
+    styled-text: styled-text,
+    underline: bool,
+    text-color: brush,
     text-position: Point,
+    font-family: string,
+    font-size: float,
+    outline-color: brush,
+    outline-width: length,
     commands: string,
 }
 
@@ -17,16 +29,27 @@ export component Keyboard {
         Path {
             viewbox-width: root.width / 1px;
             viewbox-height: root.height / 1px;
-            fill: white;
-            stroke: black;
-            stroke-width: 1px;
+            fill: key.background-image.width == 0 && key.background-image.height == 0 ? key.background : transparent;
+            stroke: key.outline-color;
+            stroke-width: key.outline-width;
             commands: key.commands;
         }
 
-        Text {
-            text: key.text;
+        StyledText {
+            default-color: key.text-color;
+            default-font-family: key.font-family;
+            default-font-size: key.font-size * 1pt;
+            text: key.styled-text;
             x: key.text-position.x - (self.width / 2);
             y: key.text-position.y - (self.height / 2);
+        }
+
+        if key.background-image.width != 0 && key.background-image.height != 0: Image {
+            source: key.background-image;
+            x: key.bounding-box-pos.x;
+            y: key.bounding-box-pos.y;
+            width: key.bounding-box-size.width;
+            height: key.bounding-box-size.height;
         }
     }
 

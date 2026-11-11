@@ -125,7 +125,7 @@ impl Default for DefaultKeyStyle {
                 text: NohRgb::BLACK,
                 outline: NohRgb::GREEN,
                 show_outline: false,
-                outline_width: 1,
+                outline_width: 1.0,
                 font: Font::default(),
                 background_image_file_name: None,
             },
@@ -134,7 +134,7 @@ impl Default for DefaultKeyStyle {
                 text: NohRgb::BLACK,
                 outline: NohRgb::GREEN,
                 show_outline: false,
-                outline_width: 1,
+                outline_width: 1.0,
                 font: Font::default(),
                 background_image_file_name: None,
             },
@@ -159,7 +159,7 @@ pub struct KeySubStyle {
     pub outline: NohRgb,
     pub show_outline: bool,
     /// The outline's width in pixels.
-    outline_width: u32,
+    pub outline_width: f32,
     pub font: Font,
     pub background_image_file_name: Option<PathSegment>,
 }
@@ -170,7 +170,7 @@ pub struct Font {
     #[default = "Courier New"]
     pub font_family: String,
     #[default = 10.0]
-    /// The font size in pixels.
+    /// The font size in points.
     pub size: f32,
     pub style: FontStyle,
 }

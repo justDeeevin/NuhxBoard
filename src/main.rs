@@ -10,13 +10,14 @@ use http_body_util::{BodyDataStream, BodyExt, Empty};
 use hyper::{Request, Uri, body::Bytes, client::conn::http1};
 use json::{
     PathSegment,
-    layout::{CommonElement, Layout},
+    layout::{CommonElement, Layout, NohPoint},
     settings::Settings,
-    style::Style,
+    style::{ElementStyle, FontStyle, Style},
 };
 use rustls_platform_verifier::BuilderVerifierExt;
 use slint::{
-    Image, LogicalPosition, SharedString, ToSharedString, Weak, language::StandardListViewItem,
+    Image, LogicalPosition, LogicalSize, Model, SharedString, StyledText, ToSharedString, Weak,
+    language::StandardListViewItem,
 };
 use smol_hyper::rt::FuturesIo;
 use std::{
@@ -27,6 +28,8 @@ use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
 };
+
+use crate::json::style::KeyStyle;
 
 slint::include_modules!();
 
@@ -41,11 +44,13 @@ static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 fn main() {
+    // TODO: save settings?
     let settings = Rc::new(RefCell::new(Settings::default()));
     let categories = Rc::new(RefCell::new(Vec::default()));
     let layouts = Rc::new(RefCell::new(Vec::default()));
     let local_styles = Rc::new(RefCell::new(Vec::default()));
     let global_styles = Rc::new(RefCell::new(Vec::default()));
+    let style = Rc::new(RefCell::new(None));
 
     let app = Main::new().unwrap();
 
@@ -69,14 +74,13 @@ fn main() {
                     ErrorPopup::pop(format!("Bad integer value: {e}"));
                 }
             }
-
-            // TODO: save settings?
         });
 
         let _ = popup.show();
     });
 
     let settings_clone = settings.clone();
+    let style_clone = style.clone();
     let categories_clone = categories.clone();
     let layouts_clone = layouts.clone();
     let local_styles_clone = local_styles.clone();
@@ -115,6 +119,7 @@ fn main() {
         let local_styles = local_styles_clone.clone();
         let settings = settings_clone.clone();
         let app = weak.clone();
+        let style = style_clone.clone();
         let weak_popup = popup.as_weak();
         popup.on_layout_changed(move |layout| {
             settings.borrow_mut().layout = Some(PathSegment::new(layout.clone()).unwrap());
@@ -124,10 +129,11 @@ fn main() {
             let settings = settings.clone();
             let app = app.clone();
             let popup = weak_popup.clone();
+            let style = style.clone();
             slint::spawn_local(async move {
                 match load_layout(
                     settings.borrow().category.as_ref().unwrap(),
-                    &PathSegment::new(layout).unwrap(),
+                    &PathSegment::new(layout.clone()).unwrap(),
                 )
                 .await
                 {
@@ -140,11 +146,22 @@ fn main() {
                     Err(e) => ErrorPopup::pop(format!("Failed to load layout: {e}")),
                 }
                 app.unwrap().set_loading(false);
+
+                if let Some(style) = &*style.borrow()
+                    && settings.borrow().global_style
+                {
+                    app.unwrap().apply_style(
+                        StyleSource::Global,
+                        settings.borrow().style.as_ref().unwrap(),
+                        style,
+                    );
+                }
             })
             .unwrap();
         });
 
         let settings = settings_clone.clone();
+        let style = style_clone.clone();
         let app = weak.clone();
         popup.on_style_changed(move |kind, name| {
             settings.borrow_mut().global_style = kind == StyleKind::Global;
@@ -153,6 +170,7 @@ fn main() {
 
             let settings = settings.clone();
             let app = app.clone();
+            let style = style.clone();
             slint::spawn_local(async move {
                 let settings = settings.borrow();
                 let source = match kind {
@@ -164,7 +182,10 @@ fn main() {
                 };
                 let name = PathSegment::new(name).unwrap();
                 match load_style(source, &name).await {
-                    Ok(style) => app.unwrap().apply_style(source, &name, &style),
+                    Ok(new_style) => {
+                        app.unwrap().apply_style(source, &name, &new_style);
+                        *style.borrow_mut() = Some(new_style);
+                    }
                     Err(e) => ErrorPopup::pop(format!("Failed to load style: {e}")),
                 }
                 app.unwrap().set_loading(false);
@@ -172,7 +193,31 @@ fn main() {
             .unwrap();
         });
 
+        fn is_item(seg: &impl Display, item: &StandardListViewItem) -> bool {
+            seg.to_shared_string() == item.text
+        }
+
         popup.set_global_styles(global_styles_clone.borrow().as_slice().into());
+        {
+            let settings = settings_clone.borrow();
+            if settings.global_style
+                && let Some(style) = &settings.style
+                && let Some(index) =
+                    global_styles_clone
+                        .borrow()
+                        .iter()
+                        .enumerate()
+                        .find_map(|(index, item)| {
+                            if is_item(style, item) {
+                                Some(index)
+                            } else {
+                                None
+                            }
+                        })
+            {
+                popup.set_global_style(index as i32);
+            }
+        }
 
         popup.set_categories(categories_clone.borrow().as_slice().into());
         if let Some(category) = &settings_clone.borrow().category {
@@ -190,8 +235,7 @@ fn main() {
                         .borrow()
                         .layout
                         .as_ref()
-                        .map(ToSharedString::to_shared_string)
-                        == Some(name.text.clone())
+                        .is_some_and(|layout| is_item(layout, name))
                     {
                         layout_index = index as i32;
                     }
@@ -210,13 +254,12 @@ fn main() {
                 .iter()
                 .enumerate()
                 .map(|(index, name)| {
-                    if settings_clone.borrow().global_style
+                    if !settings_clone.borrow().global_style
                         && settings_clone
                             .borrow()
                             .style
                             .as_ref()
-                            .map(ToSharedString::to_shared_string)
-                            == Some(name.text.clone())
+                            .is_some_and(|style| is_item(style, name))
                     {
                         style_index = index as i32;
                     }
@@ -237,6 +280,7 @@ fn main() {
     let layouts_clone = layouts.clone();
     let local_styles_clone = local_styles.clone();
     let global_styles_clone = global_styles.clone();
+    let style_clone = style.clone();
     slint::spawn_local(async move {
         setup(
             weak.clone(),
@@ -245,6 +289,7 @@ fn main() {
             layouts_clone,
             local_styles_clone,
             global_styles_clone,
+            style_clone,
         )
         .await;
         weak.unwrap().set_loading(false);
@@ -261,6 +306,7 @@ async fn setup(
     layouts: Rc<RefCell<Vec<StandardListViewItem>>>,
     local_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
     global_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
+    style: Rc<RefCell<Option<Style>>>,
 ) {
     let res = get_keyboards().await;
     if let Err(e) = res {
@@ -331,9 +377,51 @@ async fn setup(
         StyleSource::Local { category, layout }
     };
     match load_style(source, style_name).await {
-        Ok(style) => app.unwrap().apply_style(source, style_name, &style),
+        Ok(new_style) => {
+            app.unwrap().apply_style(source, style_name, &new_style);
+            *style.borrow_mut() = Some(new_style);
+        }
         Err(e) => ErrorPopup::pop(format!("Failed to load style: {e}")),
     }
+}
+
+fn signed_area(points: &[NohPoint]) -> f32 {
+    let n = points.len();
+    (0..n)
+        .map(|i| {
+            let (a, b) = (points[i], points[(i + 1) % n]);
+            (a.x * b.y) - (b.x * a.y)
+        })
+        .sum::<f32>()
+        / 2.0
+}
+
+fn add_points<'a>(commands: &mut SharedString, points: impl IntoIterator<Item = &'a NohPoint>) {
+    for point in points {
+        *commands += &format!("L {} {} ", point.x, point.y);
+    }
+}
+
+fn bounding_box(points: &[NohPoint]) -> (LogicalPosition, LogicalSize) {
+    let (min_x, min_y, max_x, max_y) = points.iter().fold(
+        (points[0].x, points[0].y, points[0].x, points[0].y),
+        |(min_x, min_y, max_x, max_y), point| {
+            (
+                min_x.min(point.x),
+                min_y.min(point.y),
+                max_x.max(point.x),
+                max_y.max(point.y),
+            )
+        },
+    );
+
+    (
+        LogicalPosition { x: min_x, y: min_y },
+        LogicalSize {
+            width: max_x - min_x,
+            height: max_y - min_y,
+        },
+    )
 }
 
 impl Main {
@@ -347,18 +435,33 @@ impl Main {
         for element in &layout.elements {
             match <&CommonElement>::try_from(&element.kind) {
                 Ok(def) => {
-                    let mut commands = format!("M {} {}", def.boundaries[0].x, def.boundaries[0].y)
-                        .to_shared_string();
-                    for point in &def.boundaries[1..] {
-                        commands += &format!("L {} {}", point.x, point.y);
+                    // For some reason, the orientation of the path changes how slint decides to
+                    // fill, eliminating the pixel gap upon which layouts tend to rely.
+                    let should_flip = signed_area(&def.boundaries) > 0.0;
+                    let first = if should_flip {
+                        *def.boundaries.last().unwrap()
+                    } else {
+                        def.boundaries[0]
+                    };
+                    let mut commands = format!("M {} {} ", first.x, first.y).to_shared_string();
+                    if should_flip {
+                        add_points(&mut commands, def.boundaries.iter().rev().skip(1));
+                    } else {
+                        add_points(&mut commands, &def.boundaries[1..]);
                     }
+                    let (bounding_box_pos, bounding_box_size) = bounding_box(&def.boundaries);
+                    commands += "Z";
                     keys.push(Key {
+                        id: element.id as i32,
                         commands,
                         text: def.text.to_shared_string(),
+                        styled_text: StyledText::from_plain_text(&def.text),
                         text_position: LogicalPosition {
                             x: def.text_position.x,
                             y: def.text_position.y,
                         },
+                        bounding_box_pos,
+                        bounding_box_size,
                         ..Default::default()
                     });
                 }
@@ -380,20 +483,76 @@ impl Main {
         self.set_background_color(style.background_color.into());
         let images_path = match source {
             StyleSource::Global => format!("global/{style_name}"),
-            StyleSource::Local { category, layout } => format!("{category}/{layout}/images"),
+            StyleSource::Local { category, .. } => format!("{category}/images"),
         };
+        let images_path = NUHXBOARD_PATH.join("keyboards").join(images_path);
         if let Some(image) = &style.background_image_file_name {
-            if let Ok(i) = Image::load_from_path(
-                &NUHXBOARD_PATH
-                    .join("keyboards")
-                    .join(images_path)
-                    .join(image),
-            ) {
+            if let Ok(i) = Image::load_from_path(&images_path.join(image)) {
                 self.set_background_image(i);
             } else {
                 ErrorPopup::pop("Failed to load background image.")
             }
         }
+        self.set_keys(
+            self.get_keys()
+                .iter()
+                .map(|key| {
+                    let key_style = match style.element_styles.get(&(key.id as u32)) {
+                        Some(ElementStyle::KeyStyle(KeyStyle {
+                            loose: Some(style), ..
+                        })) => style,
+                        _ => &style.default_key_style.loose,
+                    };
+                    let background_image = key_style
+                        .background_image_file_name
+                        .as_ref()
+                        .and_then(
+                            |name| match Image::load_from_path(&images_path.join(name)) {
+                                Ok(image) => Some(image),
+                                Err(_) => {
+                                    ErrorPopup::pop("Failed to open background image.");
+                                    None
+                                }
+                            },
+                        )
+                        .unwrap_or_default();
+
+                    let mut text = key.text.replace('#', "\\#");
+                    if !text.is_empty() {
+                        if key_style.font.style.contains(FontStyle::BOLD) {
+                            text = format!("**{text}**");
+                        }
+                        if key_style.font.style.contains(FontStyle::ITALIC) {
+                            text = format!("*{text}*");
+                        }
+                        if key_style.font.style.contains(FontStyle::UNDERLINE) {
+                            text = format!("<u>{text}</u>");
+                        }
+                        if key_style.font.style.contains(FontStyle::STRIKETHROUGH) {
+                            text = format!("~~{text}~~");
+                        }
+                    }
+                    Key {
+                        background: key_style.background.into(),
+                        background_image: background_image.clone(),
+                        underline: key_style.font.style.contains(FontStyle::UNDERLINE),
+                        styled_text: StyledText::from_markdown(&text).unwrap(),
+                        text_color: key_style.text.into(),
+                        font_family: key_style.font.font_family.to_shared_string(),
+                        font_size: key_style.font.size,
+                        outline_color: key_style.outline.into(),
+                        outline_width: if key_style.show_outline {
+                            key_style.outline_width
+                        } else {
+                            0.0
+                        },
+                        ..key
+                    }
+                })
+                .collect::<Vec<_>>()
+                .as_slice()
+                .into(),
+        );
     }
 }
 
