@@ -12,8 +12,9 @@ export component Main inherits Window {
     in property <bool> loading: true;
     in property <image> background-image;
     in property <brush> background-color <=> self.background;
+    in property <string> version;
 
-    in-out property <string> t <=> self.title;
+    in-out property <string> t;
     in-out property <length> w <=> self.width;
     in-out property <length> h <=> self.height;
 
@@ -21,6 +22,7 @@ export component Main inherits Window {
 
     height: 300px;
     width: 300px;
+    title: t == "" ? "NuhxBoard v\{version}" : t;
 
     if loading: Spinner {
         indeterminate: true;

@@ -35,10 +35,34 @@ static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 
 fn main() {
     let app = Main::new().unwrap();
-    app.on_open_settings(|| {
-        let _ = SettingsPopup::new().and_then(|popup| popup.show());
-    });
     let settings = Rc::new(RefCell::new(Settings::default()));
+
+    app.set_version(env!("CARGO_PKG_VERSION").to_shared_string());
+
+    let weak = app.as_weak();
+    let settings_clone = settings.clone();
+    app.on_open_settings(move || {
+        let Ok(popup) = SettingsPopup::new() else {
+            return;
+        };
+
+        popup.set_settings((&*settings_clone.borrow()).into());
+
+        let app = weak.clone();
+        let settings = settings_clone.clone();
+        popup.on_submit(move |user_settings| {
+            app.unwrap().set_t(user_settings.window_title.clone());
+            if let Err(es) = settings.borrow_mut().apply(user_settings) {
+                for e in es {
+                    ErrorPopup::pop(format!("Bad integer value: {e}"));
+                }
+            }
+
+            // TODO: save settings?
+        });
+
+        let _ = popup.show();
+    });
 
     let weak = app.as_weak();
     let settings_clone = settings.clone();

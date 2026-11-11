@@ -81,10 +81,7 @@
         devShells.default = craneLib.devShell {
           checks = self.checks.${system};
           packages = with pkgs; [ slint-viewer ];
-          env = {
-            LD_LIBRARY_PATH = lib.makeLibraryPath dylibs;
-            SLINT_LIVE_PREVIEW = 1;
-          };
+          env.LD_LIBRARY_PATH = lib.makeLibraryPath dylibs;
         };
       }
     );
