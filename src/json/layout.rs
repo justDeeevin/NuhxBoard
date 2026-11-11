@@ -62,7 +62,7 @@ impl ElementKind {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct NohPoint {
     pub x: f32,
@@ -129,7 +129,7 @@ impl<'a> TryFrom<&'a mut ElementKind> for &'a mut CommonElement {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct MouseSpeedIndicator {
     /// Position of the center of the indicator.

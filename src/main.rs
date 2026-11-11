@@ -8,9 +8,16 @@ use futures_rustls::{TlsConnector, pki_types::ServerName, rustls::ClientConfig};
 use futures_util::{AsyncReadExt, StreamExt, TryFutureExt, TryStreamExt, io::copy};
 use http_body_util::{BodyDataStream, BodyExt, Empty};
 use hyper::{Request, Uri, body::Bytes, client::conn::http1};
-use json::{PathSegment, layout::Layout, settings::Settings, style::Style};
+use json::{
+    PathSegment,
+    layout::{CommonElement, Layout},
+    settings::Settings,
+    style::Style,
+};
 use rustls_platform_verifier::BuilderVerifierExt;
-use slint::{Image, SharedString, ToSharedString, Weak, language::StandardListViewItem};
+use slint::{
+    Image, LogicalPosition, SharedString, ToSharedString, Weak, language::StandardListViewItem,
+};
 use smol_hyper::rt::FuturesIo;
 use std::{
     cell::RefCell,
@@ -333,6 +340,40 @@ impl Main {
     fn apply_layout(&self, layout: &Layout) {
         self.set_w(layout.width);
         self.set_h(layout.height);
+
+        let mut keys = Vec::default();
+        let mut speedometers = Vec::new();
+
+        for element in &layout.elements {
+            match <&CommonElement>::try_from(&element.kind) {
+                Ok(def) => {
+                    let mut commands = format!("M {} {}", def.boundaries[0].x, def.boundaries[0].y)
+                        .to_shared_string();
+                    for point in &def.boundaries[1..] {
+                        commands += &format!("L {} {}", point.x, point.y);
+                    }
+                    keys.push(Key {
+                        commands,
+                        text: def.text.to_shared_string(),
+                        text_position: LogicalPosition {
+                            x: def.text_position.x,
+                            y: def.text_position.y,
+                        },
+                        ..Default::default()
+                    });
+                }
+                Err(def) => speedometers.push(Speedometer {
+                    position: LogicalPosition {
+                        x: def.location.x,
+                        y: def.location.y,
+                    },
+                    radius: def.radius,
+                }),
+            }
+        }
+
+        self.set_keys(keys.as_slice().into());
+        self.set_speedometers(speedometers.as_slice().into());
     }
 
     fn apply_style(&self, source: StyleSource<'_, '_>, style_name: &PathSegment, style: &Style) {

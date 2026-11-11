@@ -1,0 +1,49 @@
+export struct Key {
+    text: string,
+    text-position: Point,
+    commands: string,
+}
+
+export struct Speedometer {
+    position: Point,
+    radius: length,
+}
+
+export component Keyboard {
+    in property <[Key]> keys;
+    in property <[Speedometer]> speedometers;
+
+    for key in keys: Rectangle {
+        Path {
+            viewbox-width: root.width / 1px;
+            viewbox-height: root.height / 1px;
+            fill: white;
+            stroke: black;
+            stroke-width: 1px;
+            commands: key.commands;
+        }
+
+        Text {
+            text: key.text;
+            x: key.text-position.x - (self.width / 2);
+            y: key.text-position.y - (self.height / 2);
+        }
+    }
+
+    for speedometer in speedometers: Rectangle {
+        x: speedometer.position.x - (self.width / 2);
+        y: speedometer.position.y - (self.height / 2);
+        width: speedometer.radius * 2;
+        height: self.width;
+        border-radius: self.width / 2;
+        border-width: 2px;
+        border-color: white;
+
+        Rectangle {
+            width: speedometer.radius * 2 * 0.2;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: white;
+        }
+    }
+}

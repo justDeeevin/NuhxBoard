@@ -1,4 +1,7 @@
 import { Spinner } from "std-widgets.slint";
+import { Keyboard, Key, Speedometer } from "component/keyboard.slint";
+
+export { Key, Speedometer } from "component/keyboard.slint";
 export { ErrorPopup } from "error.slint";
 export { SettingsPopup } from "settings.slint";
 export { LoadKeyboard } from "load.slint";
@@ -12,6 +15,9 @@ export component Main inherits Window {
     in-out property <string> t;
     in-out property <length> w <=> self.width;
     in-out property <length> h <=> self.height;
+
+    in property <[Key]> keys <=> keyboard.keys;
+    in property <[Speedometer]> speedometers <=> keyboard.speedometers;
 
     callback open-settings;
     callback open-load;
@@ -67,5 +73,12 @@ export component Main inherits Window {
                 }
             }
         }
+    }
+
+    keyboard := Keyboard {
+        width: 100%;
+        height: 100%;
+        x: 0;
+        y: 0;
     }
 }
