@@ -35,6 +35,9 @@ static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 
 fn main() {
     let app = Main::new().unwrap();
+    app.on_open_settings(|| {
+        let _ = SettingsPopup::new().and_then(|popup| popup.show());
+    });
     let settings = Rc::new(RefCell::new(Settings::default()));
 
     let weak = app.as_weak();

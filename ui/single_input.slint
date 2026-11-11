@@ -1,0 +1,24 @@
+import { ScrollView } from "std-widgets.slint";
+export component SingleInput inherits Rectangle {
+    in property <InputType> input-type <=> input.input-type;
+    in-out property <string> text <=> input.text;
+
+    min-width: 100px;
+    height: 1.75rem;
+    background: white;
+    border-radius: 2px;
+
+    ScrollView {
+        VerticalLayout {
+            padding-left: 3px;
+            padding-right: self.padding-left;
+            alignment: center;
+
+            input := TextInput {
+                color: black;
+
+                @children
+            }
+        }
+    }
+}

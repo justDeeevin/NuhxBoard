@@ -1,5 +1,6 @@
 import { Spinner } from "std-widgets.slint";
 export { ErrorPopup } from "error.slint";
+export { SettingsPopup } from "settings.slint";
 
 export global Loaded {
     in-out property <string> category;
@@ -12,12 +13,14 @@ export component Main inherits Window {
     in property <image> background-image;
     in property <brush> background-color <=> self.background;
 
-    in property <string> t <=> self.title;
+    in-out property <string> t <=> self.title;
     in-out property <length> w <=> self.width;
     in-out property <length> h <=> self.height;
 
-    height: 100px;
-    width: 100px;
+    callback open-settings;
+
+    height: 300px;
+    width: 300px;
 
     if loading: Spinner {
         indeterminate: true;
@@ -29,7 +32,40 @@ export component Main inherits Window {
         height: h;
     }
 
-    Text {
-        text: "Done";
+    ContextMenuArea {
+        Menu {
+            MenuItem {
+                title: "Settings";
+
+                activated => open-settings();
+            }
+
+            MenuItem {
+                title: "Load Keyboard";
+            }
+
+            MenuSeparator { }
+
+            MenuItem {
+                title: "Start Editing";
+            }
+
+            MenuSeparator { }
+
+            Menu {
+                title: "Save Definition";
+            }
+
+            Menu {
+                title: "Save Style";
+                MenuItem {
+                    title: "Save To 'thing'";
+                }
+
+                MenuItem {
+                    title: "Save As";
+                }
+            }
+        }
     }
 }

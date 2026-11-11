@@ -1,0 +1,21 @@
+import { SingleInput } from "single_input.slint";
+export component Labeled inherits HorizontalLayout {
+    in property <string> label;
+    in property <InputType> input-type <=> input.input-type;
+    in-out property <string> text <=> input.text;
+    in property <styled-text> tooltip;
+
+    alignment: start;
+    cross-axis-alignment: center;
+    spacing: 10px;
+
+    Text {
+        text: "\{label}:";
+    }
+
+    input := SingleInput {
+        if tooltip != @markdown(""): Tooltip {
+            text: tooltip;
+        }
+    }
+}

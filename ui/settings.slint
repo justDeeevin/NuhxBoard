@@ -1,0 +1,162 @@
+import { GroupBox, CheckBox, RadioGroup, Button } from "std-widgets.slint";
+import { Labeled } from "labeled.slint";
+import { SingleInput } from "single_input.slint";
+export component SettingsPopup inherits Window {
+    in-out property <string> window-title <=> window-title-field.text;
+
+    title: "Settings";
+    width: 650px;
+    height: 400px;
+    // default-font-size: 12px;
+
+    VerticalLayout {
+        padding-left: 5px;
+        padding-bottom: self.padding-left;
+        padding-right: self.padding-left;
+
+        HorizontalLayout {
+            alignment: start;
+            GroupBox {
+                title: "Input";
+
+                VerticalLayout {
+                    spacing: 3px;
+
+                    Labeled {
+                        label: "Mouse sensitivity";
+                        input-type: decimal;
+                        tooltip: @markdown("The sensitivity with which the mouse speed indicator reacts to mouse movement.");
+                    }
+
+                    Labeled {
+                        label: "Scroll hold time";
+                        input-type: number;
+                        tooltip: @markdown("The time (in milliseconds) before a mouse scroll is released.");
+                    }
+
+                    CheckBox {
+                        text: "Calculate mouse speed from center of screen";
+
+                        Tooltip {
+                            text: @markdown("Some games keep resetting the cursor position to the center of the screen. This setting uses this fact and compares the current mouse position to the center of the screen, rather than its last position.");
+                        }
+                    }
+
+                    Text {
+                        text: "Show keypresses for at least";
+                    }
+
+                    HorizontalLayout {
+                        padding-left: 40px;
+                        cross-axis-alignment: center;
+                        spacing: 5px;
+
+                        SingleInput {
+                            input-type: number;
+                            max-width: 50px;
+                            min-width: 0;
+
+                            Tooltip {
+                                text: @markdown("The mimnimum number of milliseconds for which key and button presses will be highlighted. Presses any shorter will be highlighted precisely this long.");
+                            }
+                        }
+
+                        Text {
+                            text: "ms";
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                title: "General";
+
+                VerticalLayout {
+                    alignment: start;
+
+                    window-title-field := Labeled {
+                        label: "Window title";
+                        tooltip: @markdown("Fill in if you want a custom window title.\nIf left empty, the default window title of \"NuhxBoard {version}\" will be shown.");
+                    }
+                }
+            }
+        }
+
+        GroupBox {
+            title: "Capitalization of Keys";
+
+            HorizontalLayout {
+                alignment: space-evenly;
+
+                RadioGroup {
+                    follow := RadioButton {
+                        text: "Follow Caps-Lock and Shift";
+
+                        Tooltip {
+                            text: @markdown("Show capitalized letter when shift or caps lock are active, but normal letters when both or neither are.");
+                        }
+                    }
+
+                    RadioButton {
+                        text: "Show all buttons capitalized";
+
+                        Tooltip {
+                            text: @markdown("Always show capitalized letters.");
+                        }
+                    }
+
+                    RadioButton {
+                        text: "Show all buttons lower-case";
+
+                        Tooltip {
+                            text: @markdown("Always show lower-case letters.");
+                        }
+                    }
+                }
+
+                VerticalLayout {
+                    alignment: start;
+
+                    Text {
+                        text: "Still follow shift for:";
+                    }
+
+                    CheckBox {
+                        text: "Caps Lock insensitive keys";
+                        enabled: !follow.checked;
+
+                        if self.enabled: Tooltip {
+                            text: @markdown("When Always show capitalized or lower-case letters is selected, checking this means the shift key is still used to shift to the alternate text on the element for all elements that are not sensitive to caps lock.");
+                        }
+                    }
+
+                    CheckBox {
+                        text: "Caps Lock sensitive keys";
+                        enabled: !follow.checked;
+
+                        if self.enabled: Tooltip {
+                            text: @markdown("When Always show capitalized or lower-case letters is selected, checking this means the shift key is still used to shift to thhe alternate text on the element for all elements that are sensitive to caps lock.");
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: end;
+            spacing: 10px;
+            padding-right: 5px;
+            padding-bottom: self.padding-right;
+
+            cancel := Button {
+                text: "Cancel";
+                clicked => root.close();
+            }
+
+            Button {
+                width: cancel.min-width;
+                text: "Ok";
+            }
+        }
+    }
+}
