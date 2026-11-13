@@ -69,6 +69,8 @@ impl Main {
                         y: def.location.y,
                     },
                     radius: def.radius,
+                    id: element.id as i32,
+                    ..Default::default()
                 }),
             }
         }
@@ -153,6 +155,25 @@ impl Main {
                             0.0
                         },
                         ..key
+                    }
+                })
+                .collect::<Vec<_>>()
+                .as_slice()
+                .into(),
+        );
+        self.set_speedometers(
+            self.get_speedometers()
+                .iter()
+                .map(|speedometer| {
+                    let style = match style.element_styles.get(&(speedometer.id as u32)) {
+                        Some(ElementStyle::MouseSpeedIndicatorStyle(style)) => style,
+                        _ => &style.default_mouse_speed_indicator_style,
+                    };
+                    Speedometer {
+                        inner_color: style.inner_color.into(),
+                        outer_color: style.outer_color.into(),
+                        outline_width: style.outline_width,
+                        ..speedometer
                     }
                 })
                 .collect::<Vec<_>>()

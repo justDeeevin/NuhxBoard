@@ -199,9 +199,9 @@ pub struct MouseSpeedIndicatorStyle {
     /// This is only shown at the maximum possible speed.
     // TODO: check above
     pub outer_color: NohRgb,
-    #[default = 1]
+    #[default = 1.0]
     /// The outline's width in pixels.
-    pub outline_width: u32,
+    pub outline_width: f32,
 }
 
 #[derive(Serialize, Deserialize)]

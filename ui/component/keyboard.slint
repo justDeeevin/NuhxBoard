@@ -17,6 +17,10 @@ export struct Key {
 }
 
 export struct Speedometer {
+    id: int,
+    inner-color: brush,
+    outer-color: brush,
+    outline-width: length,
     position: Point,
     radius: length,
 }
@@ -59,14 +63,14 @@ export component Keyboard {
         width: speedometer.radius * 2;
         height: self.width;
         border-radius: self.width / 2;
-        border-width: 2px;
-        border-color: white;
+        border-width: speedometer.outline-width;
+        border-color: speedometer.inner-color;
 
         Rectangle {
             width: speedometer.radius * 2 * 0.2;
             height: self.width;
             border-radius: self.width / 2;
-            background: white;
+            background: speedometer.inner-color;
         }
     }
 }
