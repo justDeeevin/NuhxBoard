@@ -1,4 +1,4 @@
-use crate::json::PathSegment;
+use crate::PathSegment;
 use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
 use std::collections::HashMap;

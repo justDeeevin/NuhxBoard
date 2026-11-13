@@ -1,7 +1,7 @@
 [package]
-name = "NuhxBoard"
-version = "2.0.0"
-edition = "2024"
+name = "nuhxboard"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 serde = { version = "1.0.229", features = ["derive"] }
@@ -29,10 +29,23 @@ async-tar = { version = "0.6.1", default-features = false, features = [
 ] }
 async-compression = { version = "0.4.52", features = ["futures-io", "gzip"] }
 futures-util = { version = "0.3.34", features = ["io"] }
-slint = "1.18.1"
+slint.workspace = true
 futures-rustls = "0.26.0"
 rustls-platform-verifier = "0.7.1"
 anyhow = "1.0.104"
+clamda.path = "../clamda"
+nuhxboard-ui = { version = "2.0.0", path = "crates/ui" }
+nuhxboard-json.workspace = true
 
-[build-dependencies]
-slint-build = "1.18.1"
+[workspace]
+resolver = "2"
+members = [".", "crates/*"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2024"
+
+[workspace.dependencies]
+slint = "1.18.1"
+nuhxboard-json = { version = "2.0.0", path = "crates/json" }
+derive_more = "2.1.1"

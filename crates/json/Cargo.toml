@@ -1,0 +1,12 @@
+[package]
+name = "nuhxboard-json"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+derive_more = { workspace = true, features = ["deref", "deref_mut", "display"] }
+serde = { version = "1.0.229", features = ["derive"] }
+display-info = "0.5.10"
+smart-default = "0.7.1"
+slint.workspace = true
+bitflags = "2.13.2"

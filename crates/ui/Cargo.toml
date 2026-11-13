@@ -1,0 +1,13 @@
+[package]
+name = "nuhxboard-ui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+slint.workspace = true
+nuhxboard-json.workspace = true
+derive_more = { workspace = true, features = ["display"] }
+confy = "2.0.0"
+
+[build-dependencies]
+slint-build = "1.18.1"

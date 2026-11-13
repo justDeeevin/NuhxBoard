@@ -35,6 +35,14 @@ export component Keyboard {
             commands: key.commands;
         }
 
+        if key.background-image.width != 0 && key.background-image.height != 0: Image {
+            source: key.background-image;
+            x: key.bounding-box-pos.x;
+            y: key.bounding-box-pos.y;
+            width: key.bounding-box-size.width;
+            height: key.bounding-box-size.height;
+        }
+
         StyledText {
             default-color: key.text-color;
             default-font-family: key.font-family;
@@ -42,14 +50,6 @@ export component Keyboard {
             text: key.styled-text;
             x: key.text-position.x - (self.width / 2);
             y: key.text-position.y - (self.height / 2);
-        }
-
-        if key.background-image.width != 0 && key.background-image.height != 0: Image {
-            source: key.background-image;
-            x: key.bounding-box-pos.x;
-            y: key.bounding-box-pos.y;
-            width: key.bounding-box-size.width;
-            height: key.bounding-box-size.height;
         }
     }
 

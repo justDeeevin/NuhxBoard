@@ -2,10 +2,10 @@ import { GroupBox, CheckBox, RadioGroup, Button } from "std-widgets.slint";
 import { Labeled } from "component/labeled.slint";
 import { SingleInput } from "component/single_input.slint";
 
-export enum SCapitalization { lower, upper, follow }
+export enum Capitalization { lower, upper, follow }
 
-export struct UserSettings {
-    capitalization: SCapitalization,
+export struct Settings {
+    capitalization: Capitalization,
     follow_for_caps_sensitive: bool,
     follow_for_caps_insensitive: bool,
     mouse_from_center: bool,
@@ -16,9 +16,9 @@ export struct UserSettings {
 }
 
 export component SettingsPopup inherits Window {
-    in-out property <UserSettings> settings;
+    in-out property <Settings> settings;
 
-    callback submit(UserSettings);
+    callback submit(Settings);
 
     title: "Settings";
     width: 650px;
@@ -112,7 +112,7 @@ export component SettingsPopup inherits Window {
                 RadioGroup {
                     follow := RadioButton {
                         text: "Follow Caps-Lock and Shift";
-                        checked: settings.capitalization == SCapitalization.follow;
+                        checked: settings.capitalization == Capitalization.follow;
 
                         Tooltip {
                             text: @markdown("Show capitalized letter when shift or caps lock are active, but normal letters when both or neither are.");
@@ -121,7 +121,7 @@ export component SettingsPopup inherits Window {
 
                     upper := RadioButton {
                         text: "Show all buttons capitalized";
-                        checked: settings.capitalization == SCapitalization.upper;
+                        checked: settings.capitalization == Capitalization.upper;
 
                         Tooltip {
                             text: @markdown("Always show capitalized letters.");
@@ -130,7 +130,7 @@ export component SettingsPopup inherits Window {
 
                     RadioButton {
                         text: "Show all buttons lower-case";
-                        checked: settings.capitalization == SCapitalization.lower;
+                        checked: settings.capitalization == Capitalization.lower;
 
                         Tooltip {
                             text: @markdown("Always show lower-case letters.");
@@ -182,7 +182,7 @@ export component SettingsPopup inherits Window {
                 text: "Ok";
 
                 clicked => {
-                    settings.capitalization = follow.checked ? SCapitalization.follow : (upper.checked ? SCapitalization.upper : lower);
+                    settings.capitalization = follow.checked ? Capitalization.follow : (upper.checked ? Capitalization.upper : lower);
                     submit(settings);
                     root.close();
                 }
