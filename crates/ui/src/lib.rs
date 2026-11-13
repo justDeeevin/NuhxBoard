@@ -5,7 +5,7 @@ use nuhxboard_json::{
     style::{ElementStyle, FontStyle, KeyStyle, Style},
 };
 use slint::{Image, LogicalPosition, LogicalSize, Model, SharedString, StyledText, ToSharedString};
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 use std::{
     num::{ParseFloatError, ParseIntError},
     path::PathBuf,
@@ -23,12 +23,15 @@ pub static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 impl Main {
-    pub fn apply_layout(&self, layout: &Layout) {
+    /// Returns (key_indices, speedometer_indices).
+    pub fn apply_layout(&self, layout: &Layout) -> (HashMap<u32, usize>, HashMap<u32, usize>) {
         self.set_w(layout.width);
         self.set_h(layout.height);
 
         let mut keys = Vec::default();
-        let mut speedometers = Vec::new();
+        let mut key_indices = HashMap::default();
+        let mut speedometers = Vec::default();
+        let mut speedometer_indices = HashMap::default();
 
         for element in &layout.elements {
             match <&CommonElement>::try_from(&element.kind) {
@@ -49,6 +52,7 @@ impl Main {
                     }
                     let (bounding_box_pos, bounding_box_size) = bounding_box(&def.boundaries);
                     commands += "Z";
+                    key_indices.insert(element.id, keys.len());
                     keys.push(Key {
                         id: element.id as i32,
                         commands,
@@ -63,20 +67,24 @@ impl Main {
                         ..Default::default()
                     });
                 }
-                Err(def) => speedometers.push(Speedometer {
-                    position: LogicalPosition {
-                        x: def.location.x,
-                        y: def.location.y,
-                    },
-                    radius: def.radius,
-                    id: element.id as i32,
-                    ..Default::default()
-                }),
+                Err(def) => {
+                    speedometer_indices.insert(element.id, speedometers.len());
+                    speedometers.push(Speedometer {
+                        position: LogicalPosition {
+                            x: def.location.x,
+                            y: def.location.y,
+                        },
+                        radius: def.radius,
+                        id: element.id as i32,
+                        ..Default::default()
+                    });
+                }
             }
         }
 
         self.set_keys(keys.as_slice().into());
         self.set_speedometers(speedometers.as_slice().into());
+        (key_indices, speedometer_indices)
     }
 
     pub fn apply_style(

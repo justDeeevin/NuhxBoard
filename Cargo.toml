@@ -36,6 +36,11 @@ anyhow = "1.0.104"
 clamda.path = "../clamda"
 nuhxboard-ui = { version = "2.0.0", path = "crates/ui" }
 nuhxboard-json.workspace = true
+antmon.path = "../antmon"
+byor = { version = "5.0.0", default-features = false, features = [
+	"smol",
+	"smol-oneshot",
+] }
 
 [workspace]
 resolver = "2"

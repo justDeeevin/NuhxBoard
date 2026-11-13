@@ -21,12 +21,6 @@
 
         craneLib = crane.mkLib pkgs;
 
-        libs = with pkgs; [
-          fontconfig
-          libgcc
-          libxcb
-        ];
-
         dylibs = with pkgs; [
           # wayland
           wayland
@@ -41,6 +35,17 @@
           libGL
           vulkan-loader
         ];
+
+        libs =
+          with pkgs;
+          [
+            fontconfig
+            libgcc
+            libxcb
+            libxtst
+            libinput
+          ]
+          ++ dylibs;
 
         commonArgs = {
           src = lib.fileset.toSource {

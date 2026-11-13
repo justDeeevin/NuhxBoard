@@ -3,12 +3,19 @@
 // TODO:
 // - clamda for async blocks?
 
+use antmon::{ButtonState, Event, key::convert::from_windows_vkcode};
 use async_fn::*;
 use clamda::lambda;
-use nuhxboard_json::{PathSegment, settings::Settings};
+use futures_util::StreamExt;
+use nuhxboard_json::{
+    PathSegment,
+    layout::CommonElement,
+    settings::Settings,
+    style::{ElementStyle, KeyStyle, Style},
+};
 use nuhxboard_ui::*;
-use slint::{ToSharedString, language::StandardListViewItem};
-use std::{cell::RefCell, fmt::Display, rc::Rc};
+use slint::{Model, ToSharedString, language::StandardListViewItem};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
 mod async_fn;
 
@@ -19,10 +26,65 @@ fn main() {
     let layouts = Rc::new(RefCell::new(Vec::default()));
     let local_styles = Rc::new(RefCell::new(Vec::default()));
     let global_styles = Rc::new(RefCell::new(Vec::default()));
-    let style = Rc::new(RefCell::new(None));
+    let style = Rc::new(RefCell::new(None::<Style>));
 
     let app = Main::new().unwrap();
     let weak = app.as_weak();
+
+    let keys = Rc::new(RefCell::new(HashMap::<antmon::Key, Vec<u32>>::default()));
+    let key_indices = Rc::new(RefCell::new(HashMap::default()));
+    let speedometer_indices = Rc::new(RefCell::new(HashMap::default()));
+
+    let key_indices_clone = key_indices.clone();
+    let speedometer_indices_clone = speedometer_indices.clone();
+    let keys_clone = keys.clone();
+    let weak_clone = weak.clone();
+    let style_clone = style.clone();
+    slint::spawn_local(async move {
+        let mut stream = antmon::events::<byor::runtime::Smol>().await.unwrap();
+        while let Some(Ok(event)) = stream.next().await {
+            if let Some(style) = style_clone.borrow().as_ref()
+                && let Event::Key { key, state, .. } = event
+                && let Some(ids) = keys_clone.borrow().get(&key)
+            {
+                for id in ids {
+                    let style = match style.element_styles.get(id) {
+                        Some(ElementStyle::KeyStyle(KeyStyle {
+                            pressed: Some(style),
+                            ..
+                        })) if state == ButtonState::Pressed => style,
+                        Some(ElementStyle::KeyStyle(KeyStyle {
+                            loose: Some(style), ..
+                        })) => style,
+                        _ => {
+                            if state == ButtonState::Pressed {
+                                &style.default_key_style.pressed
+                            } else {
+                                &style.default_key_style.loose
+                            }
+                        }
+                    };
+
+                    let index = *key_indices_clone.borrow().get(id).unwrap();
+                    let old_key = weak_clone.unwrap().get_keys().row_data(index).unwrap();
+                    weak_clone.unwrap().get_keys().set_row_data(
+                        index,
+                        Key {
+                            background: style.background.into(),
+                            text_color: style.text.into(),
+                            font_family: style.font.font_family.to_shared_string(),
+                            font_size: style.font.size,
+                            outline_color: style.outline.into(),
+                            outline_width: style.outline_width,
+                            // TODO: background_image and text
+                            ..old_key
+                        },
+                    )
+                }
+            }
+        }
+    })
+    .unwrap();
 
     app.set_version(env!("CARGO_PKG_VERSION").to_shared_string());
 
@@ -99,6 +161,9 @@ fn main() {
                     let app = weak.clone();
                     let popup = weak_popup.clone();
                     let style = style_clone.clone();
+                    let key_indices_clone = key_indices.clone();
+                    let speedometer_indices_clone = speedometer_indices.clone();
+                    let keys_clone = keys.clone();
                     slint::spawn_local(async move {
                         match load_layout(
                             settings.borrow().category.as_ref().unwrap(),
@@ -107,7 +172,22 @@ fn main() {
                         .await
                         {
                             Ok((layout, options)) => {
-                                app.unwrap().apply_layout(&layout);
+                                let (key_indices, speedometer_indices) = app.unwrap().apply_layout(&layout);
+                                *key_indices_clone.borrow_mut() = key_indices;
+                                *speedometer_indices_clone.borrow_mut() = speedometer_indices;
+                                keys_clone.borrow_mut().clear();
+                                for element in &layout.elements {
+                                    let Ok(def) = <&CommonElement>::try_from(&element.kind) else {
+                                        continue;
+                                    };
+                                    for key in &def.key_codes {
+                                        keys_clone
+                                            .borrow_mut()
+                                            .entry(from_windows_vkcode(*key as i32))
+                                            .and_modify(|ids| ids.push(element.id))
+                                            .or_insert_with(|| vec![element.id]);
+                                    }
+                                }
                                 let items: Vec<_> = options.into_iter().map(Into::into).collect();
                                 popup.unwrap().set_local_styles(items.as_slice().into());
                                 *local_styles_clone.borrow_mut() = items;
