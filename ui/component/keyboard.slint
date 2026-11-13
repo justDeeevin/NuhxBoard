@@ -1,11 +1,15 @@
 export struct Key {
     id: int,
+    button: bool,
     background: brush,
     background-image: image,
     bounding-box-pos: Point,
     bounding-box-size: Size,
     text: string,
+    shift-text: string,
+    change-on-caps: bool,
     styled-text: styled-text,
+    styled-shift-text: styled-text,
     underline: bool,
     text-color: brush,
     text-position: Point,
@@ -28,6 +32,10 @@ export struct Speedometer {
 export component Keyboard {
     in property <[Key]> keys;
     in property <[Speedometer]> speedometers;
+    in property <bool> shift;
+    in property <bool> caps;
+    in property <int> dx;
+    in property <int> dy;
 
     for key in keys: Rectangle {
         Path {
@@ -51,7 +59,7 @@ export component Keyboard {
             default-color: key.text-color;
             default-font-family: key.font-family;
             default-font-size: key.font-size * 1pt;
-            text: key.styled-text;
+            text: (!key.button && (shift != (caps && key.change-on-caps))) ? key.styled-shift-text : key.styled-text;
             x: key.text-position.x - (self.width / 2);
             y: key.text-position.y - (self.height / 2);
         }

@@ -1,11 +1,12 @@
+use aho_corasick::AhoCorasick;
 use derive_more::Display;
 use nuhxboard_json::{
     PathSegment,
-    layout::{CommonElement, Layout, NohPoint},
+    layout::{CommonElement, ElementKind, Layout, NohPoint},
     style::{ElementStyle, FontStyle, KeyStyle, Style},
 };
 use slint::{Image, LogicalPosition, LogicalSize, Model, SharedString, StyledText, ToSharedString};
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 use std::{
     num::{ParseFloatError, ParseIntError},
     path::PathBuf,
@@ -22,13 +23,35 @@ pub static NUHXBOARD_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         .into()
 });
 
+pub fn styled_text(text: &str, style: FontStyle) -> StyledText {
+    let subst = AhoCorasick::new(["#", ">"]).unwrap();
+    let mut text = subst.replace_all(text, &["\\#", "\\>"]);
+    if !text.is_empty() {
+        if style.contains(FontStyle::BOLD) {
+            text = format!("**{text}**");
+        }
+        if style.contains(FontStyle::ITALIC) {
+            text = format!("*{text}*");
+        }
+        if style.contains(FontStyle::UNDERLINE) {
+            text = format!("<u>{text}</u>");
+        }
+        if style.contains(FontStyle::STRIKETHROUGH) {
+            text = format!("~~{text}~~");
+        }
+    }
+    StyledText::from_markdown(&text).unwrap()
+}
+
 impl Main {
-    pub fn apply_layout(&self, layout: &Layout) {
+    /// Returns a mapping of key ids to their indices.
+    pub fn apply_layout(&self, layout: &Layout) -> HashMap<u32, usize> {
         self.set_w(layout.width);
         self.set_h(layout.height);
 
         let mut keys = Vec::default();
-        let mut speedometers = Vec::new();
+        let mut key_indices = HashMap::default();
+        let mut speedometers = Vec::default();
 
         for element in &layout.elements {
             match <&CommonElement>::try_from(&element.kind) {
@@ -49,10 +72,28 @@ impl Main {
                     }
                     let (bounding_box_pos, bounding_box_size) = bounding_box(&def.boundaries);
                     commands += "Z";
+                    key_indices.insert(element.id, keys.len());
+
+                    let change_on_caps =
+                        if let ElementKind::KeyboardKey { change_on_caps, .. } = &element.kind {
+                            *change_on_caps
+                        } else {
+                            false
+                        };
+
                     keys.push(Key {
+                        button: matches!(element.kind, ElementKind::MouseKey(_)),
                         id: element.id as i32,
                         commands,
                         text: def.text.to_shared_string(),
+                        shift_text: if let ElementKind::KeyboardKey { shift_text, .. } =
+                            &element.kind
+                        {
+                            shift_text.to_shared_string()
+                        } else {
+                            Default::default()
+                        },
+                        change_on_caps,
                         styled_text: StyledText::from_plain_text(&def.text),
                         text_position: LogicalPosition {
                             x: def.text_position.x,
@@ -63,28 +104,26 @@ impl Main {
                         ..Default::default()
                     });
                 }
-                Err(def) => speedometers.push(Speedometer {
-                    position: LogicalPosition {
-                        x: def.location.x,
-                        y: def.location.y,
-                    },
-                    radius: def.radius,
-                    id: element.id as i32,
-                    ..Default::default()
-                }),
+                Err(def) => {
+                    speedometers.push(Speedometer {
+                        position: LogicalPosition {
+                            x: def.location.x,
+                            y: def.location.y,
+                        },
+                        radius: def.radius,
+                        id: element.id as i32,
+                        ..Default::default()
+                    });
+                }
             }
         }
 
         self.set_keys(keys.as_slice().into());
         self.set_speedometers(speedometers.as_slice().into());
+        key_indices
     }
 
-    pub fn apply_style(
-        &self,
-        source: StyleSource<'_, '_>,
-        style_name: &PathSegment,
-        style: &Style,
-    ) {
+    pub fn apply_style(&self, source: StyleSource, style_name: &PathSegment, style: &Style) {
         self.set_background_color(style.background_color.into());
         let images_path = match source {
             StyleSource::Global => format!("global/{style_name}"),
@@ -125,26 +164,12 @@ impl Main {
                         })
                         .unwrap_or_default();
 
-                    let mut text = key.text.replace('#', "\\#");
-                    if !text.is_empty() {
-                        if key_style.font.style.contains(FontStyle::BOLD) {
-                            text = format!("**{text}**");
-                        }
-                        if key_style.font.style.contains(FontStyle::ITALIC) {
-                            text = format!("*{text}*");
-                        }
-                        if key_style.font.style.contains(FontStyle::UNDERLINE) {
-                            text = format!("<u>{text}</u>");
-                        }
-                        if key_style.font.style.contains(FontStyle::STRIKETHROUGH) {
-                            text = format!("~~{text}~~");
-                        }
-                    }
                     Key {
                         background: key_style.background.into(),
                         background_image: background_image.clone(),
                         underline: key_style.font.style.contains(FontStyle::UNDERLINE),
-                        styled_text: StyledText::from_markdown(&text).unwrap(),
+                        styled_text: styled_text(&key.text, key_style.font.style),
+                        styled_shift_text: styled_text(&key.shift_text, key_style.font.style),
                         text_color: key_style.text.into(),
                         font_family: key_style.font.font_family.to_shared_string(),
                         font_size: key_style.font.size,
@@ -309,12 +334,12 @@ fn bounding_box(points: &[NohPoint]) -> (LogicalPosition, LogicalSize) {
     )
 }
 
-#[derive(Clone, Copy)]
-pub enum StyleSource<'a, 'b> {
+#[derive(Clone)]
+pub enum StyleSource {
     Global,
     Local {
-        category: &'a PathSegment,
-        layout: &'b PathSegment,
+        category: PathSegment,
+        layout: PathSegment,
     },
 }
 

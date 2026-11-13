@@ -21,17 +21,18 @@ export component SettingsPopup inherits Window {
     callback submit(Settings);
 
     title: "Settings";
-    width: 650px;
-    height: 400px;
-    // default-font-size: 12px;
+    width: 675px;
+    height: 380px;
 
     VerticalLayout {
         padding-left: 5px;
         padding-bottom: self.padding-left;
         padding-right: self.padding-left;
+        alignment: start;
 
         HorizontalLayout {
-            alignment: start;
+            spacing: 10px;
+
             GroupBox {
                 title: "Input";
 
@@ -61,19 +62,18 @@ export component SettingsPopup inherits Window {
                         }
                     }
 
-                    Text {
-                        text: "Show keypresses for at least";
-                    }
-
                     HorizontalLayout {
-                        padding-left: 40px;
                         cross-axis-alignment: center;
+                        alignment: start;
                         spacing: 5px;
+
+                        Text {
+                            text: "Show keypresses for at least";
+                        }
 
                         SingleInput {
                             input-type: number;
-                            max-width: 50px;
-                            min-width: 0;
+                            width: 50px;
                             text <=> settings.min-press-time;
 
                             Tooltip {

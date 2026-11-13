@@ -15,12 +15,13 @@ smart-default = "0.7.1"
 display-info = "0.5.10"
 bitflags = "2.13.2"
 confy = "2.0.0"
+http-body-util = "0.1.5"
 hyper = { version = "1.12.0", features = ["client", "http1", "http2"] }
 # TODO: hyperbyor
 smol-hyper = "0.1.1"
 async-net = "2.0.0"
-http-body-util = "0.1.5"
 async-fs = "2.2.0"
+async-io = "2.6.0"
 async-tar = { version = "0.6.1", default-features = false, features = [
 	# the deprecated async-std crate isn't actually used; i just have to choose
 	# one of the runtime features and the tokio feature makes async-tar use tokio's io traits
@@ -36,6 +37,12 @@ anyhow = "1.0.104"
 clamda.path = "../clamda"
 nuhxboard-ui = { version = "2.0.0", path = "crates/ui" }
 nuhxboard-json.workspace = true
+antmon.path = "../antmon"
+byor = { version = "5.0.0", default-features = false, features = [
+	"smol",
+	"smol-oneshot",
+] }
+clap = { version = "4.6.7", features = ["derive"] }
 
 [workspace]
 resolver = "2"

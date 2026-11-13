@@ -1,4 +1,4 @@
-import { ComboBox, StandardListView, Button } from "std-widgets.slint";
+import { ComboBox, StandardListView, Button, Palette } from "std-widgets.slint";
 
 export enum StyleKind { local, global }
 
@@ -50,7 +50,7 @@ export component LoadKeyboard inherits Window {
 
                 Rectangle {
                     border-width: 1px;
-                    border-color: gray;
+                    border-color: Palette.border;
 
                     layout-picker := StandardListView {
                         current-item-changed(item) => layout-changed(layouts[item].text);
@@ -68,7 +68,7 @@ export component LoadKeyboard inherits Window {
 
                 Rectangle {
                     border-width: 1px;
-                    border-color: gray;
+                    border-color: Palette.border;
 
                     VerticalLayout {
 
@@ -87,7 +87,7 @@ export component LoadKeyboard inherits Window {
 
                 Rectangle {
                     border-width: 1px;
-                    border-color: gray;
+                    border-color: Palette.border;
 
                     VerticalLayout {
                         Text {

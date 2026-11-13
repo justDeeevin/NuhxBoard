@@ -1,22 +1,22 @@
-import { ScrollView } from "std-widgets.slint";
+import { ScrollView, Palette } from "std-widgets.slint";
+
 export component SingleInput inherits Rectangle {
     in property <InputType> input-type <=> input.input-type;
     in-out property <string> text <=> input.text;
 
     min-width: 100px;
     height: 1.75rem;
-    // TODO: theme-based coloring
-    background: white;
+    background: Palette.control-background;
     border-radius: 2px;
 
     ScrollView {
         VerticalLayout {
             padding-left: 3px;
             padding-right: self.padding-left;
-            alignment: center;
 
             input := TextInput {
-                color: black;
+                color: Palette.control-foreground;
+                vertical-alignment: center;
 
                 @children
             }

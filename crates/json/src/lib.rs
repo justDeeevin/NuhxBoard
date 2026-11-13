@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use derive_more::{Deref, Display};
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -5,9 +7,9 @@ pub mod layout;
 pub mod settings;
 pub mod style;
 
-#[derive(Deref, Serialize, Display)]
+#[derive(Deref, Display, Clone)]
 /// An individual path segment with no separators.
-pub struct PathSegment(String);
+pub struct PathSegment(Rc<str>);
 
 impl<'de> Deserialize<'de> for PathSegment {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -19,15 +21,24 @@ impl<'de> Deserialize<'de> for PathSegment {
     }
 }
 
+impl Serialize for PathSegment {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.0)
+    }
+}
+
 impl AsRef<std::path::Path> for PathSegment {
     fn as_ref(&self) -> &std::path::Path {
-        self.0.as_ref()
+        (*self.0).as_ref()
     }
 }
 
 impl AsRef<std::ffi::OsStr> for PathSegment {
     fn as_ref(&self) -> &std::ffi::OsStr {
-        self.0.as_ref()
+        (*self.0).as_ref()
     }
 }
 
@@ -37,7 +48,7 @@ impl PathSegment {
         if raw.contains('/') || (cfg!(target_os = "windows") && raw.contains('\\')) {
             None
         } else {
-            Some(Self(raw))
+            Some(Self(raw.into()))
         }
     }
 }

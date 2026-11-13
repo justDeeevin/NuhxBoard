@@ -18,6 +18,10 @@ export component Main inherits Window {
 
     in property <[Key]> keys <=> keyboard.keys;
     in property <[Speedometer]> speedometers <=> keyboard.speedometers;
+    in property <bool> shift <=> keyboard.shift;
+    in property <bool> caps <=> keyboard.caps;
+    in property <int> dx <=> keyboard.dx;
+    in property <int> dy <=> keyboard.dy;
 
     callback open-settings;
     callback open-load;

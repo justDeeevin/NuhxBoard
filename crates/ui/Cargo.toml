@@ -8,6 +8,7 @@ slint.workspace = true
 nuhxboard-json.workspace = true
 derive_more = { workspace = true, features = ["display"] }
 confy = "2.0.0"
+aho-corasick = "1.1.5"
 
 [build-dependencies]
 slint-build = "1.18.1"

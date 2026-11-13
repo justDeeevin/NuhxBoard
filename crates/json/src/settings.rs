@@ -52,7 +52,7 @@ fn get_default_display() -> Option<u32> {
     })
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Copy)]
+#[derive(Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
 /// How [`KeyboardKey`](ElementKind::KeyboardKey)s should
 /// respond to caps lock state.
 ///

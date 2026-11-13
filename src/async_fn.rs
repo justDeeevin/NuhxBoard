@@ -1,3 +1,4 @@
+use antmon::ButtonState;
 use anyhow::{Result, ensure};
 use async_compression::futures::bufread::GzipDecoder;
 use async_net::TcpStream;
@@ -9,18 +10,19 @@ use hyper::{Request, Uri, body::Bytes, client::conn::http1};
 use nuhxboard_json::{PathSegment, layout::Layout, settings::Settings, style::Style};
 use nuhxboard_ui::{ErrorPopup, Main, NUHXBOARD_PATH, StyleSource};
 use rustls_platform_verifier::BuilderVerifierExt;
-use slint::{SharedString, ToSharedString, Weak, language::StandardListViewItem};
+use slint::{SharedString, ToSharedString, Weak};
 use smol_hyper::rt::FuturesIo;
-use std::{cell::RefCell, io::ErrorKind, path::Path, rc::Rc, sync::Arc};
+use std::{cell::RefCell, collections::HashMap, io::ErrorKind, path::Path, rc::Rc, sync::Arc};
+
+use crate::{IdMaps, LoadPopupMemory};
 
 pub async fn setup(
     app: Weak<Main>,
     settings: Rc<RefCell<Settings>>,
-    categories: Rc<RefCell<Vec<SharedString>>>,
-    layouts: Rc<RefCell<Vec<StandardListViewItem>>>,
-    local_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
-    global_styles: Rc<RefCell<Vec<StandardListViewItem>>>,
+    memory: Rc<RefCell<LoadPopupMemory>>,
     style: Rc<RefCell<Option<Style>>>,
+    key_indices: Rc<RefCell<HashMap<u32, usize>>>,
+    id_maps: Rc<RefCell<IdMaps>>,
 ) {
     let res = get_keyboards().await;
     if let Err(e) = res {
@@ -41,7 +43,7 @@ pub async fn setup(
         })
         .await
     {
-        Ok(options) => *categories.borrow_mut() = options,
+        Ok(options) => memory.borrow_mut().categories = options,
         Err(e) => ErrorPopup::pop(format!("Failed to get categories: {e}")),
     }
     match async_fs::read_dir(NUHXBOARD_PATH.join("keyboards/global"))
@@ -59,31 +61,32 @@ pub async fn setup(
         })
         .await
     {
-        Ok(options) => *global_styles.borrow_mut() = options,
+        Ok(options) => memory.borrow_mut().global_styles = options,
         Err(e) => ErrorPopup::pop(format!("Failed to get global styles: {e}")),
     }
 
-    let Some(category) = &settings.borrow().category else {
+    let Some(category) = settings.borrow().category.as_ref().cloned() else {
         return;
     };
-    match load_category(category).await {
-        Ok(options) => *layouts.borrow_mut() = options.into_iter().map(Into::into).collect(),
+    match load_category(&category).await {
+        Ok(options) => memory.borrow_mut().layouts = options.into_iter().map(Into::into).collect(),
         Err(e) => {
             ErrorPopup::pop(format!("Failed to load category: {e}"));
             return;
         }
     }
-    let Some(layout) = &settings.borrow().layout else {
+    let Some(layout) = settings.borrow().layout.as_ref().cloned() else {
         return;
     };
-    match load_layout(category, layout).await {
+    match load_layout(&category, &layout).await {
         Ok((layout, options)) => {
-            app.unwrap().apply_layout(&layout);
-            *local_styles.borrow_mut() = options.into_iter().map(Into::into).collect();
+            *key_indices.borrow_mut() = app.unwrap().apply_layout(&layout);
+            super::update_layout_state(&layout, id_maps);
+            memory.borrow_mut().local_styles = options.into_iter().map(Into::into).collect();
         }
         Err(e) => ErrorPopup::pop(format!("Failed to load layout: {e}")),
     }
-    let Some(style_name) = &settings.borrow().style else {
+    let Some(style_name) = settings.borrow().style.as_ref().cloned() else {
         return;
     };
     let source = if settings.borrow().global_style {
@@ -91,16 +94,16 @@ pub async fn setup(
     } else {
         StyleSource::Local { category, layout }
     };
-    match load_style(source, style_name).await {
+    match load_style(source.clone(), style_name.clone()).await {
         Ok(new_style) => {
-            app.unwrap().apply_style(source, style_name, &new_style);
+            app.unwrap().apply_style(source, &style_name, &new_style);
             *style.borrow_mut() = Some(new_style);
         }
         Err(e) => ErrorPopup::pop(format!("Failed to load style: {e}")),
     }
 }
 
-pub async fn load_style(source: StyleSource<'_, '_>, style: &PathSegment) -> Result<Style> {
+pub async fn load_style(source: StyleSource, style: PathSegment) -> Result<Style> {
     let parent = match source {
         StyleSource::Local { category, layout } => format!("{category}/{layout}"),
         StyleSource::Global => "global".into(),
@@ -120,16 +123,10 @@ pub async fn load_layout(
     category: &PathSegment,
     layout: &PathSegment,
 ) -> Result<(Layout, Vec<SharedString>)> {
-    let string = async_fs::read_to_string(
-        NUHXBOARD_PATH
-            .join("keyboards")
-            .join(category)
-            .join(layout)
-            .join("keyboard.json"),
-    )
-    .await?;
+    let path = NUHXBOARD_PATH.join("keyboards").join(category).join(layout);
+    let string = async_fs::read_to_string(path.join("keyboard.json")).await?;
     let mut styles = Vec::default();
-    match async_fs::read_dir(NUHXBOARD_PATH.join("keyboards").join(category).join(layout))
+    match async_fs::read_dir(path)
         .and_then(|entries| {
             entries
                 .try_filter_map(|entry| {
@@ -255,4 +252,38 @@ async fn exists(path: impl AsRef<Path>) -> std::io::Result<bool> {
         }
         Ok(_) => Ok(true),
     }
+}
+
+pub enum Direction {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
+pub async fn release_task(
+    direction: Direction,
+    id_maps: Rc<RefCell<IdMaps>>,
+    key_indices: Rc<RefCell<HashMap<u32, usize>>>,
+    style: Rc<RefCell<Option<Style>>>,
+    settings: Rc<RefCell<Settings>>,
+    app: Weak<Main>,
+) {
+    let duration = std::time::Duration::from_millis(settings.borrow().scroll_hold_time);
+    async_io::Timer::after(duration).await;
+    let maps = id_maps.borrow();
+    let ids = match direction {
+        Direction::Up => &maps.up,
+        Direction::Right => &maps.right,
+        Direction::Down => &maps.down,
+        Direction::Left => &maps.left,
+    };
+    super::update_key(
+        ButtonState::Released,
+        ids,
+        key_indices,
+        style.borrow().as_ref().unwrap(),
+        settings,
+        app,
+    );
 }

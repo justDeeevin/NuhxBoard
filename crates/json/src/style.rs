@@ -175,7 +175,7 @@ pub struct Font {
     pub style: FontStyle,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Copy)]
 pub struct FontStyle(u8);
 
 bitflags::bitflags! {
