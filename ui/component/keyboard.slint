@@ -27,6 +27,10 @@ export struct Speedometer {
     outline-width: length,
     position: Point,
     radius: length,
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
 }
 
 export component Keyboard {
@@ -36,6 +40,7 @@ export component Keyboard {
     in property <bool> caps;
     in property <int> dx;
     in property <int> dy;
+    in property <float> ball-to-ring-ratio;
 
     for key in keys: Rectangle {
         Path {
@@ -74,8 +79,31 @@ export component Keyboard {
         border-width: speedometer.outline-width;
         border-color: speedometer.inner-color;
 
+        Path {
+            fill: white;
+            viewbox-width: parent.width / 1px;
+            viewbox-height: parent.height / 1px;
+
+            MoveTo {
+                x: parent.width / 2px;
+                y: parent.height / 2px;
+            }
+
+            LineTo {
+                x: speedometer.x1 + (parent.width / 2px);
+                y: speedometer.y1 + (parent.height / 2px);
+            }
+
+            LineTo {
+                x: speedometer.x2 + (parent.width / 2px);
+                y: speedometer.y2 + (parent.height / 2px);
+            }
+
+            Close { }
+        }
+
         Rectangle {
-            width: speedometer.radius * 2 * 0.2;
+            width: speedometer.radius * 2 * ball-to-ring-ratio;
             height: self.width;
             border-radius: self.width / 2;
             background: speedometer.inner-color;

@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use derive_more::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
 
@@ -62,11 +64,39 @@ impl ElementKind {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct NohPoint {
     pub x: f32,
     pub y: f32,
+}
+
+impl Add for NohPoint {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl<'a> std::iter::Sum<&'a Self> for NohPoint {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        iter.copied().fold(NohPoint::default(), Self::add)
+    }
+}
+
+impl std::ops::Div<f32> for NohPoint {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]

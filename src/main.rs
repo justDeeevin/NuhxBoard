@@ -3,11 +3,13 @@
 
 use antmon::{Button, ButtonState, Event, key::convert::from_windows_vkcode};
 use async_fn::*;
+use circular_buffer::FixedCircularBuffer;
 use clamda::lambda;
 use futures_util::{Stream, StreamExt};
+use nalgebra::vector;
 use nuhxboard_json::{
     PathSegment,
-    layout::{CommonElement, ElementKind, Layout},
+    layout::{CommonElement, ElementKind, Layout, NohPoint},
     settings::Settings,
     style::{ElementStyle, KeyStyle, Style},
 };
@@ -16,10 +18,13 @@ use slint::{
     CloseRequestResponse, Image, JoinHandle, Model, SharedString, ToSharedString, Weak,
     language::StandardListViewItem,
 };
-use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc, time::Instant};
 
 mod async_fn;
 mod cli;
+
+const BALL_TO_RING_RATIO: f32 = 0.2;
+const SPEED_HISTORY_LENGTH: usize = 5;
 
 #[derive(Default)]
 struct LoadPopupMemory {
@@ -46,11 +51,10 @@ fn main() {
     let settings = Rc::new(RefCell::new(Settings::default()));
     let style = Rc::new(RefCell::new(None::<Style>));
 
-    let prev_cursor = Rc::new(RefCell::new(None));
-
     let memory = Rc::new(RefCell::new(LoadPopupMemory::default()));
 
     let app = Main::new().unwrap();
+    app.set_ball_to_ring_ratio(BALL_TO_RING_RATIO);
     let weak = app.as_weak();
 
     let key_indices = Rc::new(RefCell::new(HashMap::default()));
@@ -61,12 +65,13 @@ fn main() {
     let weak_clone = weak.clone();
     let style_clone = style.clone();
     let settings_clone = settings.clone();
-    let prev_cursor_clone = prev_cursor.clone();
     slint::spawn_local(async move {
         let mut release_up_task = None::<JoinHandle<_>>;
         let mut release_right_task = None::<JoinHandle<_>>;
         let mut release_down_task = None::<JoinHandle<_>>;
         let mut release_left_task = None::<JoinHandle<_>>;
+        let mut prev_cursor = None;
+        let mut speed_history = FixedCircularBuffer::<_, SPEED_HISTORY_LENGTH>::default();
 
         let mut stream: Box<dyn Stream<Item = _> + Unpin> = if args.x11 {
             Box::new(antmon::linux::x11::events::<byor::runtime::Smol>().unwrap())
@@ -175,11 +180,38 @@ fn main() {
                         }
                     }
                     Event::Motion { x, y } => {
-                        if let Some((prev_x, prev_y)) = &*prev_cursor_clone.borrow() {
-                            weak_clone.unwrap().set_dx(x - prev_x);
-                            weak_clone.unwrap().set_dy(y - prev_y);
+                        if let Some((prev_x, prev_y, prev_time)) = &prev_cursor {
+                            let elapsed = Instant::elapsed(prev_time).as_millis() as f32;
+                            speed_history.push_back(NohPoint {
+                                x: (x - prev_x) as f32 / elapsed,
+                                y: (y - prev_y) as f32 / elapsed,
+                            });
+                            let avg =
+                                speed_history.iter().sum::<NohPoint>() / speed_history.len() as f32;
+                            let sensitivity = settings_clone.borrow().mouse_sensitivity;
+                            weak_clone.unwrap().set_speedometers(
+                                weak_clone
+                                    .unwrap()
+                                    .get_speedometers()
+                                    .iter()
+                                    .map(|s| {
+                                        let points =
+                                            speed_indicator_points(avg, s.radius, sensitivity);
+
+                                        Speedometer {
+                                            x1: points.0.x,
+                                            y1: points.0.y,
+                                            x2: points.1.x,
+                                            y2: points.1.y,
+                                            ..s
+                                        }
+                                    })
+                                    .collect::<Vec<_>>()
+                                    .as_slice()
+                                    .into(),
+                            )
                         }
-                        *prev_cursor_clone.borrow_mut() = Some((x, y));
+                        prev_cursor = Some((x, y, Instant::now()));
                     }
                     Event::Button { button, state } => {
                         if let Some(ids) = id_maps_clone.borrow().buttons.get(&button) {
@@ -641,4 +673,33 @@ fn update_layout_state(layout: &Layout, id_maps: Rc<RefCell<IdMaps>>) {
             }
         }
     }
+}
+
+fn speed_indicator_points(speed: NohPoint, radius: f32, sensitivity: f32) -> (NohPoint, NohPoint) {
+    const MOUSE_SENSITIVITY_SCALE: f32 = 0.01;
+
+    let velocity = vector![speed.x, speed.y, 0.0];
+    let u = vector![0.0, 0.0, 1.0];
+
+    let j = velocity.normalize();
+    let i = j.cross(&u).normalize();
+
+    let ball_vector = radius * j;
+
+    let length =
+        (sensitivity * MOUSE_SENSITIVITY_SCALE * velocity.magnitude() * radius).min(radius);
+
+    let left_vector = length * (ball_vector - (BALL_TO_RING_RATIO * radius * i)).normalize();
+    let right_vector = length * (ball_vector + (BALL_TO_RING_RATIO * radius * i)).normalize();
+
+    (
+        NohPoint {
+            x: left_vector.x,
+            y: left_vector.y,
+        },
+        NohPoint {
+            x: right_vector.x,
+            y: right_vector.y,
+        },
+    )
 }
