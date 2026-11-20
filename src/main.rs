@@ -13,7 +13,8 @@ use nuhxboard_json::{
 };
 use nuhxboard_ui::*;
 use slint::{
-    Image, JoinHandle, Model, SharedString, ToSharedString, Weak, language::StandardListViewItem,
+    CloseRequestResponse, Image, JoinHandle, Model, SharedString, ToSharedString, Weak,
+    language::StandardListViewItem,
 };
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
@@ -489,6 +490,33 @@ fn main() {
         weak_clone.unwrap().set_loading(false);
     })
     .unwrap();
+
+    app.window().on_close_requested(lambda!(
+        [clone] || {
+            let weak_clone = weak.clone();
+            let settings_clone = settings.clone();
+
+            slint::spawn_local(async move {
+                let Ok(string) = serde_json::to_string(&*settings_clone.borrow()) else {
+                    ErrorPopup::pop("Failed to save settings");
+                    return;
+                };
+                if async_fs::write(NUHXBOARD_PATH.join("settings.json"), &string)
+                    .await
+                    .is_err()
+                {
+                    ErrorPopup::pop("Failed to save settings");
+                    return;
+                }
+                if weak_clone.unwrap().window().hide().is_err() {
+                    slint::quit_event_loop().unwrap();
+                }
+            })
+            .unwrap();
+
+            CloseRequestResponse::KeepWindowShown
+        }
+    ));
 
     app.run().unwrap();
 }
